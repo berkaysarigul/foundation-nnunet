@@ -83,6 +83,59 @@ def decode_runs(
     return list(zip(starts, lengths))
 
 
+def decode_flat_mask(
+    rle_string: object,
+    *,
+    mask_size: int,
+    rle_mode: str = "cumulative_gap_pairs",
+    foreground_value: int = 1,
+) -> list[int]:
+    """Decode an RLE string into a flat binary mask stored as a Python list."""
+    if mask_size <= 0:
+        raise ValueError("mask_size must be positive")
+
+    flat_mask = [0] * mask_size
+    for start, length in decode_runs(rle_string, rle_mode=rle_mode):
+        end = start + length
+        if start < 0 or end > mask_size:
+            raise ValueError(
+                f"Decoded run [{start}, {end}) is out of bounds for mask size {mask_size}"
+            )
+        for index in range(start, end):
+            flat_mask[index] = foreground_value
+    return flat_mask
+
+
+def flat_mask_to_grid_fortran(flat_mask: list[int], *, height: int, width: int) -> list[list[int]]:
+    """Reshape a flat mask into a 2D grid using Fortran/column-major order."""
+    if height <= 0 or width <= 0:
+        raise ValueError("height and width must be positive")
+    if len(flat_mask) != height * width:
+        raise ValueError(
+            f"Flat mask length {len(flat_mask)} does not match height*width={height * width}"
+        )
+
+    return [[flat_mask[row + (column * height)] for column in range(width)] for row in range(height)]
+
+
+def decode_grid_mask(
+    rle_string: object,
+    *,
+    height: int,
+    width: int,
+    rle_mode: str = "cumulative_gap_pairs",
+    foreground_value: int = 1,
+) -> list[list[int]]:
+    """Decode an RLE string into a 2D grid using the accepted Fortran layout."""
+    flat_mask = decode_flat_mask(
+        rle_string,
+        mask_size=height * width,
+        rle_mode=rle_mode,
+        foreground_value=foreground_value,
+    )
+    return flat_mask_to_grid_fortran(flat_mask, height=height, width=width)
+
+
 def runs_are_strictly_non_overlapping(runs: list[tuple[int, int]]) -> bool:
     """Return True when decoded flat runs are strictly increasing."""
     previous_end = -1

@@ -73,15 +73,15 @@ Current strategic direction:
   - Overlay sanity checks on curated samples.
 
 ### P0.4 Add golden mask decode tests
-- Status: [ ]
+- Status: [x]
 - Dependencies: P0.3
-- Affected files/modules: likely `src/data/preprocess.py`, a new tests location or audit script location, curated sample fixtures
+- Affected files/modules: `src/data/rle_contract.py`, `tests/test_rle_contract.py`, `tests/fixtures/siim_rle_golden_cases.json`, `scripts/validate_siim_rle_contract.py`
 - Why it matters: the label pipeline must be protected against silent regressions.
 - Subtasks:
-  - [ ] Curate a minimal set of positive, negative, multi-region, and edge-case annotation examples.
-  - [ ] Define expected decoded mask properties and, where possible, exact expected outputs.
-  - [ ] Add a decode verification harness that can be run before regenerating the dataset.
-  - [ ] Record how these tests are executed in repo memory.
+  - [x] Curate a minimal set of positive, negative, multi-region, and edge-case annotation examples.
+  - [x] Define expected decoded mask properties and, where possible, exact expected outputs.
+  - [x] Add a decode verification harness that can be run before regenerating the dataset.
+  - [x] Record how these tests are executed in repo memory.
 - Success criteria:
   - Decode tests fail on incorrect semantics and pass on accepted semantics.
 - Validation needed before close:
@@ -368,13 +368,13 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P0.4 Add golden decode tests
-2. P0.5 Preserve original and dilated masks separately
-3. P0.6 Audit DICOM intensity policy
-4. P0.7 Regenerate trusted processed dataset
-5. P0.8 Rewrite per-image metrics
-6. P0.9 Fix positive-only validation counting
-7. P1.6 Build strong pretrained baseline after trust gates pass
-8. P1.7 Decide whether ROI / crop strategy is required
-9. P1.8 Decide whether the current hybrid is worth further investment
-10. P2.2 Notebook and documentation cleanup
+1. P0.5 Preserve original and dilated masks separately
+2. P0.6 Audit DICOM intensity policy
+3. P0.7 Regenerate trusted processed dataset
+4. P0.8 Rewrite per-image metrics
+5. P0.9 Fix positive-only validation counting
+6. P1.6 Build strong pretrained baseline after trust gates pass
+7. P1.7 Decide whether ROI / crop strategy is required
+8. P1.8 Decide whether the current hybrid is worth further investment
+9. P2.2 Notebook and documentation cleanup
+10. P1.5 Repair config-driven trainer instantiation

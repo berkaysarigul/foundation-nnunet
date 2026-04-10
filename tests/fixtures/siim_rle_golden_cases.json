@@ -1,0 +1,116 @@
+{
+  "synthetic_cases": [
+    {
+      "name": "negative_empty_mask",
+      "kind": "negative",
+      "rle": "-1",
+      "height": 2,
+      "width": 3,
+      "expected_runs_1based": [],
+      "expected_grid": [
+        [0, 0, 0],
+        [0, 0, 0]
+      ]
+    },
+    {
+      "name": "adjacent_runs_zero_gap",
+      "kind": "edge_case",
+      "rle": "2 2 0 2",
+      "height": 2,
+      "width": 4,
+      "expected_runs_1based": [
+        [2, 2],
+        [4, 2]
+      ],
+      "expected_grid": [
+        [0, 1, 1, 0],
+        [1, 1, 0, 0]
+      ]
+    },
+    {
+      "name": "sparse_multi_region_mask",
+      "kind": "multi_region",
+      "rle": "2 1 2 1 2 1",
+      "height": 2,
+      "width": 4,
+      "expected_runs_1based": [
+        [2, 1],
+        [5, 1],
+        [8, 1]
+      ],
+      "expected_grid": [
+        [0, 0, 1, 0],
+        [1, 0, 0, 1]
+      ]
+    }
+  ],
+  "local_csv_cases": [
+    {
+      "name": "local_first_positive_row",
+      "image_id": "1.2.276.0.7230010.3.1.4.8323329.4904.1517875185.355709",
+      "row_index_within_image": 0,
+      "expected_token_prefix": [
+        "175349",
+        "7",
+        "1013",
+        "12",
+        "1009",
+        "17",
+        "1005",
+        "19",
+        "1003",
+        "20",
+        "1002",
+        "22",
+        "1001",
+        "22",
+        "1000",
+        "23"
+      ],
+      "expected_run_preview_1based": [
+        [175349, 7],
+        [176369, 12],
+        [177390, 17],
+        [178412, 19],
+        [179434, 20],
+        [180456, 22],
+        [181479, 22],
+        [182501, 23]
+      ]
+    },
+    {
+      "name": "local_multirow_image_second_row",
+      "image_id": "1.2.276.0.7230010.3.1.4.8323329.32579.1517875161.299312",
+      "row_index_within_image": 1,
+      "expected_group_row_count": 4,
+      "expected_token_prefix": [
+        "252069",
+        "1",
+        "1021",
+        "3",
+        "1020",
+        "4",
+        "1018",
+        "5",
+        "1018",
+        "6",
+        "1016",
+        "7",
+        "1015",
+        "8",
+        "1014",
+        "9"
+      ],
+      "expected_run_preview_1based": [
+        [252069, 1],
+        [253091, 3],
+        [254114, 4],
+        [255136, 5],
+        [256159, 6],
+        [257181, 7],
+        [258203, 8],
+        [259225, 9]
+      ]
+    }
+  ]
+}

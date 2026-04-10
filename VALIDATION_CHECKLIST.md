@@ -17,6 +17,11 @@ How to check it:
 - Decode curated examples using the repository decoder and compare against authoritative references.
 - Verify mask shape, orientation, sparsity, region count, and exact or near-exact overlap where a golden mask exists.
 - Confirm the recovery documents point to `data/raw/SIIM-ACR/train-rle.csv` when that is the file present locally, and do not rely on absent helper filenames as source-of-truth.
+- Run `py -3 -m unittest tests.test_rle_contract -v` and confirm the golden harness passes for:
+  - negative empty-mask fixtures
+  - edge-case zero-gap fixtures
+  - multi-region synthetic fixtures
+  - curated local CSV cases
 - Run `py -3 scripts/validate_siim_rle_contract.py` and verify:
   - `resolved_mode=cumulative_gap_pairs`
   - `valid_absolute_pairs=0`

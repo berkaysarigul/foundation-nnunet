@@ -4,14 +4,14 @@ Current phase:
 - Phase 1 data correctness
 
 Current blocker:
-- The repository still lacks a trusted processed dataset and trusted validation metrics, even though the local RLE contract is now resolved.
+- The repository still lacks separated mask variants, a trusted regenerated dataset, and trusted validation metrics.
 
 Highest-priority open tasks:
-1. Add golden decode checks that fail if the accepted SIIM contract regresses.
-2. Preserve original and dilated masks separately before any trusted dataset regeneration.
-3. Audit and lock the DICOM intensity policy.
-4. Regenerate the processed dataset with versioned outputs once masks and DICOM policy are settled.
-5. Rewrite validation metrics to operate per image and fix positive-only Dice counting once the trusted dataset path is ready.
+1. Preserve original and dilated masks separately before any trusted dataset regeneration.
+2. Audit and lock the DICOM intensity policy.
+3. Regenerate the processed dataset with versioned outputs once masks and DICOM policy are settled.
+4. Rewrite validation metrics to operate per image and fix positive-only Dice counting once the trusted dataset path is ready.
+5. Keep all current model comparisons non-authoritative until the regenerated dataset exists.
 
 What is already trusted:
 - The high-level repo structure and module boundaries.
@@ -30,6 +30,8 @@ What is already trusted:
 - The accepted local SIIM decoder contract is now `cumulative_gap_pairs` with Fortran-order mask layout and `-1` for empty masks.
 - `scripts/validate_siim_rle_contract.py` reproduces the corpus evidence that `train-rle.csv` resolves unambiguously to `cumulative_gap_pairs` and that `absolute_pairs` is incompatible with the shipped positives.
 - `src/data/preprocess.py` now validates the corpus RLE mode before preprocessing and supports explicit compatibility modes only when they match the corpus.
+- `tests/test_rle_contract.py` and `tests/fixtures/siim_rle_golden_cases.json` now provide a repeatable golden decode harness covering negative, edge-case, multi-region, and curated local CSV examples.
+- The canonical regression command for RLE trust is now `py -3 -m unittest tests.test_rle_contract -v`.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and still collapses mask variants.
@@ -43,6 +45,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Add golden decode checks on curated positive, negative, and multi-row samples.
-2. Define and implement separate original-mask versus dilated-mask outputs.
-3. Lock the DICOM intensity policy before regenerating a trusted dataset.
+1. Define and implement separate original-mask versus dilated-mask outputs.
+2. Lock the DICOM intensity policy before regenerating a trusted dataset.
+3. Regenerate a versioned trusted dataset once mask variants and DICOM policy are settled.
