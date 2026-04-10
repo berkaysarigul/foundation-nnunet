@@ -21,7 +21,7 @@ Current strategic direction:
 ## Phase 0: Trust Recovery / Artifact Quarantine
 
 ### P0.1 Quarantine stale experiment artifacts
-- Status: [~]
+- Status: [x]
 - Dependencies: none
 - Affected files/modules: `results/`, `notebooks/train_local.ipynb`, `notebooks/train_colab.ipynb`, `src/evaluation/evaluate.py`, `src/training/trainer.py`
 - Why it matters: current CSVs and plots do not match the present code path and must not influence decisions.
@@ -29,7 +29,7 @@ Current strategic direction:
   - [x] Mark all existing files in `results/` as legacy/non-authoritative in repo memory and add an explicit warning inside `results/`.
   - [x] Define whether legacy artifacts will be moved, renamed, or left in place with explicit warnings.
   - [x] Add a repository convention for where authoritative experiment outputs will live.
-  - [ ] Document that notebook-generated outputs are not evidence unless traceable to config + checkpoint + dataset version.
+  - [x] Document that notebook-generated outputs are not evidence unless traceable to config + checkpoint + dataset version.
 - Success criteria:
   - No one can mistake current `results/` contents for authoritative evidence.
   - The authoritative output location and naming convention are documented.
@@ -55,16 +55,16 @@ Current strategic direction:
 ## Phase 1: Data and Label Correctness
 
 ### P0.3 Validate the SIIM RLE contract
-- Status: [ ]
+- Status: [x]
 - Dependencies: P0.1, P0.2
-- Affected files/modules: `src/data/preprocess.py`, raw SIIM annotations, any original SIIM/helper decode reference
+- Affected files/modules: `src/data/preprocess.py`, `src/data/rle_contract.py`, `scripts/validate_siim_rle_contract.py`, raw SIIM annotations
 - Why it matters: if the decoder contract is wrong, every saved mask and every reported metric is untrustworthy.
 - Subtasks:
-  - [ ] Identify the authoritative annotation source and reference decoding behavior for the shipped CSV.
-  - [ ] Compare current `rle2mask` behavior against authoritative references on curated positive and negative samples.
-  - [ ] Explicitly resolve the observed suspicious/non-monotonic positive rows rather than assuming current behavior is correct.
-  - [ ] Decide whether the decoder must support one format or detect multiple possible formats.
-  - [ ] Write down the accepted decoder contract in `DECISIONS.md`.
+  - [x] Identify the authoritative local annotation source for this workspace and mark stale doc references as non-authoritative.
+  - [x] Compare current `rle2mask` behavior against authoritative references on curated positive and negative samples.
+  - [x] Explicitly resolve the observed suspicious/non-monotonic positive rows rather than assuming current behavior is correct.
+  - [x] Decide whether the decoder must support one format or detect multiple possible formats.
+  - [x] Write down the accepted decoder contract in `DECISIONS.md`.
 - Success criteria:
   - The repository has a documented, justified, testable RLE contract.
   - Curated sample decodes match the authoritative reference.
@@ -368,13 +368,13 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P0.1 Quarantine stale artifacts
-2. P0.2 Establish provenance requirements
-3. P0.3 Validate RLE contract
-4. P0.4 Add golden decode tests
-5. P0.5 Preserve original and dilated masks separately
-6. P0.6 Audit DICOM intensity policy
-7. P0.7 Regenerate trusted processed dataset
-8. P0.8 Rewrite per-image metrics
-9. P0.9 Fix positive-only validation counting
-10. P1.6 Build strong pretrained baseline after trust gates pass
+1. P0.4 Add golden decode tests
+2. P0.5 Preserve original and dilated masks separately
+3. P0.6 Audit DICOM intensity policy
+4. P0.7 Regenerate trusted processed dataset
+5. P0.8 Rewrite per-image metrics
+6. P0.9 Fix positive-only validation counting
+7. P1.6 Build strong pretrained baseline after trust gates pass
+8. P1.7 Decide whether ROI / crop strategy is required
+9. P1.8 Decide whether the current hybrid is worth further investment
+10. P2.2 Notebook and documentation cleanup

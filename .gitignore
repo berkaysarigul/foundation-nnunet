@@ -20,13 +20,13 @@ ENV/
 Thumbs.db
 
 # Local training data and heavyweight checkpoints
-data/
-checkpoints/
+/data/
+/checkpoints/
 
 # Generated experiment outputs
-results/*
-!results/LEGACY_NOTICE.md
+/results/*
+!/results/LEGACY_NOTICE.md
 
 # Authoritative run outputs will live here, but not be committed by default
-artifacts/runs/*
-!artifacts/runs/README.md
+/artifacts/runs/*
+!/artifacts/runs/README.md

@@ -10,14 +10,25 @@ Use:
 
 What to check:
 - The accepted RLE decoder reproduces authoritative mask behavior for curated positive, negative, and multi-region samples.
+- The annotation source used for label validation matches the raw file actually present in the workspace.
+- For this workspace, corpus-level auto-resolution must select `cumulative_gap_pairs` for `data/raw/SIIM-ACR/train-rle.csv`.
 
 How to check it:
 - Decode curated examples using the repository decoder and compare against authoritative references.
 - Verify mask shape, orientation, sparsity, region count, and exact or near-exact overlap where a golden mask exists.
+- Confirm the recovery documents point to `data/raw/SIIM-ACR/train-rle.csv` when that is the file present locally, and do not rely on absent helper filenames as source-of-truth.
+- Run `py -3 scripts/validate_siim_rle_contract.py` and verify:
+  - `resolved_mode=cumulative_gap_pairs`
+  - `valid_absolute_pairs=0`
+  - `valid_cumulative_gap_pairs` matches the positive-row count
+- Confirm that explicitly requesting `absolute_pairs` for the shipped local CSV fails fast instead of decoding silently.
 
 Failure symptoms:
 - Masks appear transposed, mirrored, implausibly tiny/large, striped, or inconsistent with the annotation source.
 - Positive rows with suspicious token patterns still cannot be explained by the accepted contract.
+- Recovery logic still relies on absent raw annotation/helper files such as `stage_2_train.csv` or `mask_functions.py`.
+- Auto-resolution is ambiguous or resolves to `absolute_pairs` on the shipped local corpus.
+- The preprocessing path still accepts an incompatible explicit mode without error.
 
 What to do if it fails:
 - Stop all model work.
@@ -110,14 +121,17 @@ What to do if it fails:
 What to check:
 - No legacy artifact is being used as authoritative evidence.
 - The repository-level location used for authoritative experiment runs is not `results/`.
+- Notebook-generated outputs are not being used as evidence unless they are traceable to exact config, checkpoint, and dataset version or fingerprint.
 
 How to check it:
 - Confirm every cited metric table, plot, or prediction sample is traceable to a run with config, dataset version, checkpoint, and threshold metadata.
 - Confirm authoritative runs are located under `artifacts/runs/`, not under `results/`.
+- Confirm any notebook-derived figure, table, metric, or sample cited as evidence has explicit traceability to config, checkpoint, and dataset version/fingerprint.
 
 Failure symptoms:
 - An artifact cannot be linked to a run manifest, uses fake IDs, or contradicts current output schema.
 - New authoritative outputs are still being placed under `results/`.
+- Notebook outputs are cited in decisions or reports without the required provenance trail.
 
 What to do if it fails:
 - Mark it legacy immediately and remove it from comparison workflows.
