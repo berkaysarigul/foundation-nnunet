@@ -1,17 +1,17 @@
 # Foundation-nnU-Net Agent Context
 
 Current phase:
-- Phase 1 data correctness
+- Phase 2 evaluation correctness
 
 Current blocker:
-- The repository still lacks a trusted regenerated dataset and trusted validation metrics.
+- The repository now has a trusted regenerated dataset, but validation/model-selection metrics are still mathematically untrusted.
 
 Highest-priority open tasks:
-1. Regenerate the processed dataset with versioned outputs using the accepted RLE, mask-variant, and DICOM intensity policies.
-2. Rewrite validation metrics to operate per image and fix positive-only Dice counting once the trusted dataset path is ready.
-3. Keep all current model comparisons non-authoritative until the regenerated dataset exists.
+1. Rewrite validation metrics to operate per image on the trusted dataset path.
+2. Fix positive-only Dice counting so checkpoint selection matches `val_dice_pos_mean`.
+3. Keep all current model comparisons non-authoritative until the corrected metric path is implemented.
 4. Preserve strict separation between training mask variants and official reporting mask variants in all future runs.
-5. Add dataset-level manifests and summary statistics during regeneration.
+5. Decide whether the split should now be regenerated under stratification for publication use.
 
 What is already trusted:
 - The high-level repo structure and module boundaries.
@@ -38,6 +38,11 @@ What is already trusted:
 - The local SIIM DICOM bundle has now been audited end-to-end: all 10,712 training DICOMs are `CR`, `MONOCHROME2`, single-channel, unsigned 8-bit images with no modality LUT, rescale slope/intercept, VOI LUT, or window-center/width tags.
 - The accepted DICOM intensity policy is now: preserve native 8-bit intensities when already in display range, apply modality/VOI transforms only if present, invert `MONOCHROME1` if encountered, and use Windows long-path-safe reads for local preprocessing.
 - `scripts/audit_dicom_intensity.py` is now the canonical metadata audit entrypoint and `tests/test_dicom_intensity_policy.py` is the canonical unit-test harness for the intensity policy.
+- The canonical trusted processed dataset root is now `data/processed/pneumothorax_trusted_v1`.
+- `data/processed/pneumothorax_trusted_v1/dataset_manifest.json` is now the authoritative dataset manifest, with dataset fingerprint `dc198ef70c4e5420e36b22dfb5f6d3ae28a9872bf64ee2e94a193ee711e06c12` and split fingerprint `3fe21a9e65cf883e5303aaad327238a69745f93bfa084b08f364ed058ad4bfc9`.
+- The trusted regenerated dataset currently contains 10,675 images, 2,379 positive studies, and 8,296 negative studies under the accepted local raw bundle.
+- `scripts/validate_processed_dataset.py` is now the canonical end-to-end validation entrypoint for the trusted processed dataset contract.
+- `configs/config.yaml` now points `data.processed_dir` to `data/processed/pneumothorax_trusted_v1`.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
@@ -50,6 +55,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Regenerate a versioned trusted dataset with both mask variants, variant manifest, and accepted DICOM intensity policy.
-2. Rewrite validation metrics once the regenerated dataset path exists.
-3. Fix positive-only validation counting on top of the corrected metric path.
+1. Rewrite validation metrics once the trusted dataset path exists.
+2. Fix positive-only validation counting on top of the corrected metric path.
+3. Decide whether to regenerate the split under stratification now that the trusted dataset contract is fixed.

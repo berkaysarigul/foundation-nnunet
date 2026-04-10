@@ -118,15 +118,15 @@ Current strategic direction:
   - Image-mask overlay sanity checklist and reproducibility checklist.
 
 ### P0.7 Regenerate processed dataset with versioned outputs
-- Status: [ ]
+- Status: [x]
 - Dependencies: P0.3, P0.4, P0.5, P0.6
-- Affected files/modules: `src/data/preprocess.py`, `data/processed/pneumothorax/`
+- Affected files/modules: `src/data/preprocess.py`, `src/data/dataset_manifest.py`, `scripts/validate_processed_dataset.py`, `configs/config.yaml`, `data/processed/pneumothorax_trusted_v1/`
 - Why it matters: all future experiments must run on a known-good dataset version.
 - Subtasks:
-  - [ ] Define dataset versioning/fingerprint scheme.
-  - [ ] Regenerate processed images and both mask variants from raw data.
-  - [ ] Produce dataset summary statistics: counts, positive ratio, mask sparsity, variant definitions.
-  - [ ] Snapshot the split manifest and dataset manifest alongside the processed dataset.
+  - [x] Define dataset versioning/fingerprint scheme.
+  - [x] Regenerate processed images and both mask variants from raw data.
+  - [x] Produce dataset summary statistics: counts, positive ratio, mask sparsity, variant definitions.
+  - [x] Snapshot the split manifest and dataset manifest alongside the processed dataset.
 - Success criteria:
   - There is a single trusted processed dataset version ready for experiments.
 - Validation needed before close:
@@ -368,13 +368,13 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P0.7 Regenerate trusted processed dataset
-2. P0.8 Rewrite per-image metrics
-3. P0.9 Fix positive-only validation counting
+1. P0.8 Rewrite per-image metrics
+2. P0.9 Fix positive-only validation counting
+3. P1.1 Stratify the train/val/test split
 4. P1.6 Build strong pretrained baseline after trust gates pass
 5. P1.7 Decide whether ROI / crop strategy is required
 6. P1.8 Decide whether the current hybrid is worth further investment
-7. P2.2 Notebook and documentation cleanup
-8. P1.5 Repair config-driven trainer instantiation
-9. P1.4 Add validation-only threshold and post-processing tuning
-10. P1.2 Unify trainer/evaluator output schema
+7. P1.5 Repair config-driven trainer instantiation
+8. P1.4 Add validation-only threshold and post-processing tuning
+9. P1.2 Unify trainer/evaluator output schema
+10. P1.3 Repair Hausdorff metric or remove it from claims

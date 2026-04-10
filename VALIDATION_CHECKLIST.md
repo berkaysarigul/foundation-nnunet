@@ -52,6 +52,7 @@ How to check it:
   - metadata audit reports `MONOCHROME2`, `CR`, 8-bit single-channel images across the corpus
   - all rescale/window/VOI fields are absent for the local bundle
   - exported preview PNGs look anatomically plausible and not contrast-inverted
+- After P0.7 regeneration, run `py -3 scripts/validate_processed_dataset.py --dataset_dir data/processed/pneumothorax_trusted_v1 --preview_dir <tmp_dir> --preview_limit 3` and verify the exported overlays are anatomically aligned for both `original_masks` and `dilated_masks`.
 
 Failure symptoms:
 - Systematic left-right flips, edge offsets, masks outside plausible pleural regions, or dilation applied in a way that destroys target meaning.
@@ -68,6 +69,10 @@ What to check:
 How to check it:
 - Perform explicit set-intersection checks and compute positive/negative ratios for each split.
 - Verify split seed and policy against the dataset manifest.
+- For the current trusted dataset version, run `py -3 scripts/validate_processed_dataset.py --dataset_dir data/processed/pneumothorax_trusted_v1` and verify:
+  - split union equals the processed image ID set
+  - no split overlap is reported
+  - the current seed-42 unstratified split counts are `7471 / 1602 / 1602`
 
 Failure symptoms:
 - Any overlap, missing IDs, duplicated IDs, or unexpected class-ratio drift.
@@ -89,6 +94,10 @@ How to check it:
   - the manifest records both variant directories and their scientific intent
 - Sample files from each variant and verify unique values, dimensions, naming, and manifest references.
 - After P0.7 dataset regeneration, inspect `mask_variants.json` and verify it matches the accepted policy.
+- After P0.7 dataset regeneration, run `py -3 scripts/validate_processed_dataset.py --dataset_dir data/processed/pneumothorax_trusted_v1` and verify:
+  - `images = original_masks = dilated_masks = 10675`
+  - `positive_images = 2379`
+  - both mask variants remain binary and manifest-consistent
 
 Failure symptoms:
 - Original masks overwritten by dilated masks, grayscale mask values, mismatched counts, or ambiguous variant naming.
@@ -173,6 +182,16 @@ What to check:
 
 How to check it:
 - Inspect run directories and confirm required metadata files are present and internally consistent.
+- Inspect `data/processed/pneumothorax_trusted_v1/dataset_manifest.json` and confirm it records:
+  - `dataset_version`
+  - `dataset_fingerprint`
+  - `raw_source.annotation_csv_sha256`
+  - `generation.resolved_rle_mode`
+  - `generation.seed`
+  - `mask_statistics`
+  - `split_summary`
+  - `fingerprints.splits`
+- Run `py -3 scripts/validate_processed_dataset.py --dataset_dir data/processed/pneumothorax_trusted_v1` and confirm manifest statistics and fingerprints match the on-disk files.
 - Confirm the relative metadata layout inside a run directory matches:
   - `<run_dir>/metadata/run_metadata.yaml`
   - `<run_dir>/metadata/config_snapshot.yaml`

@@ -16,7 +16,7 @@ foundation_x:
 
 # --- Data ---
 data:
-  processed_dir: "data/processed/pneumothorax"
+  processed_dir: "data/processed/pneumothorax_trusted_v1"
   input_size: 512               # 256 or 512
   num_workers: 4
   train_mask_variant: "dilated_masks"

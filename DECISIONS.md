@@ -107,6 +107,36 @@ Impact on experiments / methodology:
 - If a future bundle introduces `MONOCHROME1`, rescale, or VOI metadata, the same helper path can apply those transforms explicitly instead of silently ignoring them.
 - The existing processed dataset remains untrusted until it is regenerated in P0.7 under this policy.
 
+## 2026-04-11 / D-019
+
+Decision:
+- The canonical trusted processed dataset version for the current recovery path is `pneumothorax_trusted_v1`.
+- Its canonical local root is `data/processed/pneumothorax_trusted_v1`.
+- A processed dataset version is authoritative only if it includes:
+  - `images/`
+  - `original_masks/`
+  - `dilated_masks/`
+  - `mask_variants.json`
+  - `splits.json`
+  - `dataset_manifest.json`
+- `dataset_manifest.json` is the authoritative source for the dataset fingerprint, split fingerprint, generation parameters, and summary statistics. The directory name alone is not sufficient provenance.
+
+Reason:
+- P0.7 regenerated the processed dataset after the accepted RLE contract, mask-variant contract, and DICOM intensity policy were all fixed.
+- Using a new versioned root avoids ambiguity with the older untrusted `data/processed/pneumothorax/` directory.
+- A dataset-level manifest is required so future runs can record exact dataset provenance rather than assuming a processed directory name implies correctness.
+
+Alternatives considered:
+- Overwrite the old unversioned processed dataset in place.
+- Keep using an unversioned `data/processed/pneumothorax/` root and rely on chat or notebook notes for provenance.
+- Delay dataset-level manifesting until the training pipeline is repaired.
+
+Impact on experiments / methodology:
+- Future trusted runs must point to `data/processed/pneumothorax_trusted_v1` unless a later explicit dataset version supersedes it.
+- The old processed dataset root remains legacy/untrusted and must not be used for authoritative experiments.
+- Dataset fingerprints and split fingerprints must be read from `dataset_manifest.json`, not inferred informally.
+- Metric-repair work in Phase 2 should now treat `pneumothorax_trusted_v1` as the fixed data substrate.
+
 ## 2026-04-10 / D-004
 
 Decision:

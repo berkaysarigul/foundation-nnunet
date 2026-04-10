@@ -7,11 +7,13 @@ Produces:
     {output_dir}/dilated_masks/{ImageId}.png  - 512x512 binary PNG (0 or 255)
     {output_dir}/mask_variants.json     - processed mask-variant contract
     {output_dir}/splits.json            - train/val/test split (70/15/15, seed=42)
+    {output_dir}/dataset_manifest.json  - trusted dataset version/fingerprint manifest
 
 Usage:
     python -m src.data.preprocess \
         --raw_dir data/raw/SIIM-ACR \
-        --output_dir data/processed/pneumothorax \
+        --output_dir data/processed/pneumothorax_trusted_v1 \
+        --dataset_version pneumothorax_trusted_v1 \
         --img_size 512 \
         --rle_mode auto \
         --seed 42
@@ -30,6 +32,13 @@ from PIL import Image
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
+from src.data.dataset_manifest import (
+    DATASET_MANIFEST_FILENAME,
+    DEFAULT_DATASET_ROOT,
+    DEFAULT_DATASET_VERSION,
+    build_dataset_manifest,
+    repo_root_from_here,
+)
 from src.data.dicom_intensity import prepare_dicom_pixels_for_png, read_dicom_dataset
 from src.data.mask_variants import build_mask_variant_manifest
 from src.data.rle_contract import decode_runs, resolve_rle_mode
@@ -163,7 +172,14 @@ def create_splits(
 # Main
 # ---------------------------------------------------------------------------
 
-def main(raw_dir: str, output_dir: str, img_size: int, seed: int, rle_mode: str) -> None:
+def main(
+    raw_dir: str,
+    output_dir: str,
+    img_size: int,
+    seed: int,
+    rle_mode: str,
+    dataset_version: str,
+) -> None:
     random.seed(seed)
     np.random.seed(seed)
 
@@ -220,6 +236,7 @@ def main(raw_dir: str, output_dir: str, img_size: int, seed: int, rle_mode: str)
     # 3. Process each image
     # ------------------------------------------------------------------
     image_ids: list[str] = []
+    positive_ids: set[str] = set()
     positive_count = 0
     skipped = 0
 
@@ -251,6 +268,7 @@ def main(raw_dir: str, output_dir: str, img_size: int, seed: int, rle_mode: str)
         image_ids.append(image_id)
         if has_px:
             positive_count += 1
+            positive_ids.add(image_id)
 
     negative_count = len(image_ids) - positive_count
     logger.info(
@@ -278,12 +296,13 @@ def main(raw_dir: str, output_dir: str, img_size: int, seed: int, rle_mode: str)
     logger.info("splits.json saved to %s", splits_path)
 
     mask_variants_path = out_path / "mask_variants.json"
+    mask_variant_manifest = build_mask_variant_manifest()
     with open(mask_variants_path, "w", encoding="utf-8") as handle:
-        json.dump(build_mask_variant_manifest(), handle, indent=2)
+        json.dump(mask_variant_manifest, handle, indent=2)
     logger.info("mask_variants.json saved to %s", mask_variants_path)
 
     # ------------------------------------------------------------------
-    # 5. Verification
+    # 5. Verification + dataset manifest
     # ------------------------------------------------------------------
     n_images = len(list(images_dir.glob("*.png")))
     n_original_masks = len(list(original_masks_dir.glob("*.png")))
@@ -297,12 +316,50 @@ def main(raw_dir: str, output_dir: str, img_size: int, seed: int, rle_mode: str)
     if n_images != n_original_masks or n_images != n_dilated_masks:
         logger.warning("Image/mask variant count mismatch. Check processing logs above.")
 
+    repo_root = repo_root_from_here()
+    code_paths = [
+        repo_root / "src/data/preprocess.py",
+        repo_root / "src/data/rle_contract.py",
+        repo_root / "src/data/mask_variants.py",
+        repo_root / "src/data/dicom_intensity.py",
+        repo_root / "src/data/dataset_manifest.py",
+        repo_root / "configs/config.yaml",
+    ]
+    manifest = build_dataset_manifest(
+        dataset_version=dataset_version,
+        dataset_root=out_path,
+        raw_dir=raw_path,
+        annotation_csv_path=csv_path,
+        dicom_dir=dicom_dir,
+        image_size=img_size,
+        seed=seed,
+        resolved_rle_mode=resolved_rle_mode,
+        skipped_images=skipped,
+        splits=splits,
+        mask_variant_manifest=mask_variant_manifest,
+        code_paths=code_paths,
+    )
+    dataset_manifest_path = out_path / DATASET_MANIFEST_FILENAME
+    with open(dataset_manifest_path, "w", encoding="utf-8") as handle:
+        json.dump(manifest, handle, indent=2)
+    logger.info(
+        "%s saved to %s (dataset_fingerprint=%s)",
+        DATASET_MANIFEST_FILENAME,
+        dataset_manifest_path,
+        manifest["dataset_fingerprint"],
+    )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Preprocess SIIM-ACR DICOM data")
     parser.add_argument("--raw_dir", default="data/raw/SIIM-ACR", help="Raw data directory")
     parser.add_argument(
-        "--output_dir", default="data/processed/pneumothorax", help="Output directory"
+        "--output_dir", default=str(DEFAULT_DATASET_ROOT), help="Output directory"
+    )
+    parser.add_argument(
+        "--dataset_version",
+        default=DEFAULT_DATASET_VERSION,
+        help="Dataset version label stored in dataset_manifest.json",
     )
     parser.add_argument("--img_size", type=int, default=512, help="Output image size")
     parser.add_argument(
@@ -320,4 +377,5 @@ if __name__ == "__main__":
         img_size=args.img_size,
         seed=args.seed,
         rle_mode=args.rle_mode,
+        dataset_version=args.dataset_version,
     )
