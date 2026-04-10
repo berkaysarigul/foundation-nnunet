@@ -76,12 +76,19 @@ What to do if it fails:
 
 What to check:
 - Original and dilated masks are both present, binary, and clearly labeled as separate variants.
+- The processed dataset contract records default training and evaluation mask variants explicitly.
 
 How to check it:
+- Before full dataset regeneration, run `py -3 -m unittest tests.test_mask_variants -v` and confirm:
+  - the default training variant is `dilated_masks`
+  - the default evaluation variant is `original_masks`
+  - the manifest records both variant directories and their scientific intent
 - Sample files from each variant and verify unique values, dimensions, naming, and manifest references.
+- After P0.7 dataset regeneration, inspect `mask_variants.json` and verify it matches the accepted policy.
 
 Failure symptoms:
 - Original masks overwritten by dilated masks, grayscale mask values, mismatched counts, or ambiguous variant naming.
+- Training/evaluation defaults are implicit, contradictory, or missing from the processed dataset contract.
 
 What to do if it fails:
 - Stop all experiments using the processed dataset.

@@ -48,6 +48,34 @@ Impact on experiments / methodology:
 - All runs must record which mask variant was used for training, validation, and reporting.
 - Final claims must distinguish official-mask performance from any dilated-target training setup.
 
+## 2026-04-11 / D-017
+
+Decision:
+- The processed dataset layout now stores mask variants separately:
+  - `<processed_dir>/original_masks/`
+  - `<processed_dir>/dilated_masks/`
+  - `<processed_dir>/mask_variants.json`
+- The default run policy is:
+  - training mask variant: `dilated_masks`
+  - validation/test/final reporting mask variant: `original_masks`
+- Dilation is treated as a separate mask variant inside the processed dataset, not as an overwrite of the original labels and not as a wholly separate dataset root.
+
+Reason:
+- P0.5 required the original labels to remain available while still supporting sparse-target training experiments.
+- Storing both variants under the same processed dataset root keeps image IDs and splits aligned while making variant provenance explicit.
+- Defaulting training to the dilated target preserves the current sparse-target research direction without allowing official reporting to silently drift away from the original annotations.
+
+Alternatives considered:
+- Keep only one `masks/` directory and switch its meaning between experiments.
+- Make dilation a completely separate processed dataset root.
+- Use original masks for every stage by default and make dilation purely ad hoc.
+
+Impact on experiments / methodology:
+- Any authoritative run must record `train_mask_variant` and `eval_mask_variant`.
+- Final official SIIM reporting must use `original_masks` unless a future explicit decision changes that claim boundary.
+- Training with `dilated_masks` is allowed as an optimization strategy, but it does not change the evaluation target for official reporting.
+- The existing processed dataset remains untrusted until P0.7 regenerates it with the new layout.
+
 ## 2026-04-10 / D-004
 
 Decision:

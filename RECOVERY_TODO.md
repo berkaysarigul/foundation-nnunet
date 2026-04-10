@@ -88,15 +88,15 @@ Current strategic direction:
   - Label decoding checklist and reproducibility checklist.
 
 ### P0.5 Preserve original and dilated masks separately
-- Status: [ ]
+- Status: [x]
 - Dependencies: P0.3
-- Affected files/modules: `src/data/preprocess.py`, `src/data/dataset.py`, processed data layout, split/data loading conventions
+- Affected files/modules: `src/data/preprocess.py`, `src/data/dataset.py`, `src/data/mask_variants.py`, `src/training/trainer.py`, `src/evaluation/evaluate.py`, `configs/config.yaml`, processed data layout
 - Why it matters: training on dilated targets may be acceptable as an experiment, but official-mask evaluation requires the original target to remain available.
 - Subtasks:
-  - [ ] Define processed dataset layout for `original_masks` and `dilated_masks` or equivalent variant naming.
-  - [ ] Define which mask variant is used for training, validation, and final reporting.
-  - [ ] Decide whether dilation is optional, configurable, or a separate dataset version.
-  - [ ] Record the scientific implications of training/evaluating on each mask variant.
+  - [x] Define processed dataset layout for `original_masks` and `dilated_masks` or equivalent variant naming.
+  - [x] Define which mask variant is used for training, validation, and final reporting.
+  - [x] Decide whether dilation is optional, configurable, or a separate dataset version.
+  - [x] Record the scientific implications of training/evaluating on each mask variant.
 - Success criteria:
   - Original and dilated masks can be addressed separately and unambiguously.
 - Validation needed before close:
@@ -368,13 +368,13 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P0.5 Preserve original and dilated masks separately
-2. P0.6 Audit DICOM intensity policy
-3. P0.7 Regenerate trusted processed dataset
-4. P0.8 Rewrite per-image metrics
-5. P0.9 Fix positive-only validation counting
-6. P1.6 Build strong pretrained baseline after trust gates pass
-7. P1.7 Decide whether ROI / crop strategy is required
-8. P1.8 Decide whether the current hybrid is worth further investment
-9. P2.2 Notebook and documentation cleanup
-10. P1.5 Repair config-driven trainer instantiation
+1. P0.6 Audit DICOM intensity policy
+2. P0.7 Regenerate trusted processed dataset
+3. P0.8 Rewrite per-image metrics
+4. P0.9 Fix positive-only validation counting
+5. P1.6 Build strong pretrained baseline after trust gates pass
+6. P1.7 Decide whether ROI / crop strategy is required
+7. P1.8 Decide whether the current hybrid is worth further investment
+8. P2.2 Notebook and documentation cleanup
+9. P1.5 Repair config-driven trainer instantiation
+10. P1.4 Add validation-only threshold and post-processing tuning

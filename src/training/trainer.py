@@ -53,7 +53,7 @@ def build_sampler(dataset: PneumothoraxDataset) -> WeightedRandomSampler:
     what's needed to check pixel sums. Positive and negative class weights are
     balanced to produce a ~50/50 mix per epoch regardless of dataset imbalance.
     """
-    masks_dir = dataset.data_dir / "masks"
+    masks_dir = dataset.mask_dir
     import cv2
 
     labels = []
@@ -116,6 +116,8 @@ def train(cfg: dict) -> float:
     data_dir     = cfg["data"]["processed_dir"]
     input_size   = cfg["data"]["input_size"]
     num_workers  = cfg["data"]["num_workers"]
+    train_mask_variant = cfg["data"].get("train_mask_variant", "dilated_masks")
+    eval_mask_variant = cfg["data"].get("eval_mask_variant", "original_masks")
     batch_size   = cfg["training"]["batch_size"]
     epochs       = cfg["training"]["epochs"]
     lr           = cfg["training"]["learning_rate"]
@@ -131,9 +133,11 @@ def train(cfg: dict) -> float:
     train_ds = PneumothoraxDataset(
         data_dir, split="train", img_size=input_size,
         transform=get_train_transforms(),
+        mask_variant=train_mask_variant,
     )
     val_ds = PneumothoraxDataset(
         data_dir, split="val", img_size=input_size, transform=None,
+        mask_variant=eval_mask_variant,
     )
 
     sampler = build_sampler(train_ds)
@@ -145,7 +149,13 @@ def train(cfg: dict) -> float:
         val_ds, batch_size=batch_size, shuffle=False,
         num_workers=num_workers, pin_memory=device.type == "cuda",
     )
-    logger.info("Train: %d samples | Val: %d samples", len(train_ds), len(val_ds))
+    logger.info(
+        "Train: %d samples | Val: %d samples | train_mask_variant=%s | eval_mask_variant=%s",
+        len(train_ds),
+        len(val_ds),
+        train_ds.mask_variant,
+        val_ds.mask_variant,
+    )
 
     # ------------------------------------------------------------------
     # Model

@@ -19,6 +19,8 @@ data:
   processed_dir: "data/processed/pneumothorax"
   input_size: 512               # 256 or 512
   num_workers: 4
+  train_mask_variant: "dilated_masks"
+  eval_mask_variant: "original_masks"
 
 # --- Training ---
 training:

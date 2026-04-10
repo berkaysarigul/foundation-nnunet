@@ -3,7 +3,9 @@ preprocess.py - DICOM to PNG conversion and RLE mask decoding for SIIM-ACR.
 
 Produces:
     {output_dir}/images/{ImageId}.png   - 512x512 grayscale PNG
-    {output_dir}/masks/{ImageId}.png    - 512x512 binary PNG (0 or 255)
+    {output_dir}/original_masks/{ImageId}.png - 512x512 binary PNG (0 or 255)
+    {output_dir}/dilated_masks/{ImageId}.png  - 512x512 binary PNG (0 or 255)
+    {output_dir}/mask_variants.json     - processed mask-variant contract
     {output_dir}/splits.json            - train/val/test split (70/15/15, seed=42)
 
 Usage:
@@ -29,6 +31,7 @@ from PIL import Image
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
+from src.data.mask_variants import build_mask_variant_manifest
 from src.data.rle_contract import decode_runs, resolve_rle_mode
 
 logging.basicConfig(
@@ -109,32 +112,40 @@ def process_image(
 _DILATION_KERNEL = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15))
 
 
+def save_mask(mask: np.ndarray, output_mask_path: Path, img_size: int) -> None:
+    """Resize a binary mask with nearest-neighbor interpolation and save it."""
+    mask_img = Image.fromarray(mask).convert("L")
+    mask_img = mask_img.resize((img_size, img_size), Image.NEAREST)
+    mask_img.save(output_mask_path)
+
+
 def process_mask(
     rle_list: list[str],
-    output_mask_path: Path,
+    output_original_mask_path: Path,
+    output_dilated_mask_path: Path,
     img_size: int,
     orig_height: int = 1024,
     orig_width: int = 1024,
     rle_mode: str = "cumulative_gap_pairs",
 ) -> bool:
-    """Merge RLE annotations, dilate, resize (NEAREST), and save mask PNG.
+    """Merge RLE annotations and save both original and dilated mask variants.
 
-    This repository currently applies a 15x15 elliptical dilation to positive
-    masks before resize. The scientific choice of which mask variant should be
-    used for training or reporting is tracked separately in recovery task P0.5.
+    The original decoded mask and the dilated training-friendly mask are saved
+    separately so the pipeline can train with one variant and report on the
+    official variant without overwriting provenance.
 
     Returns True if the image has at least one pneumothorax region.
     """
-    merged = merge_rle_rows(rle_list, height=orig_height, width=orig_width, rle_mode=rle_mode)
-    has_pneumothorax = merged.max() > 0
+    original_mask = merge_rle_rows(rle_list, height=orig_height, width=orig_width, rle_mode=rle_mode)
+    has_pneumothorax = original_mask.max() > 0
+    dilated_mask = original_mask.copy()
 
     # Dilate positive masks at original resolution before resize.
     if has_pneumothorax:
-        merged = cv2.dilate(merged, _DILATION_KERNEL, iterations=1)
+        dilated_mask = cv2.dilate(dilated_mask, _DILATION_KERNEL, iterations=1)
 
-    mask_img = Image.fromarray(merged).convert("L")
-    mask_img = mask_img.resize((img_size, img_size), Image.NEAREST)
-    mask_img.save(output_mask_path)
+    save_mask(original_mask, output_original_mask_path, img_size)
+    save_mask(dilated_mask, output_dilated_mask_path, img_size)
 
     return has_pneumothorax
 
@@ -165,9 +176,11 @@ def main(raw_dir: str, output_dir: str, img_size: int, seed: int, rle_mode: str)
     raw_path = Path(raw_dir)
     out_path = Path(output_dir)
     images_dir = out_path / "images"
-    masks_dir = out_path / "masks"
+    original_masks_dir = out_path / "original_masks"
+    dilated_masks_dir = out_path / "dilated_masks"
     images_dir.mkdir(parents=True, exist_ok=True)
-    masks_dir.mkdir(parents=True, exist_ok=True)
+    original_masks_dir.mkdir(parents=True, exist_ok=True)
+    dilated_masks_dir.mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------
     # 1. Read annotations CSV
@@ -224,11 +237,18 @@ def main(raw_dir: str, output_dir: str, img_size: int, seed: int, rle_mode: str)
             continue
 
         out_image = images_dir / f"{image_id}.png"
-        out_mask = masks_dir / f"{image_id}.png"
+        out_original_mask = original_masks_dir / f"{image_id}.png"
+        out_dilated_mask = dilated_masks_dir / f"{image_id}.png"
 
         try:
             process_image(dcm_path, out_image, img_size)
-            has_px = process_mask(rle_list, out_mask, img_size, rle_mode=resolved_rle_mode)
+            has_px = process_mask(
+                rle_list,
+                out_original_mask,
+                out_dilated_mask,
+                img_size,
+                rle_mode=resolved_rle_mode,
+            )
         except Exception as exc:
             logger.warning("Failed to process %s: %s - skipping", image_id, exc)
             skipped += 1
@@ -263,14 +283,25 @@ def main(raw_dir: str, output_dir: str, img_size: int, seed: int, rle_mode: str)
     )
     logger.info("splits.json saved to %s", splits_path)
 
+    mask_variants_path = out_path / "mask_variants.json"
+    with open(mask_variants_path, "w", encoding="utf-8") as handle:
+        json.dump(build_mask_variant_manifest(), handle, indent=2)
+    logger.info("mask_variants.json saved to %s", mask_variants_path)
+
     # ------------------------------------------------------------------
     # 5. Verification
     # ------------------------------------------------------------------
     n_images = len(list(images_dir.glob("*.png")))
-    n_masks = len(list(masks_dir.glob("*.png")))
-    logger.info("Verification - images: %d | masks: %d", n_images, n_masks)
-    if n_images != n_masks:
-        logger.warning("Image/mask count mismatch. Check processing logs above.")
+    n_original_masks = len(list(original_masks_dir.glob("*.png")))
+    n_dilated_masks = len(list(dilated_masks_dir.glob("*.png")))
+    logger.info(
+        "Verification - images: %d | original_masks: %d | dilated_masks: %d",
+        n_images,
+        n_original_masks,
+        n_dilated_masks,
+    )
+    if n_images != n_original_masks or n_images != n_dilated_masks:
+        logger.warning("Image/mask variant count mismatch. Check processing logs above.")
 
 
 if __name__ == "__main__":

@@ -125,6 +125,7 @@ def evaluate(cfg: dict, checkpoint_path: str, model_type: str) -> pd.DataFrame:
         split="test",
         img_size=cfg["data"]["input_size"],
         transform=None,
+        mask_variant=cfg["data"].get("eval_mask_variant", "original_masks"),
     )
     test_loader = DataLoader(
         test_ds,
@@ -132,7 +133,7 @@ def evaluate(cfg: dict, checkpoint_path: str, model_type: str) -> pd.DataFrame:
         shuffle=False,
         num_workers=cfg["data"]["num_workers"],
     )
-    logger.info("Test set: %d samples", len(test_ds))
+    logger.info("Test set: %d samples | eval_mask_variant=%s", len(test_ds), test_ds.mask_variant)
 
     # ------------------------------------------------------------------
     # Per-image evaluation

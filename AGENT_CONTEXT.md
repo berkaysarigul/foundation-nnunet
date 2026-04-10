@@ -4,14 +4,14 @@ Current phase:
 - Phase 1 data correctness
 
 Current blocker:
-- The repository still lacks separated mask variants, a trusted regenerated dataset, and trusted validation metrics.
+- The repository still lacks a trusted regenerated dataset, an audited DICOM intensity policy, and trusted validation metrics.
 
 Highest-priority open tasks:
-1. Preserve original and dilated masks separately before any trusted dataset regeneration.
-2. Audit and lock the DICOM intensity policy.
-3. Regenerate the processed dataset with versioned outputs once masks and DICOM policy are settled.
-4. Rewrite validation metrics to operate per image and fix positive-only Dice counting once the trusted dataset path is ready.
-5. Keep all current model comparisons non-authoritative until the regenerated dataset exists.
+1. Audit and lock the DICOM intensity policy.
+2. Regenerate the processed dataset with versioned outputs once mask variants and DICOM policy are settled.
+3. Rewrite validation metrics to operate per image and fix positive-only Dice counting once the trusted dataset path is ready.
+4. Keep all current model comparisons non-authoritative until the regenerated dataset exists.
+5. Preserve strict separation between training mask variants and official reporting mask variants in all future runs.
 
 What is already trusted:
 - The high-level repo structure and module boundaries.
@@ -32,9 +32,12 @@ What is already trusted:
 - `src/data/preprocess.py` now validates the corpus RLE mode before preprocessing and supports explicit compatibility modes only when they match the corpus.
 - `tests/test_rle_contract.py` and `tests/fixtures/siim_rle_golden_cases.json` now provide a repeatable golden decode harness covering negative, edge-case, multi-region, and curated local CSV examples.
 - The canonical regression command for RLE trust is now `py -3 -m unittest tests.test_rle_contract -v`.
+- The processed dataset contract now uses separate `original_masks/` and `dilated_masks/` directories plus `mask_variants.json`.
+- The default mask policy is now explicit in code and config: train on `dilated_masks`, validate/test/report on `original_masks` unless a run records a different variant deliberately.
+- `tests/test_mask_variants.py` is now the canonical contract-level smoke test for mask-variant defaults and manifest semantics.
 
 What is still untrusted:
-- The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and still collapses mask variants.
+- The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
 - Historical metrics and plots under `results/`, which remain legacy-only artifacts.
 - Validation/model-selection numbers from the current trainer, because the code path has not yet been updated to honor the defined authoritative metric.
 - Any claim involving Foundation X as clean external pretraining on SIIM.
@@ -45,6 +48,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Define and implement separate original-mask versus dilated-mask outputs.
-2. Lock the DICOM intensity policy before regenerating a trusted dataset.
-3. Regenerate a versioned trusted dataset once mask variants and DICOM policy are settled.
+1. Lock the DICOM intensity policy before regenerating a trusted dataset.
+2. Regenerate a versioned trusted dataset with both mask variants and variant manifest.
+3. Rewrite validation metrics once the regenerated dataset path exists.

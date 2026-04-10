@@ -13,15 +13,27 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
+from src.data.mask_variants import resolve_mask_dir, resolve_mask_variant
+
 
 class PneumothoraxDataset(Dataset):
-    def __init__(self, data_dir: str, split: str = "train", img_size: int = 256, transform=None):
+    def __init__(
+        self,
+        data_dir: str,
+        split: str = "train",
+        img_size: int = 256,
+        transform=None,
+        mask_variant: str | None = None,
+    ):
         """
         Args:
-            data_dir:  Path to processed data directory (data/processed/pneumothorax).
-            split:     "train", "val", or "test".
-            img_size:  Runtime resize dimension (256 or 512).
-            transform: albumentations Compose pipeline, or None.
+            data_dir:      Path to processed data directory (data/processed/pneumothorax).
+            split:         "train", "val", or "test".
+            img_size:      Runtime resize dimension (256 or 512).
+            transform:     albumentations Compose pipeline, or None.
+            mask_variant:  Processed mask directory to read from. If omitted,
+                           the dataset uses dilated masks for train and
+                           original masks for validation/test.
         """
         self.data_dir = Path(data_dir)
         self.img_size = img_size
@@ -33,6 +45,16 @@ class PneumothoraxDataset(Dataset):
 
         if split not in splits:
             raise ValueError(f"Unknown split '{split}'. Expected one of {list(splits.keys())}.")
+
+        self.split = split
+        purpose = "train" if split == "train" else "eval"
+        self.mask_variant = resolve_mask_variant(mask_variant, purpose=purpose)
+        self.mask_dir = resolve_mask_dir(self.data_dir, self.mask_variant)
+        if not self.mask_dir.exists():
+            raise FileNotFoundError(
+                f"Mask variant directory not found: {self.mask_dir}. "
+                f"Expected processed dataset to contain separate mask variants."
+            )
 
         self.image_ids: list[str] = splits[split]
 
@@ -48,7 +70,7 @@ class PneumothoraxDataset(Dataset):
             cv2.IMREAD_GRAYSCALE,
         )
         mask = cv2.imread(
-            str(self.data_dir / "masks" / f"{image_id}.png"),
+            str(self.mask_dir / f"{image_id}.png"),
             cv2.IMREAD_GRAYSCALE,
         )
 
