@@ -4,14 +4,14 @@ Current phase:
 - Phase 1 data correctness
 
 Current blocker:
-- The repository still lacks a trusted regenerated dataset, an audited DICOM intensity policy, and trusted validation metrics.
+- The repository still lacks a trusted regenerated dataset and trusted validation metrics.
 
 Highest-priority open tasks:
-1. Audit and lock the DICOM intensity policy.
-2. Regenerate the processed dataset with versioned outputs once mask variants and DICOM policy are settled.
-3. Rewrite validation metrics to operate per image and fix positive-only Dice counting once the trusted dataset path is ready.
-4. Keep all current model comparisons non-authoritative until the regenerated dataset exists.
-5. Preserve strict separation between training mask variants and official reporting mask variants in all future runs.
+1. Regenerate the processed dataset with versioned outputs using the accepted RLE, mask-variant, and DICOM intensity policies.
+2. Rewrite validation metrics to operate per image and fix positive-only Dice counting once the trusted dataset path is ready.
+3. Keep all current model comparisons non-authoritative until the regenerated dataset exists.
+4. Preserve strict separation between training mask variants and official reporting mask variants in all future runs.
+5. Add dataset-level manifests and summary statistics during regeneration.
 
 What is already trusted:
 - The high-level repo structure and module boundaries.
@@ -35,6 +35,9 @@ What is already trusted:
 - The processed dataset contract now uses separate `original_masks/` and `dilated_masks/` directories plus `mask_variants.json`.
 - The default mask policy is now explicit in code and config: train on `dilated_masks`, validate/test/report on `original_masks` unless a run records a different variant deliberately.
 - `tests/test_mask_variants.py` is now the canonical contract-level smoke test for mask-variant defaults and manifest semantics.
+- The local SIIM DICOM bundle has now been audited end-to-end: all 10,712 training DICOMs are `CR`, `MONOCHROME2`, single-channel, unsigned 8-bit images with no modality LUT, rescale slope/intercept, VOI LUT, or window-center/width tags.
+- The accepted DICOM intensity policy is now: preserve native 8-bit intensities when already in display range, apply modality/VOI transforms only if present, invert `MONOCHROME1` if encountered, and use Windows long-path-safe reads for local preprocessing.
+- `scripts/audit_dicom_intensity.py` is now the canonical metadata audit entrypoint and `tests/test_dicom_intensity_policy.py` is the canonical unit-test harness for the intensity policy.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
@@ -42,12 +45,11 @@ What is still untrusted:
 - Validation/model-selection numbers from the current trainer, because the code path has not yet been updated to honor the defined authoritative metric.
 - Any claim involving Foundation X as clean external pretraining on SIIM.
 - The scientific value of the current hybrid design.
-- The final DICOM intensity policy, which has not yet been audited on representative raw samples.
 
 Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Lock the DICOM intensity policy before regenerating a trusted dataset.
-2. Regenerate a versioned trusted dataset with both mask variants and variant manifest.
-3. Rewrite validation metrics once the regenerated dataset path exists.
+1. Regenerate a versioned trusted dataset with both mask variants, variant manifest, and accepted DICOM intensity policy.
+2. Rewrite validation metrics once the regenerated dataset path exists.
+3. Fix positive-only validation counting on top of the corrected metric path.

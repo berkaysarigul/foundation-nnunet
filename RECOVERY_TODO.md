@@ -103,15 +103,15 @@ Current strategic direction:
   - Mask visualization and image-mask alignment checklist.
 
 ### P0.6 Audit and lock the DICOM intensity policy
-- Status: [ ]
+- Status: [x]
 - Dependencies: none
-- Affected files/modules: `src/data/preprocess.py`, raw DICOM metadata handling
+- Affected files/modules: `src/data/preprocess.py`, `src/data/dicom_intensity.py`, `scripts/audit_dicom_intensity.py`, `tests/test_dicom_intensity_policy.py`, raw DICOM metadata handling
 - Why it matters: slope/intercept, VOI LUT/windowing, or photometric inversion mistakes can silently create domain shift.
 - Subtasks:
-  - [ ] Inspect raw DICOM metadata on a representative sample.
-  - [ ] Decide whether current min-max scaling is acceptable or must be replaced by a more medically faithful policy.
-  - [ ] Record final intensity-processing policy in `DECISIONS.md`.
-  - [ ] Define visual checks that confirm contrast/orientation sanity after preprocessing.
+  - [x] Inspect raw DICOM metadata on a representative sample.
+  - [x] Decide whether current min-max scaling is acceptable or must be replaced by a more medically faithful policy.
+  - [x] Record final intensity-processing policy in `DECISIONS.md`.
+  - [x] Define visual checks that confirm contrast/orientation sanity after preprocessing.
 - Success criteria:
   - DICOM intensity handling is explicitly justified and visually verified.
 - Validation needed before close:
@@ -368,13 +368,13 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P0.6 Audit DICOM intensity policy
-2. P0.7 Regenerate trusted processed dataset
-3. P0.8 Rewrite per-image metrics
-4. P0.9 Fix positive-only validation counting
-5. P1.6 Build strong pretrained baseline after trust gates pass
-6. P1.7 Decide whether ROI / crop strategy is required
-7. P1.8 Decide whether the current hybrid is worth further investment
-8. P2.2 Notebook and documentation cleanup
-9. P1.5 Repair config-driven trainer instantiation
-10. P1.4 Add validation-only threshold and post-processing tuning
+1. P0.7 Regenerate trusted processed dataset
+2. P0.8 Rewrite per-image metrics
+3. P0.9 Fix positive-only validation counting
+4. P1.6 Build strong pretrained baseline after trust gates pass
+5. P1.7 Decide whether ROI / crop strategy is required
+6. P1.8 Decide whether the current hybrid is worth further investment
+7. P2.2 Notebook and documentation cleanup
+8. P1.5 Repair config-driven trainer instantiation
+9. P1.4 Add validation-only threshold and post-processing tuning
+10. P1.2 Unify trainer/evaluator output schema

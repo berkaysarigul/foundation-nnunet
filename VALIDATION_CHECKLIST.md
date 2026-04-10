@@ -48,6 +48,10 @@ What to check:
 How to check it:
 - Review overlays for a curated sample of positives and negatives spanning small, medium, and large masks.
 - Inspect both original-mask and dilated-mask variants.
+- Run `py -3 scripts/audit_dicom_intensity.py --sample_size 128 --preview_dir <tmp_dir> --preview_limit 3` and verify:
+  - metadata audit reports `MONOCHROME2`, `CR`, 8-bit single-channel images across the corpus
+  - all rescale/window/VOI fields are absent for the local bundle
+  - exported preview PNGs look anatomically plausible and not contrast-inverted
 
 Failure symptoms:
 - Systematic left-right flips, edge offsets, masks outside plausible pleural regions, or dilation applied in a way that destroys target meaning.

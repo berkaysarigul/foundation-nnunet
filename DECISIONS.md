@@ -76,6 +76,37 @@ Impact on experiments / methodology:
 - Training with `dilated_masks` is allowed as an optimization strategy, but it does not change the evaluation target for official reporting.
 - The existing processed dataset remains untrusted until P0.7 regenerates it with the new layout.
 
+## 2026-04-11 / D-018
+
+Decision:
+- The accepted local DICOM intensity policy for `data/raw/SIIM-ACR/dicom-images-train` is:
+  - read DICOMs through a Windows long-path-safe helper
+  - preserve native pixel values when the image is already single-channel and within display range `[0, 255]`
+  - apply modality LUT/rescale only if corresponding DICOM metadata exists
+  - invert `MONOCHROME1` images if encountered
+  - apply VOI LUT/windowing only if corresponding metadata exists
+  - fall back to linear min-max scaling into uint8 only when the post-transform pixels are outside `[0, 255]`
+
+Reason:
+- Full-corpus metadata audit over all 10,712 local training DICOMs showed:
+  - `PhotometricInterpretation=MONOCHROME2` for every file
+  - `Modality=CR` for every file
+  - `BitsStored=8`, `BitsAllocated=8`, `PixelRepresentation=0`, `SamplesPerPixel=1` for every file
+  - `RescaleSlope`, `RescaleIntercept`, `WindowCenter`, `WindowWidth`, and `VOILUTFunction` are absent for every file
+- Sample pixel audit showed many images already have maxima below 255, so the previous per-image `pixels / max * 255` step would artificially stretch contrast on a large fraction of the dataset.
+- Preview PNGs generated under the new policy looked anatomically plausible and not contrast-inverted.
+
+Alternatives considered:
+- Keep the old per-image max normalization.
+- Always apply min-max scaling regardless of metadata.
+- Hardcode a SIIM-specific 8-bit assumption without future-safe modality/VOI handling.
+
+Impact on experiments / methodology:
+- Future preprocessing on this local bundle should preserve native 8-bit CR intensities instead of rescaling every image by its per-image maximum.
+- The local preprocessing path is now robust to long Windows file paths, which is necessary for successful dataset regeneration in this workspace.
+- If a future bundle introduces `MONOCHROME1`, rescale, or VOI metadata, the same helper path can apply those transforms explicitly instead of silently ignoring them.
+- The existing processed dataset remains untrusted until it is regenerated in P0.7 under this policy.
+
 ## 2026-04-10 / D-004
 
 Decision:
@@ -354,10 +385,6 @@ Impact on experiments / methodology:
 - P0.4 will add golden regression checks for this accepted contract.
 
 ## Open decisions requiring evidence
-
-### OD-002
-- Topic: Final DICOM intensity preprocessing policy.
-- Needed evidence: metadata inspection plus visual sanity checks.
 
 ### OD-003
 - Topic: Implementation verification of the chosen primary model-selection metric and empty-mask handling policy.

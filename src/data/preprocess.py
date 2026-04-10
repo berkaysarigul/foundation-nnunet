@@ -26,11 +26,11 @@ from pathlib import Path
 import cv2
 import numpy as np
 import pandas as pd
-import pydicom
 from PIL import Image
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
+from src.data.dicom_intensity import prepare_dicom_pixels_for_png, read_dicom_dataset
 from src.data.mask_variants import build_mask_variant_manifest
 from src.data.rle_contract import decode_runs, resolve_rle_mode
 
@@ -94,15 +94,9 @@ def process_image(
     output_image_path: Path,
     img_size: int,
 ) -> None:
-    """Read a DICOM file, normalize to uint8, resize, and save as PNG."""
-    ds = pydicom.dcmread(str(dicom_path))
-    pixels = ds.pixel_array.astype(np.float32)
-
-    # Normalize to 0-255 uint8 (DICOM values can be 0-4095)
-    pmax = pixels.max()
-    if pmax > 0:
-        pixels = pixels / pmax * 255.0
-    pixels = pixels.astype(np.uint8)
+    """Read a DICOM file, apply the accepted intensity policy, resize, and save as PNG."""
+    ds = read_dicom_dataset(dicom_path, stop_before_pixels=False)
+    pixels, _ = prepare_dicom_pixels_for_png(ds)
 
     img = Image.fromarray(pixels).convert("L")
     img = img.resize((img_size, img_size), Image.BILINEAR)
