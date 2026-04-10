@@ -1,0 +1,278 @@
+# Foundation-nnU-Net Decisions
+
+Purpose: persistent record of architectural, methodological, and workflow decisions that affect experiments and claims.
+
+## 2026-04-10 / D-001
+
+Decision:
+- Treat all current historical artifacts in `results/` as legacy and non-authoritative until regenerated from the corrected pipeline.
+
+Reason:
+- Existing CSVs and plots do not reliably match present code behavior or evaluator output format.
+
+Alternatives considered:
+- Continue using legacy artifacts as rough guidance.
+- Delete all legacy artifacts immediately.
+
+Impact on experiments / methodology:
+- No current metric table, plot, or image under `results/` should be cited as evidence.
+- Future authoritative runs must carry provenance metadata.
+
+## 2026-04-10 / D-002
+
+Decision:
+- Label correctness and metric correctness are hard blockers for all new experiments.
+
+Reason:
+- The audit identified unresolved RLE trust issues and biased validation/model-selection metrics. These defects change scientific conclusions, not just engineering quality.
+
+Alternatives considered:
+- Start baseline work in parallel before labels and metrics are fully validated.
+
+Impact on experiments / methodology:
+- No architecture comparison or hyperparameter tuning should be treated as meaningful until these blockers are cleared.
+
+## 2026-04-10 / D-003
+
+Decision:
+- Preserve original and dilated mask variants separately in the processed dataset.
+
+Reason:
+- Training on dilated masks may be useful for sparse targets, but evaluation against official SIIM targets requires access to original masks. Overwriting originals with dilated masks destroys scientific traceability.
+
+Alternatives considered:
+- Keep only dilated masks.
+- Keep only original masks and abandon dilation experiments.
+
+Impact on experiments / methodology:
+- All runs must record which mask variant was used for training, validation, and reporting.
+- Final claims must distinguish official-mask performance from any dilated-target training setup.
+
+## 2026-04-10 / D-004
+
+Decision:
+- No hybrid optimization work should start before a trusted strong supervised baseline exists.
+
+Reason:
+- The current hybrid is both semantically misaligned and methodologically constrained by Foundation X pretraining on SIIM. A strong supervised baseline is required to judge whether the hybrid is worth keeping.
+
+Alternatives considered:
+- Salvage the current hybrid immediately.
+- Abandon the hybrid permanently now.
+
+Impact on experiments / methodology:
+- Recovery effort focuses first on trust recovery and baseline strength.
+- Hybrid work must pass an explicit keep/drop gate later.
+
+## 2026-04-10 / D-005
+
+Decision:
+- The default strategic path is: trust recovery -> strong pretrained CNN baseline -> hybrid keep/drop decision -> paper-grade methodology.
+
+Reason:
+- This ordering maximizes scientific validity and minimizes wasted work on a currently broken hybrid.
+
+Alternatives considered:
+- Prioritize novelty before baseline strength.
+- Focus only on engineering cleanup without a staged research plan.
+
+Impact on experiments / methodology:
+- Task prioritization should always favor trust and baseline milestones over hybrid novelty.
+
+## 2026-04-10 / D-006
+
+Decision:
+- Foundation X under the current setup cannot be presented as clean external-pretraining generalization on SIIM.
+
+Reason:
+- The audit identified SIIM-ACR exposure inside the Foundation X pretraining corpus, which creates a leakage-sensitive claim boundary.
+
+Alternatives considered:
+- Present Foundation X as generic external transfer anyway.
+- Remove Foundation X entirely from the project immediately.
+
+Impact on experiments / methodology:
+- Any future Foundation X results must be framed as in-domain transfer, ablation, or deferred work unless a non-SIIM-pretrained checkpoint is used.
+
+## 2026-04-10 / D-007
+
+Decision:
+- Provenance requirements must not assume Git metadata exists in the working directory; a code fingerprint fallback is mandatory.
+
+Reason:
+- The current workspace is not a detected Git repository, but experiment traceability is still required.
+
+Alternatives considered:
+- Defer provenance until the project is inside Git.
+- Require manual version labels only.
+
+Impact on experiments / methodology:
+- Authoritative runs must record either a Git revision or a deterministic code fingerprint over the relevant source/config files.
+
+## 2026-04-10 / D-008
+
+Decision:
+- Every authoritative training or evaluation run must persist a minimum metadata record with the following fields:
+  - `run_id`
+  - `started_at`
+  - `model_type`
+  - `config_path`
+  - `config_hash`
+  - `code_revision` if available, otherwise `code_fingerprint`
+  - `code_fingerprint_scope`
+  - `dataset_root`
+  - `dataset_fingerprint`
+  - `split_fingerprint`
+  - `train_mask_variant`
+  - `eval_mask_variant`
+  - `initial_checkpoint_path`
+  - `resume_checkpoint_path`
+  - `input_size`
+  - `seed`
+  - `selection_metric`
+  - `selected_threshold`
+  - `selected_postprocess`
+
+Reason:
+- Recovery depends on being able to reconstruct exactly which code, data, target definition, and inference settings produced a result. This is especially important because the workspace is not a detected Git repository.
+
+Alternatives considered:
+- Store only a config snapshot and seed.
+- Require Git before defining provenance.
+- Track provenance manually in notebooks or chat.
+
+Impact on experiments / methodology:
+- No future run should be treated as authoritative unless this minimum metadata record exists.
+- Training/evaluation provenance must distinguish mask variants and threshold/post-processing choices, not just model weights.
+- The implementation may evolve later, but these fields are the non-negotiable minimum contract.
+
+## 2026-04-10 / D-009
+
+Decision:
+- Until a repository-level run root is chosen, the relative metadata layout inside any authoritative run directory must be:
+  - `<run_dir>/metadata/run_metadata.yaml`
+  - `<run_dir>/metadata/config_snapshot.yaml`
+
+Reason:
+- Recovery needs a stable on-disk contract for provenance before trainer/evaluator implementation begins.
+- Defining the relative layout now avoids ambiguity without prematurely deciding the global output root or the full list of non-metadata artifacts.
+
+Alternatives considered:
+- Store all metadata in a single top-level file.
+- Delay file naming until trainer implementation starts.
+- Define the full run artifact tree now, including metrics, checkpoints, and visuals.
+
+Impact on experiments / methodology:
+- Any future authoritative run must have a `metadata/` directory under its run directory.
+- `run_metadata.yaml` is the canonical provenance record defined in D-008.
+- `config_snapshot.yaml` is the exact resolved config used by that run.
+- The global run root location and the rest of the artifact tree remain open and will be decided separately.
+
+## 2026-04-10 / D-010
+
+Decision:
+- In addition to the metadata files defined in D-009, every authoritative training run must persist the following minimum output set:
+  - `<run_dir>/metrics/history.csv`
+  - `<run_dir>/checkpoints/best_checkpoint_metadata.yaml`
+  - `<run_dir>/selection/selection_state.yaml`
+  - `<run_dir>/qualitative/validation_samples/`
+
+Reason:
+- Provenance is not sufficient by itself; a training run must also retain the minimum evidence needed to reconstruct learning dynamics, the chosen checkpoint context, the selected threshold/post-processing state, and qualitative sanity checks.
+- This resolves the minimum required outputs without prematurely fixing metric columns or the full evaluation artifact schema.
+
+Alternatives considered:
+- Require only metadata and leave all other outputs optional.
+- Define the full training and evaluation artifact tree in one step.
+- Defer output requirements until trainer implementation.
+
+Impact on experiments / methodology:
+- No training run should be treated as authoritative unless these minimum outputs exist alongside the metadata contract.
+- `history.csv` is required, but its exact column schema can still be specified later.
+- `best_checkpoint_metadata.yaml` is required even before final checkpoint naming policy is fully implemented.
+- `selection_state.yaml` is the required record for selected threshold and post-processing state.
+- Qualitative validation samples are mandatory evidence, not optional extras.
+
+## 2026-04-11 / D-011
+
+Decision:
+- The authoritative primary metric for model selection is `val_dice_pos_mean`, defined as:
+  - mean Dice over positive validation images only
+  - computed per image, then averaged
+  - evaluated on the run's declared evaluation mask variant
+  - evaluated using the run's recorded threshold and post-processing state
+
+Reason:
+- Overall or micro-aggregated Dice is too easily biased by the large number of negative images in SIIM pneumothorax segmentation.
+- The audit already identified batch-level aggregation bias and incorrect positive-only counting in the current trainer.
+- A positive-only per-image Dice metric best matches the actual research objective: segment pneumothorax correctly on positive studies.
+
+Alternatives considered:
+- Validation loss
+- All-image mean Dice
+- Batch-level or dataset-level micro Dice
+- IoU as the primary checkpoint-selection metric
+
+Impact on experiments / methodology:
+- Once Phase 2 metric corrections are implemented, checkpoint ranking and early stopping must use `val_dice_pos_mean`.
+- Any current trainer result that was selected using another metric remains non-authoritative.
+- The `selection_metric` field in run metadata must be `val_dice_pos_mean` for authoritative runs unless a later explicit decision supersedes it.
+
+## 2026-04-11 / D-012
+
+Decision:
+- Legacy artifacts currently under `results/` will remain in place for now and will not be moved or renamed during recovery Phase 0, provided they continue to carry explicit legacy/non-authoritative warnings.
+
+Reason:
+- Moving or renaming them before an authoritative output location is defined would add churn without improving scientific trust.
+- The real risk is mistaken use as evidence, and that risk is already mitigated by explicit legacy warnings plus recovery-memory policy.
+
+Alternatives considered:
+- Move all legacy artifacts into a separate archive directory immediately.
+- Rename every legacy file with a `legacy_` prefix.
+
+Impact on experiments / methodology:
+- Existing artifacts remain available for historical/debug context only.
+- No current file under `results/` becomes authoritative by staying in place.
+- A later task will define the separate authoritative output location; until then, `results/` should still be treated as legacy-only.
+
+## 2026-04-11 / D-013
+
+Decision:
+- The repository-level canonical location for authoritative experiment runs is `artifacts/runs/`.
+
+Reason:
+- Recovery needs a clear separation between legacy artifacts in `results/` and future authoritative outputs.
+- A dedicated run root reduces ambiguity without forcing code changes yet.
+
+Alternatives considered:
+- Continue using `results/` for both legacy and authoritative outputs.
+- Use a different root such as `outputs/` or `experiments/`.
+- Delay the location decision until trainer implementation.
+
+Impact on experiments / methodology:
+- Future authoritative runs must not be written into `results/`.
+- Each authoritative run should create its own run directory under `artifacts/runs/`.
+- The relative metadata and required output contracts defined earlier now apply under this repository-level run root.
+
+## Open decisions requiring evidence
+
+### OD-001
+- Topic: Final accepted SIIM RLE decoder contract for the shipped CSV.
+- Needed evidence: authoritative reference behavior and golden decode checks.
+
+### OD-002
+- Topic: Final DICOM intensity preprocessing policy.
+- Needed evidence: metadata inspection plus visual sanity checks.
+
+### OD-003
+- Topic: Implementation verification of the chosen primary model-selection metric and empty-mask handling policy.
+- Needed evidence: corrected metric implementation and trainer/evaluator parity.
+
+### OD-004
+- Topic: Whether ROI/crop strategy is necessary after the strong baseline is measured.
+- Needed evidence: trusted baseline performance and sparsity analysis.
+
+### OD-005
+- Topic: Whether the hybrid is retained, redesigned, or deferred from the main paper.
+- Needed evidence: trusted baseline, leak-aware framing, gradient-flow verification, and aligned fusion design.

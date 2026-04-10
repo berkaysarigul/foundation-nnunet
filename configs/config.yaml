@@ -1,0 +1,39 @@
+# ========================
+# Foundation-nnU-Net Config
+# ========================
+
+# --- Model ---
+model:
+  type: "baseline"              # "baseline" or "hybrid"
+  in_channels: 1
+  num_classes: 1
+  base_filters: 64
+
+# --- Foundation X ---
+foundation_x:
+  checkpoint_path: "checkpoints/foundation_x.pth"
+  frozen: true
+
+# --- Data ---
+data:
+  processed_dir: "data/processed/pneumothorax"
+  input_size: 512               # 256 or 512
+  num_workers: 4
+
+# --- Training ---
+training:
+  epochs: 150
+  batch_size: 8                 # 512: bs=8 (reduced for VRAM vs 256: bs=16)
+  learning_rate: 0.0001
+  optimizer: "AdamW"
+  weight_decay: 0.01
+  scheduler: "ReduceLROnPlateau"
+  early_stopping_patience: 30
+
+# --- Loss ---
+loss:
+  type: "dice_focal"
+
+# --- Other ---
+seed: 42
+device: "auto"                  # "auto", "cuda", "cpu"

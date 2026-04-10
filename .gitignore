@@ -1,0 +1,32 @@
+# Python cache / build artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Virtual environments / local env files
+.venv/
+venv/
+env/
+ENV/
+.env
+
+# Logs / local OS noise
+*.log
+.DS_Store
+Thumbs.db
+
+# Local training data and heavyweight checkpoints
+data/
+checkpoints/
+
+# Generated experiment outputs
+results/*
+!results/LEGACY_NOTICE.md
+
+# Authoritative run outputs will live here, but not be committed by default
+artifacts/runs/*
+!artifacts/runs/README.md
