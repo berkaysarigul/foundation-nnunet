@@ -651,6 +651,59 @@ Impact on experiments / methodology:
 - Hybrid keep/drop work should compare against this baseline family, not against the current random-init plain U-Net.
 - This decision selects the family only; exact implementation details such as grayscale adaptation, decoder wiring, and configuration surface remain separate follow-up tasks.
 
+## 2026-04-11 / D-028
+
+Decision:
+- The immediate fair-comparison protocol for the first strong supervised baseline is fixed as a one-variable comparison between:
+  - the corrected current plain U-Net baseline
+  - the future `ImageNet-pretrained ResNet34 encoder U-Net`
+- For that first authoritative comparison, both runs must keep the following data and evaluation substrate identical:
+  - trusted dataset root: `data/processed/pneumothorax_trusted_v1`
+  - the current trusted split manifest/fingerprint under that dataset version
+  - `data.input_size=512`
+  - `data.train_mask_variant=dilated_masks`
+  - `data.eval_mask_variant=original_masks`
+  - the existing training augmentation path from `src.data.augmentations.get_train_transforms()`
+  - the existing weighted train sampler policy used by `src/training/trainer.py`
+- For that first authoritative comparison, both runs must keep the following optimization and model-selection settings identical:
+  - `loss.type=dice_focal`
+  - `training.optimizer=AdamW`
+  - `training.learning_rate=0.0001`
+  - `training.weight_decay=0.01`
+  - `training.scheduler=ReduceLROnPlateau`
+  - `training.batch_size=8`
+  - `training.epochs=150`
+  - `training.early_stopping_patience=30`
+  - `seed=42`
+  - checkpoint ranking by `val_dice_pos_mean`
+  - validation-only threshold selection and reuse under D-025 and D-026
+  - `selection.postprocess=none`
+- The first authoritative comparison may change only the segmentation architecture and initialization path. It must not introduce, for only one arm:
+  - ROI/crop preprocessing
+  - alternate dataset roots or mask semantics
+  - test-time augmentation
+  - post-processing beyond `none`
+  - model-specific optimizer/loss/scheduler retuning
+  - staged encoder freezing/unfreezing
+  - any hybrid/Foundation X component
+- The pretrained baseline should be fine-tuned end-to-end from the start in the immediate protocol; if grayscale adaptation is required for the pretrained encoder, that adaptation must happen inside the model path rather than by creating a second RGB dataset pipeline.
+
+Reason:
+- P1.6 required the fair training protocol to be fixed in repo memory before implementation begins.
+- The repository now has a trusted dataset, corrected per-image metrics, corrected checkpoint-selection logic, and a defined validation-only threshold path, so the main remaining fairness risk is changing multiple knobs at once when the pretrained baseline is introduced.
+- Fixing the first comparison as a one-variable architectural change keeps the baseline result publication-legible and prevents scope creep into crop strategy, post-processing, or model-specific retuning before the pretrained path even exists.
+
+Alternatives considered:
+- Tune optimizer, scheduler, augmentation, or batch policy separately for the pretrained model immediately.
+- Freeze the pretrained encoder initially, or use a staged unfreeze schedule in the first comparison.
+- Create a separate RGB-preprocessed dataset branch for the pretrained encoder.
+- Fold ROI/crop or post-processing changes into the first pretrained baseline run.
+
+Impact on experiments / methodology:
+- The next implementation task should add the `ResNet34` encoder U-Net path without reopening the rest of the corrected baseline protocol.
+- The first corrected comparison between the plain U-Net and pretrained baseline is now explicitly a single-variable architecture/initialization comparison.
+- Any initial pretrained-baseline result that changes additional knobs relative to this fixed protocol is non-authoritative for the paper-path baseline gate and should not be used for hybrid keep/drop decisions.
+
 ## Open decisions requiring evidence
 
 ### OD-004

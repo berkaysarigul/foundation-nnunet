@@ -246,7 +246,7 @@ Current strategic direction:
 - Why it matters: a plain randomly initialized U-Net is not a competitive paper baseline.
 - Subtasks:
   - [x] Select one primary pretrained baseline family for immediate implementation.
-  - [ ] Define fair training protocol relative to the corrected current baseline.
+  - [x] Define fair training protocol relative to the corrected current baseline.
   - [x] Record why this baseline is the publication anchor.
   - [ ] Specify required outputs: tuned validation threshold, test report, qualitative examples.
 - Success criteria:

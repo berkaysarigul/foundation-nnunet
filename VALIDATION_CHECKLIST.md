@@ -320,12 +320,29 @@ What to do if it fails:
 
 What to check:
 - A strong pretrained supervised baseline exists before hybrid work resumes.
+- The first corrected comparison between the plain U-Net and the pretrained `ResNet34` encoder baseline respects the fixed fairness protocol rather than changing multiple knobs at once.
 
 How to check it:
 - Confirm a trusted pretrained-encoder baseline has run end-to-end with corrected metrics, threshold selection, and reproducible outputs.
+- Confirm the initial corrected comparison keeps the shared protocol fixed across both arms:
+  - same trusted dataset root and split fingerprint
+  - same `input_size=512`
+  - same `train_mask_variant=dilated_masks` and `eval_mask_variant=original_masks`
+  - same training augmentation path and weighted train sampler policy
+  - same `loss.type=dice_focal`
+  - same `training.optimizer=AdamW`, `training.learning_rate=1e-4`, and `training.weight_decay=0.01`
+  - same `training.scheduler=ReduceLROnPlateau`
+  - same `training.batch_size=8`, `training.epochs=150`, `training.early_stopping_patience=30`, and `seed=42`
+  - same checkpoint ranking by `val_dice_pos_mean`
+  - same validation-only threshold selection path with `selection.postprocess=none`
+- Confirm the initial pretrained baseline is fine-tuned end-to-end and that any grayscale adaptation stays inside the model path rather than introducing a separate RGB dataset pipeline.
+- Confirm the first comparison does not add ROI/crop preprocessing, test-time augmentation, hybrid/Foundation X components, or model-specific hyperparameter retuning for only one arm.
 
 Failure symptoms:
 - Hybrid work starts while the baseline is still the weak random-init U-Net or while trust blockers remain open.
+- The pretrained baseline run uses a different data root, split, optimizer, scheduler, loss, threshold policy, or other non-architectural change relative to the corrected plain U-Net comparison arm.
+- The first pretrained run quietly adds crop strategy, post-processing, TTA, staged freezing, or a separate RGB dataset path.
 
 What to do if it fails:
 - Pause hybrid work and return to Phase 3 baseline tasks.
+- Treat the comparison as protocol-breaking and do not use it as the publication anchor or hybrid decision baseline.
