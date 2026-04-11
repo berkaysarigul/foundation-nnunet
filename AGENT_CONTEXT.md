@@ -4,12 +4,12 @@ Current phase:
 - Phase 3 baseline preparation
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, and a complete validation-only threshold-selection path with authoritative persistence and test-time reuse. The next blocker is establishing the strong pretrained supervised baseline that will anchor the publication path.
+- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, and a chosen pretrained baseline family. The next blocker is defining the fair training protocol for that baseline and then implementing it without widening scope.
 
 Highest-priority open tasks:
-1. Select one primary pretrained baseline family for immediate implementation.
+1. Define the fair training protocol for the chosen pretrained baseline relative to the corrected current U-Net.
 2. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
-3. Preserve strict separation between training mask variants and official reporting mask variants in all future runs.
+3. Implement the chosen pretrained baseline only after the protocol is fixed in repo memory.
 4. Keep hybrid work paused until a strong supervised baseline exists.
 5. Delay output-schema cleanup until the pretrained baseline path exists.
 
@@ -77,6 +77,8 @@ What is already trusted:
 - Validation threshold selection is now persisted to `<run_dir>/selection/selection_state.yaml`.
 - Test evaluation now requires `selection_state.yaml` input and validates that its `model_type`, `checkpoint_path`, `dataset_root`, `eval_mask_variant`, and `input_size` match the current evaluation context before using the selected threshold.
 - `tests/test_threshold_selection.py` is now the canonical regression harness for validation-only threshold selection, selection-state persistence, and selection-state reuse.
+- The selected primary pretrained baseline family for immediate implementation is now `ImageNet-pretrained ResNet34 encoder U-Net`, implemented within the existing repo stack rather than by introducing a new segmentation framework dependency.
+- This baseline family is currently the publication anchor because it is the lowest-risk strong supervised upgrade over the current plain U-Net while staying compatible with the existing `torchvision`/`timm` dependency surface and standard encoder-decoder segmentation practice.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
@@ -84,7 +86,7 @@ What is still untrusted:
 - Any future run that bypasses the trusted dataset root or corrected metric path.
 - Any trainer config outside the accepted immediate surface until a later decision expands it.
 - Any post-processing mode beyond `none` until a later explicit decision expands the search space.
-- Any pretrained baseline result until a real pretrained encoder path is selected, implemented, and run end-to-end.
+- Any pretrained baseline result until the selected `ResNet34` encoder path is implemented and run end-to-end under the trusted protocol.
 - Any claim involving Foundation X as clean external pretraining on SIIM.
 - The scientific value of the current hybrid design.
 
@@ -92,6 +94,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Select one primary pretrained baseline family for immediate implementation and record why it is the publication anchor.
-2. Define the fair training protocol for that baseline relative to the corrected current U-Net.
-3. Implement the pretrained baseline only after the family and protocol are fixed in repo memory.
+1. Define the fair training protocol for the selected `ImageNet-pretrained ResNet34 encoder U-Net` relative to the corrected current U-Net.
+2. Specify the required authoritative outputs for that baseline run: tuned validation threshold, test report, and qualitative examples.
+3. Implement the selected pretrained baseline only after the protocol and output package are fixed in repo memory.

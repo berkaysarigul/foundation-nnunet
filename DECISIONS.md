@@ -623,6 +623,34 @@ Impact on experiments / methodology:
 - Any selection-state file whose context does not match the current test evaluation must be treated as invalid evidence rather than "close enough."
 - P1.4 is now complete for the immediate `postprocess=none` path; broader post-processing search remains a later decision.
 
+## 2026-04-11 / D-027
+
+Decision:
+- The single primary pretrained baseline family for immediate implementation is `ImageNet-pretrained ResNet34 encoder U-Net`.
+- The immediate implementation path should stay inside the current repository stack by using the already-present encoder/runtime dependencies (`torchvision` and/or `timm`) rather than introducing a new segmentation-framework dependency just to obtain the baseline.
+
+Reason:
+- P1.6 required one strong supervised baseline family to be fixed before protocol design or implementation could continue.
+- `ResNet34` is a standard, publication-legible pretrained encoder upgrade over the current plain U-Net without changing the overall encoder-decoder framing of the project.
+- Compared with deeper or more novelty-heavy alternatives, `ResNet34` offers a favorable balance of:
+  - lower integration risk
+  - lower compute/memory pressure at the current `512` input size
+  - straightforward multiscale feature hierarchy for a U-Net-style decoder
+  - clean methodological separation from the Foundation X hybrid path
+- The repository already depends on `torchvision` and `timm`, and `timm` is already used in `src/models/backbone.py`, so this family fits the current stack better than adding an extra external segmentation package as a new hard dependency.
+
+Alternatives considered:
+- `ImageNet-pretrained ResNet50 encoder U-Net`: stronger but higher compute cost and wider scope for the first corrected baseline.
+- `ImageNet-pretrained EfficientNet encoder U-Net`: reasonable, but a less straightforward immediate drop-in relative to the current U-Net-style encoder stages.
+- `ImageNet-pretrained DenseNet encoder U-Net`: chest-X-ray-relevant on the classification side, but less natural as the first low-risk segmentation anchor here.
+- Introducing `segmentation_models_pytorch` immediately: would speed implementation, but adds a new dependency surface when the current recovery path is trying to keep baseline changes narrow and auditable.
+
+Impact on experiments / methodology:
+- The paper-path supervised anchor is now fixed to a pretrained `ResNet34` encoder family unless a later explicit decision supersedes it.
+- The next baseline task should define a fair training protocol around this chosen family rather than reopening encoder selection.
+- Hybrid keep/drop work should compare against this baseline family, not against the current random-init plain U-Net.
+- This decision selects the family only; exact implementation details such as grayscale adaptation, decoder wiring, and configuration surface remain separate follow-up tasks.
+
 ## Open decisions requiring evidence
 
 ### OD-004

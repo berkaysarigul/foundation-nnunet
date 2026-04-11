@@ -240,14 +240,14 @@ Current strategic direction:
 ## Phase 3: Strong Supervised Baseline
 
 ### P1.6 Replace the weak baseline with a pretrained encoder baseline
-- Status: [ ]
+- Status: [~]
 - Dependencies: P0.7, P0.8, P0.9, P1.4, P1.5
 - Affected files/modules: `src/models/`, `src/training/trainer.py`, config surface, experiment outputs
 - Why it matters: a plain randomly initialized U-Net is not a competitive paper baseline.
 - Subtasks:
-  - [ ] Select one primary pretrained baseline family for immediate implementation.
+  - [x] Select one primary pretrained baseline family for immediate implementation.
   - [ ] Define fair training protocol relative to the corrected current baseline.
-  - [ ] Record why this baseline is the publication anchor.
+  - [x] Record why this baseline is the publication anchor.
   - [ ] Specify required outputs: tuned validation threshold, test report, qualitative examples.
 - Success criteria:
   - At least one strong supervised baseline is reproducible end-to-end on the trusted dataset.
