@@ -194,6 +194,14 @@ What to check:
 - Threshold and post-processing selection uses validation data only and the chosen values are recorded.
 
 How to check it:
+- Run `py -3 -m unittest tests.test_threshold_selection -v` and confirm:
+  - threshold selection only accepts `split="val"`
+  - the accepted immediate selection surface is enforced:
+    - `selection.metric=val_dice_pos_mean`
+    - `selection.threshold_candidates` includes `0.5` and stays inside `(0, 1)`
+    - `selection.postprocess=none`
+  - selection prefers the threshold that maximizes positive-only validation Dice rather than all-image mean Dice
+  - exact-score ties resolve deterministically back toward `0.5`
 - Review the tuning script/run metadata and ensure the selected threshold is frozen before test evaluation.
 
 Failure symptoms:

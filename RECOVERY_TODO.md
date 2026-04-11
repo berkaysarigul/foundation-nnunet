@@ -209,15 +209,15 @@ Current strategic direction:
   - Metric correctness checklist.
 
 ### P1.4 Add validation-only threshold and post-processing tuning
-- Status: [ ]
+- Status: [~]
 - Dependencies: P0.8, P0.9
 - Affected files/modules: `src/evaluation/evaluate.py`, training/evaluation configuration, run metadata
 - Why it matters: sparse-mask segmentation often improves materially with threshold and contour/min-area tuning.
 - Subtasks:
-  - [ ] Define search space for threshold and optional post-processing.
-  - [ ] Decide which validation metric is optimized.
+  - [x] Define search space for threshold and optional post-processing.
+  - [x] Decide which validation metric is optimized.
   - [ ] Define how the chosen threshold is stored and reused on test.
-  - [ ] Define rules preventing test-set leakage.
+  - [x] Define rules preventing test-set leakage.
 - Success criteria:
   - Threshold selection is reproducible and test-set clean.
 - Validation needed before close:

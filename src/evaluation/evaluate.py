@@ -15,6 +15,7 @@ import argparse
 import logging
 import math
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -39,6 +40,189 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 logger = logging.getLogger(__name__)
+
+
+SELECTION_METRIC_ALIASES = {
+    "valdiceposmean": "val_dice_pos_mean",
+}
+
+POSTPROCESS_ALIASES = {
+    "none": "none",
+    "off": "none",
+    "disabled": "none",
+}
+
+DEFAULT_THRESHOLD_CANDIDATES = [
+    0.05,
+    0.10,
+    0.15,
+    0.20,
+    0.25,
+    0.30,
+    0.35,
+    0.40,
+    0.45,
+    0.50,
+    0.55,
+    0.60,
+    0.65,
+    0.70,
+    0.75,
+    0.80,
+    0.85,
+    0.90,
+    0.95,
+]
+
+DEFAULT_SELECTION_THRESHOLD = 0.5
+SELECTION_SCORE_TOLERANCE = 1e-12
+
+
+def normalize_component_name(value: str) -> str:
+    return "".join(ch for ch in str(value).lower() if ch.isalnum())
+
+
+def resolve_component_choice(
+    raw_value: str,
+    aliases: dict[str, str],
+    field_name: str,
+) -> str:
+    normalized = normalize_component_name(raw_value)
+    canonical = aliases.get(normalized)
+    if canonical is None:
+        supported_values = ", ".join(sorted(set(aliases.values())))
+        raise ValueError(
+            f"Unsupported {field_name}: {raw_value!r}. Supported values: {supported_values}."
+        )
+    return canonical
+
+
+def resolve_threshold_selection_config(cfg: dict[str, Any]) -> dict[str, Any]:
+    selection_cfg = cfg.get("selection", {})
+    metric_name = resolve_component_choice(
+        selection_cfg.get("metric", "val_dice_pos_mean"),
+        SELECTION_METRIC_ALIASES,
+        "selection.metric",
+    )
+    postprocess = resolve_component_choice(
+        selection_cfg.get("postprocess", "none"),
+        POSTPROCESS_ALIASES,
+        "selection.postprocess",
+    )
+
+    raw_thresholds = selection_cfg.get("threshold_candidates", DEFAULT_THRESHOLD_CANDIDATES)
+    if not raw_thresholds:
+        raise ValueError("selection.threshold_candidates must contain at least one candidate.")
+
+    thresholds = sorted({float(value) for value in raw_thresholds})
+    if any(threshold <= 0.0 or threshold >= 1.0 for threshold in thresholds):
+        raise ValueError(
+            "selection.threshold_candidates must stay strictly inside (0, 1)."
+        )
+    if DEFAULT_SELECTION_THRESHOLD not in thresholds:
+        raise ValueError(
+            "selection.threshold_candidates must include 0.5 so threshold tuning can "
+            "compare against the current default inference threshold."
+        )
+
+    return {
+        "metric": metric_name,
+        "postprocess": postprocess,
+        "threshold_candidates": thresholds,
+    }
+
+
+def validate_threshold_selection_split(split: str) -> str:
+    if split != "val":
+        raise ValueError(
+            f"Threshold selection must use validation data only; received split={split!r}."
+        )
+    return split
+
+
+def summarize_threshold_candidates(
+    preds: torch.Tensor,
+    masks: torch.Tensor,
+    thresholds: list[float],
+) -> list[dict[str, float]]:
+    summary = []
+    positive_image_count = int((masks > 0.5).reshape(masks.shape[0], -1).any(dim=1).sum().item())
+
+    for threshold in thresholds:
+        summary.append(
+            {
+                "threshold": float(threshold),
+                "val_dice_pos_mean": float(
+                    dice_score(preds, masks, threshold=threshold, reduction="positive_mean").item()
+                ),
+                "val_dice_mean": float(
+                    dice_score(preds, masks, threshold=threshold, reduction="mean").item()
+                ),
+                "val_iou_mean": float(
+                    iou_score(preds, masks, threshold=threshold, reduction="mean").item()
+                ),
+                "positive_image_count": positive_image_count,
+            }
+        )
+
+    return summary
+
+
+def select_best_threshold(
+    threshold_summary: list[dict[str, float]],
+    metric_name: str,
+) -> dict[str, float]:
+    if not threshold_summary:
+        raise ValueError("threshold_summary must contain at least one evaluated threshold.")
+
+    valid_rows = [
+        row for row in threshold_summary if not math.isnan(float(row[metric_name]))
+    ]
+    if not valid_rows:
+        raise ValueError(
+            f"All threshold candidates produced NaN for selection metric {metric_name!r}."
+        )
+
+    best_score = max(float(row[metric_name]) for row in valid_rows)
+    tied_rows = [
+        row
+        for row in valid_rows
+        if math.isclose(float(row[metric_name]), best_score, abs_tol=SELECTION_SCORE_TOLERANCE)
+    ]
+    return min(
+        tied_rows,
+        key=lambda row: (
+            abs(float(row["threshold"]) - DEFAULT_SELECTION_THRESHOLD),
+            float(row["threshold"]),
+        ),
+    )
+
+
+def tune_threshold_on_validation_predictions(
+    preds: torch.Tensor,
+    masks: torch.Tensor,
+    cfg: dict[str, Any],
+    *,
+    split: str = "val",
+) -> dict[str, Any]:
+    validate_threshold_selection_split(split)
+    selection_config = resolve_threshold_selection_config(cfg)
+    threshold_summary = summarize_threshold_candidates(
+        preds,
+        masks,
+        selection_config["threshold_candidates"],
+    )
+    best_row = select_best_threshold(
+        threshold_summary,
+        metric_name=selection_config["metric"],
+    )
+    return {
+        "split": split,
+        "selection_metric": selection_config["metric"],
+        "selected_threshold": float(best_row["threshold"]),
+        "selected_postprocess": selection_config["postprocess"],
+        "threshold_summary": threshold_summary,
+    }
 
 
 def build_model(cfg: dict, model_type: str) -> torch.nn.Module:

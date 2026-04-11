@@ -548,6 +548,39 @@ Impact on experiments / methodology:
 - Changing `training.optimizer` or `training.scheduler` inside the accepted surface now changes trainer behavior explicitly and audibly instead of being ignored.
 - Pre-fix resume checkpoints without `training_components` metadata are non-authoritative for continued config-driven runs and should be discarded rather than resumed.
 
+## 2026-04-11 / D-025
+
+Decision:
+- The accepted immediate validation-only threshold-selection policy is:
+  - selection split: `val` only
+  - optimized metric: `val_dice_pos_mean`
+  - threshold candidate grid: `0.05` to `0.95` inclusive in `0.05` steps
+  - post-processing search space: `none` only for now
+- Threshold selection must fail fast if invoked on `train` or `test`.
+- If multiple thresholds tie on the optimized metric, the deterministic tie-break is:
+  - prefer the threshold closest to the legacy default `0.5`
+  - if still tied, prefer the smaller threshold
+
+Reason:
+- P1.4 needed a concrete, reproducible threshold-selection policy before strong-baseline runs can be compared fairly.
+- D-011 already fixed the authoritative selection metric as positive-only per-image Dice, so threshold tuning should optimize the same corrected metric rather than invent a second objective.
+- A coarse-but-auditable `0.05` grid is sufficient for the immediate blocker and keeps the search space explicit in config and tests.
+- Post-processing remains scientifically open, so the immediate safe policy is to pin it to `none` instead of silently mixing in untracked contour or min-area heuristics.
+- Failing fast on non-validation splits closes the most obvious test-leakage path while storage/reuse wiring is still pending.
+- Preferring `0.5` on exact ties minimizes gratuitous drift from the historical inference threshold.
+
+Alternatives considered:
+- Keep using a fixed hardcoded threshold of `0.5` with no validation selection.
+- Tune thresholds on all-image mean Dice or IoU instead of `val_dice_pos_mean`.
+- Include contour filtering or minimum-area pruning immediately before their provenance path is defined.
+- Allow threshold search on `test` and rely on manual discipline to avoid leakage.
+
+Impact on experiments / methodology:
+- Near-term threshold sweeps are now constrained to a documented validation-only policy instead of ad hoc manual probing.
+- Any selected threshold outside the declared candidate grid is non-authoritative unless a later decision expands the search space.
+- Any tuned run using post-processing other than `none` remains out of bounds until that search surface is explicitly approved and recorded.
+- P1.4 is not yet complete: the selected threshold and post-processing state still need authoritative storage and test-time reuse.
+
 ## Open decisions requiring evidence
 
 ### OD-004

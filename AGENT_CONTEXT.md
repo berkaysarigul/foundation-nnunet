@@ -4,13 +4,13 @@ Current phase:
 - Phase 3 baseline preparation
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, and an accepted immediate trainer config surface. The next blocker is validation-only threshold and post-processing selection on top of the corrected metric path before launching the strong supervised baseline.
+- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, and a coded validation-only threshold-selection policy. The next blocker is persisting the selected threshold/post-processing state and reusing it on test without breaking provenance.
 
 Highest-priority open tasks:
-1. Add validation-only threshold and post-processing tuning.
+1. Store the selected validation threshold/post-processing state and reuse it on test.
 2. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
 3. Preserve strict separation between training mask variants and official reporting mask variants in all future runs.
-4. Start the strong supervised baseline only after threshold-selection discipline is in place.
+4. Start the strong supervised baseline only after threshold-selection discipline is complete end-to-end.
 5. Keep hybrid work paused until a strong supervised baseline exists.
 
 What is already trusted:
@@ -68,12 +68,21 @@ What is already trusted:
 - Unsupported trainer config values now fail fast at startup instead of silently falling back.
 - Resume checkpoints for authoritative runs must now carry canonical `training_components` metadata; legacy `checkpoints/last_*.pth` files without that metadata are rejected.
 - `tests/test_trainer_config_surface.py` is now the canonical regression harness for the accepted immediate trainer config surface.
+- `src/evaluation/evaluate.py` now exposes a validation-only threshold-selection helper that sweeps an accepted immediate threshold grid over the corrected per-image metric backend.
+- The accepted immediate threshold-selection surface is now:
+  - `selection.metric`: `val_dice_pos_mean`
+  - `selection.threshold_candidates`: `0.05` to `0.95` inclusive in `0.05` steps
+  - `selection.postprocess`: `none`
+- Threshold selection now fails fast if asked to tune on any split other than `val`.
+- `tests/test_threshold_selection.py` is now the canonical regression harness for validation-only threshold selection.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
 - Historical metrics and plots under `results/`, which remain legacy-only artifacts.
 - Any future run that bypasses the trusted dataset root or corrected metric path.
 - Any trainer config outside the accepted immediate surface until a later decision expands it.
+- Any threshold or post-processing choice that is not recorded and replayed through an authoritative provenance path.
+- Any post-processing mode beyond `none` until a later explicit decision expands the search space.
 - Any claim involving Foundation X as clean external pretraining on SIIM.
 - The scientific value of the current hybrid design.
 
@@ -81,6 +90,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Add validation-only threshold tuning on top of the corrected metric path.
-2. Define how the chosen threshold and post-processing state are stored and reused on test.
-3. Start the strong supervised baseline only after threshold-selection discipline is in place.
+1. Define how the chosen threshold and post-processing state are stored and reused on test.
+2. Wire authoritative evaluation to consume the selected threshold instead of an ad hoc default.
+3. Start the strong supervised baseline only after threshold-selection discipline is complete end-to-end.
