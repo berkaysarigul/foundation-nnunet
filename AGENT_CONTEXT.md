@@ -4,14 +4,13 @@ Current phase:
 - Phase 3 baseline preparation
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, and trainer-side authoritative run artifact emission. The next blocker is emitting evaluation-side threshold/report/qualitative artifacts into that same authoritative run directory before the first end-to-end trusted run.
+- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, trainer-side authoritative run artifact emission, and now a validated evaluation-side artifact path under the same authoritative run directory. The next blocker is executing the first end-to-end trusted pretrained baseline run on the trusted dataset with that full evidence package.
 
 Highest-priority open tasks:
-1. Emit evaluation-side threshold/report/qualitative artifacts under the trainer-created authoritative run directory for the pretrained baseline path.
-2. Execute the first authoritative pretrained baseline run end-to-end on the trusted dataset once the full run-directory evidence path exists.
-3. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
-4. Keep hybrid work paused until a strong supervised baseline exists.
-5. Keep ROI/crop work out of scope until the strong baseline is actually measured.
+1. Execute the first authoritative pretrained baseline run end-to-end on the trusted dataset now that the full run-directory evidence path is validated.
+2. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
+3. Keep hybrid work paused until a strong supervised baseline exists.
+4. Keep ROI/crop work out of scope until the strong baseline is actually measured.
 
 What is already trusted:
 - The high-level repo structure and module boundaries.
@@ -107,6 +106,16 @@ What is already trusted:
   - `<run_dir>/checkpoints/best_checkpoint_metadata.yaml`
 - The trainer now initializes best-checkpoint selection from `-inf` so the first epoch always materializes a best checkpoint artifact and matching metadata instead of risking an empty best-checkpoint path when the first corrected metric equals `0.0`.
 - `tests/test_run_artifacts.py` is now the canonical targeted regression harness for authoritative trainer-side run artifact helpers and provenance payloads.
+- `src/evaluation/evaluate.py` now derives evaluation-side authoritative outputs from `<run_dir>/selection/selection_state.yaml` so that validation threshold state, held-out test reports, and validation/test qualitative packages land under the same trainer-created `artifacts/runs/<run_id>/` tree instead of `results/`.
+- Evaluation-side authoritative outputs now target:
+  - `<run_dir>/selection/selection_state.yaml`
+  - `<run_dir>/reports/test_metrics.csv`
+  - `<run_dir>/reports/test_summary.yaml`
+  - `<run_dir>/qualitative/validation_samples/`
+  - `<run_dir>/qualitative/test_samples/`
+- Validation and test qualitative packages now write a deterministic manifest plus per-sample image, target-mask, prediction-mask, and overlay PNG files for up to four positives and four negatives per split in split order.
+- Evaluation now syncs `metadata/run_metadata.yaml` with the selected threshold and selected post-processing state once `selection_state.yaml` is written or reused.
+- `tests/test_evaluation_run_outputs.py` is now the canonical evaluator-side regression harness for authoritative run-directory output emission, and it passes alongside `tests.test_threshold_selection`, `tests.test_run_artifacts`, and `tests.test_evaluate_metrics_backend` under `C:\Users\beko5\AppData\Local\Programs\Python\Python310\python.exe`.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
@@ -117,7 +126,6 @@ What is still untrusted:
 - Any pretrained baseline result until the selected `ResNet34` encoder path is implemented and run end-to-end under the trusted protocol.
 - Any initial baseline comparison that changes more than the architecture/initialization relative to the fixed protocol above.
 - Any initial pretrained baseline result that lacks the fixed baseline-gate output package under its authoritative run directory.
-- Any pretrained baseline run whose evaluation-side threshold/report/qualitative artifacts are still written outside the trainer-created authoritative run directory.
 - The real pretrained forward/training path in this local desktop environment until the repository training dependencies are installed; current local validation covered syntax, factory wiring, and the explicit missing-dependency path, but `torchvision` is not installed here for a live forward smoke.
 - Any claim involving Foundation X as clean external pretraining on SIIM.
 - The scientific value of the current hybrid design.
@@ -126,6 +134,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Emit evaluation-side threshold/report/qualitative artifacts under the same authoritative run directory created by the trainer.
-2. Execute the first authoritative pretrained baseline run end-to-end on the trusted dataset once the full run-directory evidence path exists.
+1. Execute the first authoritative pretrained baseline run end-to-end on the trusted dataset with the validated run-directory evidence path.
+2. Compare that authoritative pretrained baseline against the corrected plain U-Net under the fixed one-variable protocol.
 3. Keep the first baseline comparison constrained to the fixed trusted protocol instead of reopening optimizer, crop, or post-processing scope.

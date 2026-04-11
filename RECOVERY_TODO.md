@@ -251,7 +251,8 @@ Current strategic direction:
   - [x] Specify required outputs: tuned validation threshold, test report, qualitative examples.
   - [x] Implement the selected pretrained baseline model path in the current repo stack.
   - [x] Emit authoritative training-side run directory, metadata, config snapshot, history, and best-checkpoint metadata under `artifacts/runs/<run_id>/`.
-  - [ ] Emit evaluation-side threshold/report/qualitative artifacts under the same authoritative run directory.
+  - [x] Emit evaluation-side threshold/report/qualitative artifacts under the same authoritative run directory.
+    - Validation note (2026-04-11): `C:\Users\beko5\AppData\Local\Programs\Python\Python310\python.exe -m unittest tests.test_evaluation_run_outputs -v`, `tests.test_threshold_selection -v`, `tests.test_run_artifacts -v`, and `tests.test_evaluate_metrics_backend -v` all passed.
   - [ ] Execute the first authoritative pretrained baseline run end-to-end on the trusted dataset.
 - Success criteria:
   - At least one strong supervised baseline is reproducible end-to-end on the trusted dataset.

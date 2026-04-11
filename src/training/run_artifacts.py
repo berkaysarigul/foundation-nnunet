@@ -29,8 +29,10 @@ class RunArtifacts:
     metrics_dir: Path
     checkpoints_dir: Path
     selection_dir: Path
+    reports_dir: Path
     qualitative_dir: Path
     qualitative_validation_dir: Path
+    qualitative_test_dir: Path
 
     @property
     def run_metadata_path(self) -> Path:
@@ -55,6 +57,26 @@ class RunArtifacts:
     @property
     def best_checkpoint_metadata_path(self) -> Path:
         return self.checkpoints_dir / "best_checkpoint_metadata.yaml"
+
+    @property
+    def selection_state_path(self) -> Path:
+        return self.selection_dir / "selection_state.yaml"
+
+    @property
+    def test_metrics_path(self) -> Path:
+        return self.reports_dir / "test_metrics.csv"
+
+    @property
+    def test_summary_path(self) -> Path:
+        return self.reports_dir / "test_summary.yaml"
+
+    @property
+    def qualitative_validation_manifest_path(self) -> Path:
+        return self.qualitative_validation_dir / "manifest.yaml"
+
+    @property
+    def qualitative_test_manifest_path(self) -> Path:
+        return self.qualitative_test_dir / "manifest.yaml"
 
 
 def canonicalize_workspace_path(path_like: str | Path, repo_root: Path) -> str:
@@ -89,15 +111,19 @@ def prepare_run_artifacts(
     metrics_dir = resolved_run_dir / "metrics"
     checkpoints_dir = resolved_run_dir / "checkpoints"
     selection_dir = resolved_run_dir / "selection"
+    reports_dir = resolved_run_dir / "reports"
     qualitative_dir = resolved_run_dir / "qualitative"
     qualitative_validation_dir = qualitative_dir / "validation_samples"
+    qualitative_test_dir = qualitative_dir / "test_samples"
 
     for directory in (
         metadata_dir,
         metrics_dir,
         checkpoints_dir,
         selection_dir,
+        reports_dir,
         qualitative_validation_dir,
+        qualitative_test_dir,
     ):
         directory.mkdir(parents=True, exist_ok=True)
 
@@ -108,8 +134,10 @@ def prepare_run_artifacts(
         metrics_dir=metrics_dir,
         checkpoints_dir=checkpoints_dir,
         selection_dir=selection_dir,
+        reports_dir=reports_dir,
         qualitative_dir=qualitative_dir,
         qualitative_validation_dir=qualitative_validation_dir,
+        qualitative_test_dir=qualitative_test_dir,
     )
 
 

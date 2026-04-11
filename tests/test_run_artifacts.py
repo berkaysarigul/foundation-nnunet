@@ -47,8 +47,13 @@ class TestRunArtifacts(unittest.TestCase):
             self.assertTrue(artifacts.metrics_dir.exists())
             self.assertTrue(artifacts.checkpoints_dir.exists())
             self.assertTrue(artifacts.selection_dir.exists())
+            self.assertTrue(artifacts.reports_dir.exists())
             self.assertTrue(artifacts.qualitative_validation_dir.exists())
+            self.assertTrue(artifacts.qualitative_test_dir.exists())
             self.assertEqual(artifacts.run_id, "20260411T093000Z_baseline")
+            self.assertEqual(artifacts.selection_state_path, artifacts.selection_dir / "selection_state.yaml")
+            self.assertEqual(artifacts.test_metrics_path, artifacts.reports_dir / "test_metrics.csv")
+            self.assertEqual(artifacts.test_summary_path, artifacts.reports_dir / "test_summary.yaml")
 
     def test_config_hash_is_deterministic(self) -> None:
         cfg_a = {"model": {"type": "baseline"}, "seed": 42}

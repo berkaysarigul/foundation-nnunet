@@ -23,11 +23,13 @@ Usage:
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
 import logging
 import math
 from pathlib import Path
 from typing import Any
 
+import cv2
 import numpy as np
 import pandas as pd
 import torch
@@ -44,6 +46,7 @@ from src.training.metrics import (
     precision_score,
     recall_score,
 )
+from src.training.run_artifacts import prepare_run_artifacts, write_yaml
 
 logging.basicConfig(
     level=logging.INFO,
@@ -102,6 +105,19 @@ REQUIRED_SELECTION_STATE_KEYS = {
     "eval_mask_variant",
     "input_size",
 }
+METRIC_COLUMNS = ["dice", "iou", "hausdorff", "precision", "recall", "f1"]
+QUALITATIVE_SAMPLE_LIMIT_PER_CLASS = 4
+QUALITATIVE_SELECTION_POLICY = "first_n_per_class_in_dataset_order"
+
+
+@dataclass(frozen=True)
+class QualitativeSample:
+    image_id: str
+    positive: bool
+    metrics: dict[str, float]
+    image_uint8: np.ndarray
+    target_mask_uint8: np.ndarray
+    pred_mask_uint8: np.ndarray
 
 
 def normalize_component_name(value: str) -> str:
@@ -110,6 +126,40 @@ def normalize_component_name(value: str) -> str:
 
 def canonicalize_path(path_like: str | Path) -> str:
     return str(Path(path_like).resolve())
+
+
+def resolve_repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def prepare_evaluation_run_artifacts(model_type: str, selection_state_path: str | Path):
+    validated_selection_state_path = validate_selection_state_path(selection_state_path)
+    run_dir = validated_selection_state_path.parent.parent
+    return prepare_run_artifacts(
+        model_type,
+        run_dir=run_dir,
+        run_root=resolve_repo_root() / "artifacts" / "runs",
+    )
+
+
+def sync_run_metadata_with_selection_state(
+    run_metadata_path: Path,
+    selection_state: dict[str, Any],
+) -> None:
+    if not run_metadata_path.exists():
+        logger.warning(
+            "Run metadata not found while syncing selected threshold: %s",
+            run_metadata_path,
+        )
+        return
+
+    with run_metadata_path.open(encoding="utf-8") as handle:
+        metadata = yaml.safe_load(handle) or {}
+
+    metadata["selection_metric"] = selection_state["selection_metric"]
+    metadata["selected_threshold"] = float(selection_state["selected_threshold"])
+    metadata["selected_postprocess"] = selection_state["selected_postprocess"]
+    write_yaml(run_metadata_path, metadata)
 
 
 def resolve_component_choice(
@@ -512,6 +562,227 @@ def compute_per_image_metrics(
     }
 
 
+def summarize_metric_values(values: list[float]) -> dict[str, float | None]:
+    clean = [float(value) for value in values if not math.isnan(float(value))]
+    if not clean:
+        return {"mean": None, "std": None}
+    return {
+        "mean": float(np.mean(clean)),
+        "std": float(np.std(clean)),
+    }
+
+
+def build_test_summary_payload(
+    df: pd.DataFrame,
+    selection_state: dict[str, Any],
+    checkpoint_path: str,
+    model_type: str,
+) -> dict[str, Any]:
+    subsets = {
+        "all": df,
+        "positive": df[df["positive"] == True],
+        "negative": df[df["positive"] == False],
+    }
+    subset_summary: dict[str, Any] = {}
+    for subset_name, subset_df in subsets.items():
+        metrics_summary: dict[str, Any] = {"count": int(len(subset_df))}
+        for metric_name in METRIC_COLUMNS:
+            metric_summary = summarize_metric_values(subset_df[metric_name].tolist())
+            metrics_summary[metric_name] = metric_summary
+        subset_summary[subset_name] = metrics_summary
+
+    return {
+        "split": "test",
+        "model_type": model_type,
+        "checkpoint_path": canonicalize_path(checkpoint_path),
+        "dataset_root": selection_state["dataset_root"],
+        "eval_mask_variant": selection_state["eval_mask_variant"],
+        "input_size": int(selection_state["input_size"]),
+        "selection_metric": selection_state["selection_metric"],
+        "selected_threshold": float(selection_state["selected_threshold"]),
+        "selected_postprocess": selection_state["selected_postprocess"],
+        "subsets": subset_summary,
+    }
+
+
+def tensor_image_to_uint8(image: torch.Tensor) -> np.ndarray:
+    return np.clip(np.rint(image.squeeze().detach().cpu().numpy() * 255.0), 0, 255).astype(np.uint8)
+
+
+def tensor_mask_to_uint8(mask: torch.Tensor) -> np.ndarray:
+    return ((mask.squeeze().detach().cpu().numpy() > 0.5).astype(np.uint8) * 255)
+
+
+def build_overlay_image(
+    image_uint8: np.ndarray,
+    target_mask_uint8: np.ndarray,
+    pred_mask_uint8: np.ndarray,
+) -> np.ndarray:
+    overlay = cv2.cvtColor(image_uint8, cv2.COLOR_GRAY2BGR)
+    target_mask = target_mask_uint8 > 0
+    pred_mask = pred_mask_uint8 > 0
+    both_mask = target_mask & pred_mask
+
+    if target_mask.any():
+        overlay[target_mask] = (0.6 * overlay[target_mask] + 0.4 * np.array([0, 0, 255])).astype(np.uint8)
+    if pred_mask.any():
+        overlay[pred_mask] = (0.6 * overlay[pred_mask] + 0.4 * np.array([0, 255, 0])).astype(np.uint8)
+    if both_mask.any():
+        overlay[both_mask] = (0.4 * overlay[both_mask] + 0.6 * np.array([0, 255, 255])).astype(np.uint8)
+
+    return overlay
+
+
+def write_png(path: Path, image: np.ndarray) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if not cv2.imwrite(str(path), image):
+        raise IOError(f"Failed to write PNG artifact: {path}")
+
+
+def build_qualitative_manifest(
+    *,
+    split: str,
+    model_type: str,
+    checkpoint_path: str,
+    selection_state: dict[str, Any],
+    samples: list[QualitativeSample],
+) -> dict[str, Any]:
+    manifest_samples = []
+    for index, sample in enumerate(samples, start=1):
+        sample_prefix = f"{index:02d}_{sample.image_id}"
+        manifest_samples.append(
+            {
+                "image_id": sample.image_id,
+                "positive": bool(sample.positive),
+                "metrics": {name: float(value) for name, value in sample.metrics.items()},
+                "files": {
+                    "image": f"{sample_prefix}_image.png",
+                    "target_mask": f"{sample_prefix}_target_mask.png",
+                    "prediction_mask": f"{sample_prefix}_prediction_mask.png",
+                    "overlay": f"{sample_prefix}_overlay.png",
+                },
+            }
+        )
+
+    return {
+        "split": split,
+        "model_type": model_type,
+        "checkpoint_path": canonicalize_path(checkpoint_path),
+        "dataset_root": selection_state["dataset_root"],
+        "eval_mask_variant": selection_state["eval_mask_variant"],
+        "input_size": int(selection_state["input_size"]),
+        "selection_metric": selection_state["selection_metric"],
+        "selected_threshold": float(selection_state["selected_threshold"]),
+        "selected_postprocess": selection_state["selected_postprocess"],
+        "sample_selection_policy": {
+            "type": QUALITATIVE_SELECTION_POLICY,
+            "positive_limit": QUALITATIVE_SAMPLE_LIMIT_PER_CLASS,
+            "negative_limit": QUALITATIVE_SAMPLE_LIMIT_PER_CLASS,
+        },
+        "samples": manifest_samples,
+    }
+
+
+def write_qualitative_package(
+    output_dir: Path,
+    *,
+    split: str,
+    model_type: str,
+    checkpoint_path: str,
+    selection_state: dict[str, Any],
+    samples: list[QualitativeSample],
+) -> dict[str, Any]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    manifest = build_qualitative_manifest(
+        split=split,
+        model_type=model_type,
+        checkpoint_path=checkpoint_path,
+        selection_state=selection_state,
+        samples=samples,
+    )
+
+    for index, sample in enumerate(samples, start=1):
+        sample_prefix = f"{index:02d}_{sample.image_id}"
+        write_png(output_dir / f"{sample_prefix}_image.png", sample.image_uint8)
+        write_png(output_dir / f"{sample_prefix}_target_mask.png", sample.target_mask_uint8)
+        write_png(output_dir / f"{sample_prefix}_prediction_mask.png", sample.pred_mask_uint8)
+        write_png(
+            output_dir / f"{sample_prefix}_overlay.png",
+            build_overlay_image(
+                sample.image_uint8,
+                sample.target_mask_uint8,
+                sample.pred_mask_uint8,
+            ),
+        )
+
+    write_yaml(output_dir / "manifest.yaml", manifest)
+    return manifest
+
+
+def collect_split_records_and_samples(
+    model: torch.nn.Module,
+    dataset: PneumothoraxDataset,
+    data_loader: DataLoader,
+    device: torch.device,
+    *,
+    split: str,
+    checkpoint_path: str,
+    model_type: str,
+    selection_state: dict[str, Any],
+) -> tuple[list[dict[str, Any]], list[QualitativeSample]]:
+    records: list[dict[str, Any]] = []
+    samples: list[QualitativeSample] = []
+    positive_sample_count = 0
+    negative_sample_count = 0
+    threshold = float(selection_state["selected_threshold"])
+
+    with torch.no_grad():
+        for idx, (image, mask) in enumerate(tqdm(data_loader, desc=f"Evaluating {split}")):
+            image, mask = image.to(device), mask.to(device)
+            pred = model(image)
+            is_positive = bool(mask.sum().item() > 0)
+            metrics = compute_per_image_metrics(pred, mask, threshold=threshold)
+            image_id = dataset.image_ids[idx]
+
+            records.append(
+                {
+                    "image_id": image_id,
+                    "split": split,
+                    "model_type": model_type,
+                    "checkpoint_path": canonicalize_path(checkpoint_path),
+                    "eval_mask_variant": selection_state["eval_mask_variant"],
+                    "selection_metric": selection_state["selection_metric"],
+                    "selected_threshold": threshold,
+                    "selected_postprocess": selection_state["selected_postprocess"],
+                    "positive": is_positive,
+                    **metrics,
+                }
+            )
+
+            should_capture = False
+            if is_positive and positive_sample_count < QUALITATIVE_SAMPLE_LIMIT_PER_CLASS:
+                positive_sample_count += 1
+                should_capture = True
+            elif not is_positive and negative_sample_count < QUALITATIVE_SAMPLE_LIMIT_PER_CLASS:
+                negative_sample_count += 1
+                should_capture = True
+
+            if should_capture:
+                pred_mask_uint8 = ((pred > threshold).squeeze().detach().cpu().numpy().astype(np.uint8) * 255)
+                samples.append(
+                    QualitativeSample(
+                        image_id=image_id,
+                        positive=is_positive,
+                        metrics=metrics,
+                        image_uint8=tensor_image_to_uint8(image),
+                        target_mask_uint8=tensor_mask_to_uint8(mask),
+                        pred_mask_uint8=pred_mask_uint8,
+                    )
+                )
+
+    return records, samples
+
+
 def print_summary(df: pd.DataFrame, model_type: str) -> None:
     metrics = ["dice", "iou", "hausdorff", "precision", "recall", "f1"]
 
@@ -593,10 +864,11 @@ def select_threshold_and_save(
     model_type: str,
     selection_state_path: str | Path,
 ) -> dict[str, Any]:
+    run_artifacts = prepare_evaluation_run_artifacts(model_type, selection_state_path)
     device = resolve_device(cfg)
     logger.info("Device: %s", device)
     model = load_model_for_evaluation(cfg, checkpoint_path, model_type, device)
-    _, val_loader = build_eval_dataloader(cfg, split="val")
+    val_ds, val_loader = build_eval_dataloader(cfg, split="val")
     selection_config = resolve_threshold_selection_config(cfg)
     threshold_summary = summarize_threshold_candidates_from_model(
         model,
@@ -616,17 +888,37 @@ def select_threshold_and_save(
         "threshold_summary": threshold_summary,
     }
     payload = save_selection_state(
-        selection_state_path,
+        run_artifacts.selection_state_path,
         selection_result,
         cfg,
         checkpoint_path=checkpoint_path,
         model_type=model_type,
     )
+    sync_run_metadata_with_selection_state(run_artifacts.run_metadata_path, payload)
+    _, qualitative_samples = collect_split_records_and_samples(
+        model,
+        val_ds,
+        val_loader,
+        device,
+        split="val",
+        checkpoint_path=checkpoint_path,
+        model_type=model_type,
+        selection_state=payload,
+    )
+    write_qualitative_package(
+        run_artifacts.qualitative_validation_dir,
+        split="val",
+        model_type=model_type,
+        checkpoint_path=checkpoint_path,
+        selection_state=payload,
+        samples=qualitative_samples,
+    )
     logger.info(
-        "Saved selection state to %s | selected_threshold=%.2f | selection_metric=%s",
-        validate_selection_state_path(selection_state_path),
+        "Saved selection state to %s | selected_threshold=%.2f | selection_metric=%s | validation qualitative=%s",
+        run_artifacts.selection_state_path,
         payload["selected_threshold"],
         payload["selection_metric"],
+        run_artifacts.qualitative_validation_dir,
     )
     return payload
 
@@ -648,34 +940,44 @@ def evaluate(
         model_type,
         selection_state_path,
     )
+    run_artifacts = prepare_evaluation_run_artifacts(model_type, selection_state_path)
+    sync_run_metadata_with_selection_state(run_artifacts.run_metadata_path, selection_state)
     logger.info(
         "Using selected threshold %.2f from %s",
         threshold,
         validate_selection_state_path(selection_state_path) if selection_state_path is not None else "",
     )
 
-    records = []
-    with torch.no_grad():
-        for idx, (image, mask) in enumerate(tqdm(test_loader, desc="Evaluating")):
-            image, mask = image.to(device), mask.to(device)
-            pred = model(image)
-            is_positive = mask.sum().item() > 0
-            metrics = compute_per_image_metrics(pred, mask, threshold=threshold)
-
-            records.append(
-                {
-                    "image_id": test_ds.image_ids[idx],
-                    "positive": is_positive,
-                    **metrics,
-                }
-            )
-
+    records, qualitative_samples = collect_split_records_and_samples(
+        model,
+        test_ds,
+        test_loader,
+        device,
+        split="test",
+        checkpoint_path=checkpoint_path,
+        model_type=model_type,
+        selection_state=selection_state,
+    )
     df = pd.DataFrame(records)
-
-    Path("results").mkdir(exist_ok=True)
-    out_path = f"results/test_metrics_{model_type}.csv"
-    df.to_csv(out_path, index=False)
-    logger.info("Saved per-image metrics to %s", out_path)
+    df.to_csv(run_artifacts.test_metrics_path, index=False)
+    write_yaml(
+        run_artifacts.test_summary_path,
+        build_test_summary_payload(df, selection_state, checkpoint_path, model_type),
+    )
+    write_qualitative_package(
+        run_artifacts.qualitative_test_dir,
+        split="test",
+        model_type=model_type,
+        checkpoint_path=checkpoint_path,
+        selection_state=selection_state,
+        samples=qualitative_samples,
+    )
+    logger.info(
+        "Saved evaluation reports to %s and %s | test qualitative=%s",
+        run_artifacts.test_metrics_path,
+        run_artifacts.test_summary_path,
+        run_artifacts.qualitative_test_dir,
+    )
 
     print_summary(df, model_type)
     return df
