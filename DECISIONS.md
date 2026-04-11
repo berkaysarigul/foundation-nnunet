@@ -446,10 +446,6 @@ Impact on experiments / methodology:
 
 ## Open decisions requiring evidence
 
-### OD-003
-- Topic: Implementation verification of the chosen primary model-selection metric and empty-mask handling policy.
-- Needed evidence: corrected metric implementation and trainer/evaluator parity.
-
 ### OD-004
 - Topic: Whether ROI/crop strategy is necessary after the strong baseline is measured.
 - Needed evidence: trusted baseline performance and sparsity analysis.

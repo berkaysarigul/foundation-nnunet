@@ -141,7 +141,11 @@ What to check:
 - Given the same saved predictions and targets, trainer-side validation metrics and offline evaluator metrics agree.
 
 How to check it:
-- Run both paths on the same sample batch or saved prediction set and compare outputs field-by-field.
+- Run `py -3 -m unittest tests.test_trainer_evaluator_parity -v` and confirm:
+  - the same saved prediction fixture is loaded once and consumed by both paths
+  - trainer-side all-image Dice/IoU means match evaluator-side per-image record means
+  - trainer-side positive-only Dice mean matches the evaluator-side mean over positive records only
+- If debugging outside the test harness, run both paths on the same sample batch or saved prediction set and compare outputs field-by-field.
 
 Failure symptoms:
 - Same predictions produce different Dice/IoU values or different image counts.

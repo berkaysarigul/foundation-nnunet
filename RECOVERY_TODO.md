@@ -149,7 +149,7 @@ Current strategic direction:
 ## Phase 2: Evaluation Correctness
 
 ### P0.8 Rewrite Dice / IoU aggregation to be per-image first
-- Status: [~]
+- Status: [x]
 - Dependencies: P0.7
 - Affected files/modules: `src/training/metrics.py`, `src/training/trainer.py`, `src/evaluation/evaluate.py`, `tests/test_metrics_reduction.py`, `tests/test_evaluate_metrics_backend.py`, `tests/test_trainer_validation_aggregation.py`
 - Why it matters: current batch-level micro aggregation biases model selection and invalidates comparisons.
@@ -157,7 +157,7 @@ Current strategic direction:
   - [x] Define canonical reduction modes: per-image mean, positive-only mean, optional micro metrics if needed.
   - [x] Wire evaluator-side per-image reporting to the shared metric backend.
   - [x] Wire trainer-side all-image validation aggregation to the shared metric backend.
-  - [ ] Prove trainer/evaluator parity on the same saved predictions.
+  - [x] Prove trainer/evaluator parity on the same saved predictions.
   - [x] Define empty-mask handling explicitly for each metric.
   - [x] Document the primary checkpoint-selection metric.
 - Success criteria:
@@ -370,12 +370,11 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P0.8 Rewrite per-image metrics
-2. P1.1 Stratify the train/val/test split
-3. P1.6 Build strong pretrained baseline after trust gates pass
-4. P1.7 Decide whether ROI / crop strategy is required
-5. P1.8 Decide whether the current hybrid is worth further investment
-6. P1.5 Repair config-driven trainer instantiation
-7. P1.4 Add validation-only threshold and post-processing tuning
-8. P1.2 Unify trainer/evaluator output schema
-9. P1.3 Repair Hausdorff metric or remove it from claims
+1. P1.1 Stratify the train/val/test split
+2. P1.6 Build strong pretrained baseline after trust gates pass
+3. P1.7 Decide whether ROI / crop strategy is required
+4. P1.8 Decide whether the current hybrid is worth further investment
+5. P1.5 Repair config-driven trainer instantiation
+6. P1.4 Add validation-only threshold and post-processing tuning
+7. P1.2 Unify trainer/evaluator output schema
+8. P1.3 Repair Hausdorff metric or remove it from claims

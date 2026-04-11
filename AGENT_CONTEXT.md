@@ -1,17 +1,17 @@
 # Foundation-nnU-Net Agent Context
 
 Current phase:
-- Phase 2 evaluation correctness
+- Phase 2 evaluation correctness / baseline gate prep
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, a tested shared metric reduction backend, evaluator-side per-image wiring, and trainer-side all-image plus positive-only mean aggregation, but trainer/evaluator parity is still unresolved.
+- The repository now has a trusted regenerated dataset plus corrected per-image validation metrics with demonstrated trainer/evaluator parity on the same saved predictions. The next blocker is moving from trust recovery into publication-facing split policy and baseline preparation without reopening metric ambiguity.
 
 Highest-priority open tasks:
-1. Prove trainer/evaluator parity on the same saved predictions.
-2. Keep all current model comparisons non-authoritative until parity is demonstrated.
+1. Regenerate the train/val/test split under an explicit stratified policy for publication-facing use.
+2. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
 3. Preserve strict separation between training mask variants and official reporting mask variants in all future runs.
-4. Decide whether the split should now be regenerated under stratification for publication use.
-5. Keep hybrid work paused until the corrected metric path and strong baseline gates are satisfied.
+4. Repair config-driven trainer instantiation before large ablation sweeps.
+5. Keep hybrid work paused until a strong supervised baseline exists.
 
 What is already trusted:
 - The high-level repo structure and module boundaries.
@@ -52,12 +52,12 @@ What is already trusted:
 - `src/training/trainer.py` now aggregates `val_dice_pos_mean` from positive-image Dice sums and positive image counts rather than batch-level micro Dice over positive subsets.
 - `tests/test_trainer_validation_aggregation.py` is now the canonical regression harness for trainer-side all-image validation aggregation.
 - `scheduler.step(val_dice_pos_mean)` and best-checkpoint ranking now operate on the corrected positive-image mean Dice path.
+- `tests/test_trainer_evaluator_parity.py` now proves that trainer-side aggregated Dice/IoU/positive-Dice match evaluator-side per-image records on the same saved prediction fixture.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
 - Historical metrics and plots under `results/`, which remain legacy-only artifacts.
-- Validation/model-selection numbers from the current trainer, because trainer/evaluator parity on the same predictions has not yet been demonstrated end to end.
-- Trainer/evaluator parity, because all-image aggregation is now shared-backend based but parity on the same saved predictions has not yet been demonstrated.
+- Any future run that bypasses the trusted dataset root or corrected metric path.
 - Any claim involving Foundation X as clean external pretraining on SIIM.
 - The scientific value of the current hybrid design.
 
@@ -65,6 +65,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Prove trainer/evaluator parity on the same saved predictions.
-2. Stratify the train/val/test split for publication-facing experiments.
-3. Keep baseline work blocked until parity is demonstrated and authoritative metrics are fully stable.
+1. Stratify the train/val/test split for publication-facing experiments.
+2. Repair config-driven trainer instantiation before serious baseline sweeps.
+3. Add validation-only threshold tuning once the split policy is locked.
