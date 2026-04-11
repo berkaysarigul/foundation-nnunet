@@ -166,14 +166,14 @@ Current strategic direction:
   - Metric correctness and trainer/evaluator parity checklist.
 
 ### P0.9 Fix positive-only validation counting
-- Status: [ ]
+- Status: [x]
 - Dependencies: P0.8
 - Affected files/modules: `src/training/trainer.py`
 - Why it matters: the current positive-only Dice count increments per batch instead of per positive image.
 - Subtasks:
-  - [ ] Change the counting rule to operate on image counts, not batch counts.
-  - [ ] Confirm the selected metric is the one used for early stopping and checkpoint ranking.
-  - [ ] Record the metric policy in `DECISIONS.md`.
+  - [x] Change the counting rule to operate on image counts, not batch counts.
+  - [x] Confirm the selected metric is the one used for early stopping and checkpoint ranking.
+  - [x] Record the metric policy in `DECISIONS.md`.
 - Success criteria:
   - Positive-only validation reflects mean performance over positive images.
 - Validation needed before close:
@@ -371,12 +371,11 @@ Current strategic direction:
 ## Top priority queue
 
 1. P0.8 Rewrite per-image metrics
-2. P0.9 Fix positive-only validation counting
-3. P1.1 Stratify the train/val/test split
-4. P1.6 Build strong pretrained baseline after trust gates pass
-5. P1.7 Decide whether ROI / crop strategy is required
-6. P1.8 Decide whether the current hybrid is worth further investment
-7. P1.5 Repair config-driven trainer instantiation
-8. P1.4 Add validation-only threshold and post-processing tuning
-9. P1.2 Unify trainer/evaluator output schema
-10. P1.3 Repair Hausdorff metric or remove it from claims
+2. P1.1 Stratify the train/val/test split
+3. P1.6 Build strong pretrained baseline after trust gates pass
+4. P1.7 Decide whether ROI / crop strategy is required
+5. P1.8 Decide whether the current hybrid is worth further investment
+6. P1.5 Repair config-driven trainer instantiation
+7. P1.4 Add validation-only threshold and post-processing tuning
+8. P1.2 Unify trainer/evaluator output schema
+9. P1.3 Repair Hausdorff metric or remove it from claims

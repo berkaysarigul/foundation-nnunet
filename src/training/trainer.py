@@ -47,6 +47,25 @@ def compute_validation_overlap_totals(
     }
 
 
+def compute_positive_validation_dice_totals(
+    preds: torch.Tensor,
+    masks: torch.Tensor,
+    threshold: float = 0.5,
+) -> dict[str, float]:
+    """Return summed per-image Dice over positive-target images only."""
+    per_image_dice = dice_score(preds, masks, threshold=threshold, reduction="none")
+    positive_mask = (masks > 0.5).reshape(masks.shape[0], -1).any(dim=1)
+
+    if not positive_mask.any():
+        return {"dice_sum": 0.0, "positive_image_count": 0}
+
+    positive_dice = per_image_dice[positive_mask]
+    return {
+        "dice_sum": float(positive_dice.sum().item()),
+        "positive_image_count": int(positive_mask.sum().item()),
+    }
+
+
 def set_seeds(seed: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
@@ -253,11 +272,9 @@ def train(cfg: dict) -> float:
                 val_iou_sum  += overlap_totals["iou_sum"]
                 val_metric_image_count += overlap_totals["image_count"]
 
-                # Per-batch positive-only Dice: select images that have GT foreground
-                is_pos = masks.sum(dim=(1, 2, 3)) > 0
-                if is_pos.any():
-                    val_dice_pos_sum   += dice_score(preds[is_pos], masks[is_pos]).item()
-                    val_dice_pos_count += 1
+                positive_dice_totals = compute_positive_validation_dice_totals(preds, masks)
+                val_dice_pos_sum += positive_dice_totals["dice_sum"]
+                val_dice_pos_count += positive_dice_totals["positive_image_count"]
 
         val_loss         /= len(val_loader)
         val_dice_mean     = val_dice_sum / max(val_metric_image_count, 1)

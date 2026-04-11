@@ -4,14 +4,14 @@ Current phase:
 - Phase 2 evaluation correctness
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, a tested shared metric reduction backend, evaluator-side per-image wiring, and trainer-side all-image mean aggregation, but positive-only checkpoint selection and trainer/evaluator parity are still unresolved.
+- The repository now has a trusted regenerated dataset, a tested shared metric reduction backend, evaluator-side per-image wiring, and trainer-side all-image plus positive-only mean aggregation, but trainer/evaluator parity is still unresolved.
 
 Highest-priority open tasks:
-1. Rewrite validation metrics to operate per image on the trusted dataset path.
-2. Fix positive-only Dice counting so checkpoint selection matches `val_dice_pos_mean`.
-3. Keep all current model comparisons non-authoritative until the corrected metric path is implemented.
-4. Preserve strict separation between training mask variants and official reporting mask variants in all future runs.
-5. Decide whether the split should now be regenerated under stratification for publication use.
+1. Prove trainer/evaluator parity on the same saved predictions.
+2. Keep all current model comparisons non-authoritative until parity is demonstrated.
+3. Preserve strict separation between training mask variants and official reporting mask variants in all future runs.
+4. Decide whether the split should now be regenerated under stratification for publication use.
+5. Keep hybrid work paused until the corrected metric path and strong baseline gates are satisfied.
 
 What is already trusted:
 - The high-level repo structure and module boundaries.
@@ -49,13 +49,14 @@ What is already trusted:
 - `src/evaluation/evaluate.py` now routes per-image overlap metrics through the shared backend with explicit `reduction="none"`.
 - `tests/test_evaluate_metrics_backend.py` is now the canonical evaluator-side regression harness for per-image metric wiring.
 - `src/training/trainer.py` now aggregates all-image validation Dice/IoU from per-image scores instead of averaging implicit batch-micro metrics over loader steps.
+- `src/training/trainer.py` now aggregates `val_dice_pos_mean` from positive-image Dice sums and positive image counts rather than batch-level micro Dice over positive subsets.
 - `tests/test_trainer_validation_aggregation.py` is now the canonical regression harness for trainer-side all-image validation aggregation.
+- `scheduler.step(val_dice_pos_mean)` and best-checkpoint ranking now operate on the corrected positive-image mean Dice path.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
 - Historical metrics and plots under `results/`, which remain legacy-only artifacts.
-- Validation/model-selection numbers from the current trainer, because the code path has not yet been updated to honor the defined authoritative metric.
-- Positive-only checkpoint selection, because `val_dice_pos_mean` still uses the old batch-counting logic.
+- Validation/model-selection numbers from the current trainer, because trainer/evaluator parity on the same predictions has not yet been demonstrated end to end.
 - Trainer/evaluator parity, because all-image aggregation is now shared-backend based but parity on the same saved predictions has not yet been demonstrated.
 - Any claim involving Foundation X as clean external pretraining on SIIM.
 - The scientific value of the current hybrid design.
@@ -64,6 +65,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Rewrite validation metrics once the trusted dataset path exists.
-2. Fix positive-only validation counting on top of the corrected metric path.
-3. Prove trainer/evaluator parity on the same predictions after the positive-only path is fixed.
+1. Prove trainer/evaluator parity on the same saved predictions.
+2. Stratify the train/val/test split for publication-facing experiments.
+3. Keep baseline work blocked until parity is demonstrated and authoritative metrics are fully stable.
