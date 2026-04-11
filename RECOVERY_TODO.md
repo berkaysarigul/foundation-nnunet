@@ -224,12 +224,12 @@ Current strategic direction:
   - Threshold tuning discipline checklist.
 
 ### P1.5 Repair config-driven trainer instantiation
-- Status: [ ]
+- Status: [~]
 - Dependencies: P0.2
 - Affected files/modules: `src/training/trainer.py`, `configs/config.yaml`
 - Why it matters: ablations are unreliable if YAML values do not actually control loss, optimizer, and scheduler behavior.
 - Subtasks:
-  - [ ] Inventory which config fields are currently ignored.
+  - [x] Inventory which config fields are currently ignored (`training.optimizer`, `training.scheduler`, `loss.type` are currently ignored by the trainer path).
   - [ ] Define which options must be supported immediately versus later.
   - [ ] Record the accepted configuration surface in `DECISIONS.md`.
 - Success criteria:

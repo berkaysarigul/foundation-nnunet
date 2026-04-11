@@ -4,7 +4,7 @@ Current phase:
 - Phase 3 baseline preparation
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, and a refreshed publication-facing stratified split. The next blocker is training-pipeline readiness for baseline experiments, especially config-driven trainer behavior and validation-only threshold selection.
+- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, and a refreshed publication-facing stratified split. The next blocker is training-pipeline readiness for baseline experiments, especially config-driven trainer behavior and validation-only threshold selection. The current trainer still hardcodes `DiceFocalLoss`, `AdamW`, and `ReduceLROnPlateau`, so `loss.type`, `training.optimizer`, and `training.scheduler` do not yet control behavior.
 
 Highest-priority open tasks:
 1. Repair config-driven trainer instantiation before large ablation sweeps.
@@ -59,6 +59,7 @@ What is already trusted:
 - `src/data/preprocess.py::create_splits` now implements that deterministic two-stage stratified policy in code.
 - `scripts/regenerate_trusted_split.py` is now the canonical helper for refreshing `splits.json` and `dataset_manifest.json` under the fixed stratified policy.
 - The refreshed trusted split now matches the policy target closely: train `22.2862%`, val `22.2846%`, test `22.2846%` versus dataset-wide `22.2857%`.
+- The current config/trainer mismatch inventory is now explicit: `configs/config.yaml` exposes `loss.type`, `training.optimizer`, and `training.scheduler`, but `src/training/trainer.py` still hardcodes `DiceFocalLoss`, `torch.optim.AdamW`, and `torch.optim.lr_scheduler.ReduceLROnPlateau`.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
@@ -71,6 +72,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Repair config-driven trainer instantiation before serious baseline sweeps.
+1. Decide which subset of the currently ignored config surface must be supported immediately in `src/training/trainer.py`.
 2. Add validation-only threshold tuning on top of the corrected metric path.
 3. Start the strong supervised baseline only after those two pipeline blockers are cleared.
