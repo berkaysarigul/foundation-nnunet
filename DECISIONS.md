@@ -137,6 +137,36 @@ Impact on experiments / methodology:
 - Dataset fingerprints and split fingerprints must be read from `dataset_manifest.json`, not inferred informally.
 - Metric-repair work in Phase 2 should now treat `pneumothorax_trusted_v1` as the fixed data substrate.
 
+## 2026-04-11 / D-020
+
+Decision:
+- The canonical overlap-metric reduction modes are:
+  - `micro`: aggregate TP/FP/FN across the full evaluated tensor set before computing the metric
+  - `mean`: compute the metric per image, then average across all images
+  - `positive_mean`: compute the metric per image, then average only across images whose target mask contains foreground
+  - `none`: return the per-image metric tensor without reduction
+- The explicit empty-mask policy for Dice, IoU, Precision, Recall, and F1 is:
+  - pred empty and target empty -> `1.0`
+  - pred empty and target positive -> `0.0`
+  - pred positive and target empty -> `0.0`
+  - `positive_mean` over a subset with zero positive target images -> `NaN`
+- `micro` metrics may remain available as auxiliary diagnostics, but authoritative checkpoint selection and official reporting should use per-image reductions, not batch-micro aggregation.
+
+Reason:
+- P0.8 required the overlap-metric math to stop depending on implicit batch aggregation.
+- The audit already showed that batch-micro Dice in the trainer was biasing model selection.
+- Empty-mask edge cases must be explicit because SIIM contains many negative studies, and undefined behavior would silently distort all-image metrics.
+
+Alternatives considered:
+- Keep the old implicit micro reduction as the only supported mode.
+- Use smoothing constants to avoid explicit empty-mask policy.
+- Return `NaN` for every empty-mask overlap case.
+
+Impact on experiments / methodology:
+- Phase 2 alignment work must wire trainer and evaluator to these named reductions instead of relying on implicit batch semantics.
+- `val_dice_pos_mean` now has an explicit metric backend contract: Dice with `positive_mean`.
+- Any legacy metric history computed before this reduction contract was implemented remains non-authoritative.
+
 ## 2026-04-10 / D-004
 
 Decision:

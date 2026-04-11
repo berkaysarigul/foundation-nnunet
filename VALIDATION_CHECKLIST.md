@@ -115,6 +115,12 @@ What to check:
 
 How to check it:
 - Use handcrafted prediction/target pairs covering empty-empty, empty-positive, positive-empty, and partial-overlap cases.
+- Run `py -3 -m unittest tests.test_metrics_reduction -v` and confirm:
+  - Dice supports `micro`, `mean`, `positive_mean`, and `none`
+  - `mean`, `positive_mean`, and `micro` produce distinct expected values on a mixed handcrafted batch
+  - empty-empty overlap metrics evaluate to `1.0`
+  - one-empty-one-positive overlap metrics evaluate to `0.0`
+  - `positive_mean` returns `NaN` when there are no positive target images
 - Verify per-image and positive-only reductions explicitly.
 - Verify that checkpoint-selection calculations exclude negative images from the primary metric and do not use batch-level micro aggregation.
 

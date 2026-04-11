@@ -4,7 +4,7 @@ Current phase:
 - Phase 2 evaluation correctness
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, but validation/model-selection metrics are still mathematically untrusted.
+- The repository now has a trusted regenerated dataset and a tested shared metric reduction backend, but trainer/evaluator still do not use that backend consistently.
 
 Highest-priority open tasks:
 1. Rewrite validation metrics to operate per image on the trusted dataset path.
@@ -43,11 +43,15 @@ What is already trusted:
 - The trusted regenerated dataset currently contains 10,675 images, 2,379 positive studies, and 8,296 negative studies under the accepted local raw bundle.
 - `scripts/validate_processed_dataset.py` is now the canonical end-to-end validation entrypoint for the trusted processed dataset contract.
 - `configs/config.yaml` now points `data.processed_dir` to `data/processed/pneumothorax_trusted_v1`.
+- `src/training/metrics.py` now exposes explicit overlap-metric reductions: `micro`, `mean`, `positive_mean`, and `none`.
+- The accepted overlap-metric empty-mask policy is now explicit and regression-tested: empty-empty => `1.0`, one-empty-one-positive => `0.0`, and `positive_mean` returns `NaN` when no positive targets exist.
+- `tests/test_metrics_reduction.py` is now the canonical regression harness for metric reductions and empty-mask edge cases.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
 - Historical metrics and plots under `results/`, which remain legacy-only artifacts.
 - Validation/model-selection numbers from the current trainer, because the code path has not yet been updated to honor the defined authoritative metric.
+- Trainer/evaluator parity, because both call the old metric wrappers without the new canonical reduction path wired in yet.
 - Any claim involving Foundation X as clean external pretraining on SIIM.
 - The scientific value of the current hybrid design.
 

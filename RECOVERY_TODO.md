@@ -149,15 +149,15 @@ Current strategic direction:
 ## Phase 2: Evaluation Correctness
 
 ### P0.8 Rewrite Dice / IoU aggregation to be per-image first
-- Status: [ ]
+- Status: [~]
 - Dependencies: P0.7
-- Affected files/modules: `src/training/metrics.py`, `src/training/trainer.py`, `src/evaluation/evaluate.py`
+- Affected files/modules: `src/training/metrics.py`, `src/training/trainer.py`, `src/evaluation/evaluate.py`, `tests/test_metrics_reduction.py`
 - Why it matters: current batch-level micro aggregation biases model selection and invalidates comparisons.
 - Subtasks:
-  - [ ] Define canonical reduction modes: per-image mean, positive-only mean, optional micro metrics if needed.
+  - [x] Define canonical reduction modes: per-image mean, positive-only mean, optional micro metrics if needed.
   - [ ] Align trainer and evaluator to the same metric backend.
-  - [ ] Define empty-mask handling explicitly for each metric.
-  - [ ] Document the primary checkpoint-selection metric.
+  - [x] Define empty-mask handling explicitly for each metric.
+  - [x] Document the primary checkpoint-selection metric.
 - Success criteria:
   - Trainer and evaluator compute the same numbers on the same predictions.
 - Validation needed before close:
