@@ -254,6 +254,7 @@ Current strategic direction:
   - [x] Emit evaluation-side threshold/report/qualitative artifacts under the same authoritative run directory.
     - Validation note (2026-04-11): `C:\Users\beko5\AppData\Local\Programs\Python\Python310\python.exe -m unittest tests.test_evaluation_run_outputs -v`, `tests.test_threshold_selection -v`, `tests.test_run_artifacts -v`, and `tests.test_evaluate_metrics_backend -v` all passed.
   - [ ] Execute the first authoritative pretrained baseline run end-to-end on the trusted dataset.
+    - Progress note (2026-04-11): `configs/pretrained_resnet34_authoritative.yaml` now locks the fixed D-028 protocol for the first run, and `tests.test_authoritative_pretrained_config -v` passes. The current desktop runtime reports `torch 2.11.0+cpu` with `cuda_available=False`, so this end-to-end run remains pending on a GPU-capable environment rather than this local machine.
 - Success criteria:
   - At least one strong supervised baseline is reproducible end-to-end on the trusted dataset.
 - Validation needed before close:
