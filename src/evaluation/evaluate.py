@@ -74,6 +74,26 @@ def _stat(values: list[float]) -> str:
     return f"{m:.4f} ± {s:.4f}"
 
 
+def compute_per_image_metrics(
+    pred: torch.Tensor,
+    mask: torch.Tensor,
+    threshold: float = 0.5,
+) -> dict[str, float]:
+    """Return per-image metrics via the shared overlap-metric backend."""
+    return {
+        "dice": float(dice_score(pred, mask, threshold=threshold, reduction="none").squeeze(0).item()),
+        "iou": float(iou_score(pred, mask, threshold=threshold, reduction="none").squeeze(0).item()),
+        "hausdorff": hausdorff_distance(pred, mask, threshold=threshold),
+        "precision": float(
+            precision_score(pred, mask, threshold=threshold, reduction="none").squeeze(0).item()
+        ),
+        "recall": float(
+            recall_score(pred, mask, threshold=threshold, reduction="none").squeeze(0).item()
+        ),
+        "f1": float(f1_score(pred, mask, threshold=threshold, reduction="none").squeeze(0).item()),
+    }
+
+
 def print_summary(df: pd.DataFrame, model_type: str) -> None:
     metrics = ["dice", "iou", "hausdorff", "precision", "recall", "f1"]
 
@@ -146,16 +166,12 @@ def evaluate(cfg: dict, checkpoint_path: str, model_type: str) -> pd.DataFrame:
             pred = model(image)
 
             is_positive = mask.sum().item() > 0
+            metrics = compute_per_image_metrics(pred, mask)
 
             records.append({
                 "image_id":  test_ds.image_ids[idx],
                 "positive":  is_positive,
-                "dice":      dice_score(pred, mask).item(),
-                "iou":       iou_score(pred, mask).item(),
-                "hausdorff": hausdorff_distance(pred, mask),
-                "precision": precision_score(pred, mask).item(),
-                "recall":    recall_score(pred, mask).item(),
-                "f1":        f1_score(pred, mask).item(),
+                **metrics,
             })
 
     df = pd.DataFrame(records)

@@ -121,6 +121,7 @@ How to check it:
   - empty-empty overlap metrics evaluate to `1.0`
   - one-empty-one-positive overlap metrics evaluate to `0.0`
   - `positive_mean` returns `NaN` when there are no positive target images
+- Run `py -3 -m unittest tests.test_evaluate_metrics_backend -v` and confirm evaluator-side per-image records are produced through `reduction="none"` rather than implicit batch-micro reduction.
 - Verify per-image and positive-only reductions explicitly.
 - Verify that checkpoint-selection calculations exclude negative images from the primary metric and do not use batch-level micro aggregation.
 

@@ -4,7 +4,7 @@ Current phase:
 - Phase 2 evaluation correctness
 
 Current blocker:
-- The repository now has a trusted regenerated dataset and a tested shared metric reduction backend, but trainer/evaluator still do not use that backend consistently.
+- The repository now has a trusted regenerated dataset, a tested shared metric reduction backend, and evaluator-side per-image wiring, but trainer-side validation aggregation is still mathematically wrong.
 
 Highest-priority open tasks:
 1. Rewrite validation metrics to operate per image on the trusted dataset path.
@@ -46,12 +46,14 @@ What is already trusted:
 - `src/training/metrics.py` now exposes explicit overlap-metric reductions: `micro`, `mean`, `positive_mean`, and `none`.
 - The accepted overlap-metric empty-mask policy is now explicit and regression-tested: empty-empty => `1.0`, one-empty-one-positive => `0.0`, and `positive_mean` returns `NaN` when no positive targets exist.
 - `tests/test_metrics_reduction.py` is now the canonical regression harness for metric reductions and empty-mask edge cases.
+- `src/evaluation/evaluate.py` now routes per-image overlap metrics through the shared backend with explicit `reduction="none"`.
+- `tests/test_evaluate_metrics_backend.py` is now the canonical evaluator-side regression harness for per-image metric wiring.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
 - Historical metrics and plots under `results/`, which remain legacy-only artifacts.
 - Validation/model-selection numbers from the current trainer, because the code path has not yet been updated to honor the defined authoritative metric.
-- Trainer/evaluator parity, because both call the old metric wrappers without the new canonical reduction path wired in yet.
+- Trainer/evaluator parity, because evaluator now uses the shared backend explicitly but trainer-side validation aggregation is still using the old batch-level accumulation logic.
 - Any claim involving Foundation X as clean external pretraining on SIIM.
 - The scientific value of the current hybrid design.
 
