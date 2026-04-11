@@ -469,6 +469,31 @@ Impact on experiments / methodology:
 - Validation of the stratified split should check class-ratio deviation against the dataset-wide positive ratio, not just overlap-free IDs.
 - This decision defines the target class balance only; it does not yet decide whether the current split IDs are preserved or regenerated.
 
+## 2026-04-11 / D-022
+
+Decision:
+- The current trusted split IDs under `data/processed/pneumothorax_trusted_v1/splits.json` will **not** be preserved for publication-facing experiments.
+- The split must be regenerated under the accepted stratified policy.
+
+Reason:
+- Measured image-level positive ratios for the current trusted split are:
+  - train: `22.6610%` (`1693 / 7471`)
+  - val: `21.2235%` (`340 / 1602`)
+  - test: `21.5980%` (`346 / 1602`)
+- The dataset-wide positive ratio is `22.2857%` (`2379 / 10675`).
+- Under D-021, the target is to keep each split within `1.0` absolute percentage point of the dataset-wide ratio when feasible.
+- The current validation split deviates by about `1.0622` percentage points, so the current split narrowly misses the accepted publication-facing target.
+- No authoritative baseline results depend on keeping the existing split IDs, so regeneration has lower methodological risk than preserving a slightly off-policy split for convenience.
+
+Alternatives considered:
+- Preserve the current split IDs because the drift is small.
+- Preserve only the training IDs and regenerate validation/test.
+
+Impact on experiments / methodology:
+- The current split remains usable for legacy/debug context inside the trusted dataset version, but it should not be the publication-facing split once P1.1 is fully implemented.
+- The next split task should implement deterministic regeneration under the accepted stratified policy and then update the split fingerprint.
+- Strong baseline work should prefer the regenerated stratified split once it exists.
+
 ## Open decisions requiring evidence
 
 ### OD-004

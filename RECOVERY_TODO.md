@@ -139,7 +139,7 @@ Current strategic direction:
 - Why it matters: the current split has low but unnecessary class-ratio drift and is weaker for publication.
 - Subtasks:
   - [x] Define stratification target at image level for positive/negative class balance.
-  - [ ] Decide whether to preserve current image IDs or regenerate the split.
+  - [x] Decide whether to preserve current image IDs or regenerate the split.
   - [ ] Record the split policy and seed in `DECISIONS.md`.
 - Success criteria:
   - Split ratios are stable and leakage-free.
