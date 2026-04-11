@@ -278,6 +278,15 @@ def build_model(cfg: dict) -> torch.nn.Module:
     if model_type == "baseline":
         return UNet(in_channels=in_ch, num_classes=num_cls, base_filters=base_f)
 
+    if model_type == "pretrained_resnet34_unet":
+        from src.models.resnet34_unet import PretrainedResNet34UNet
+
+        return PretrainedResNet34UNet(
+            in_channels=in_ch,
+            num_classes=num_cls,
+            base_filters=base_f,
+        )
+
     if model_type == "hybrid":
         from src.models.hybrid import HybridFoundationUNet
         return HybridFoundationUNet(
@@ -289,7 +298,10 @@ def build_model(cfg: dict) -> torch.nn.Module:
             img_size=cfg["data"]["input_size"],
         )
 
-    raise ValueError(f"Unknown model type: '{model_type}'. Use 'baseline' or 'hybrid'.")
+    raise ValueError(
+        "Unknown model type: "
+        f"'{model_type}'. Use 'baseline', 'pretrained_resnet34_unet', or 'hybrid'."
+    )
 
 
 def train(cfg: dict) -> float:

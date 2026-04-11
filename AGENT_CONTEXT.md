@@ -4,13 +4,13 @@ Current phase:
 - Phase 3 baseline preparation
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, and a fixed baseline-gate output package. The next blocker is implementing the selected pretrained baseline inside that fixed protocol without widening scope.
+- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, and a concrete pretrained model path in code. The next blocker is emitting authoritative run metadata and the baseline-gate evidence package for that pretrained path before the first end-to-end trusted run.
 
 Highest-priority open tasks:
-1. Implement the chosen pretrained baseline only after the protocol and output package are fixed in repo memory.
-2. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
-3. Keep hybrid work paused until a strong supervised baseline exists.
-4. Delay output-schema cleanup until the pretrained baseline path exists.
+1. Emit the fixed baseline-gate evidence package under `artifacts/runs/<run_id>/` for the pretrained baseline path instead of leaking outputs into `results/`.
+2. Execute the first authoritative pretrained baseline run end-to-end on the trusted dataset once that run-directory path exists.
+3. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
+4. Keep hybrid work paused until a strong supervised baseline exists.
 5. Keep ROI/crop work out of scope until the strong baseline is actually measured.
 
 What is already trusted:
@@ -92,6 +92,10 @@ What is already trusted:
   - qualitative evidence must include both `<run_dir>/qualitative/validation_samples/` and `<run_dir>/qualitative/test_samples/`
   - each qualitative directory must carry a manifest describing the selected image IDs so the evidence package is auditable rather than ad hoc
   - exact trainer/evaluator output column naming remains deferred to P1.2, but the baseline-gate package must already be sufficient to recover real image IDs, split identity, eval mask variant, threshold/postprocess context, and corrected per-image metrics
+- `src/models/resnet34_unet.py` now provides the concrete `PretrainedResNet34UNet` implementation for the selected pretrained baseline family.
+- The pretrained baseline path now keeps grayscale adaptation inside the model by replacing the ResNet34 stem conv with a 1-channel version initialized from the RGB pretrained filters, rather than introducing a separate RGB dataset pipeline.
+- `src/training/trainer.py::build_model` and `src/evaluation/evaluate.py::build_model` now accept `model_type=pretrained_resnet34_unet`.
+- `tests/test_pretrained_resnet34_unet.py` is now the canonical targeted regression harness for the pretrained baseline model path and factory wiring.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
@@ -102,6 +106,7 @@ What is still untrusted:
 - Any pretrained baseline result until the selected `ResNet34` encoder path is implemented and run end-to-end under the trusted protocol.
 - Any initial baseline comparison that changes more than the architecture/initialization relative to the fixed protocol above.
 - Any initial pretrained baseline result that lacks the fixed baseline-gate output package under its authoritative run directory.
+- The real pretrained forward/training path in this local desktop environment until the repository training dependencies are installed; current local validation covered syntax, factory wiring, and the explicit missing-dependency path, but `torchvision` is not installed here for a live forward smoke.
 - Any claim involving Foundation X as clean external pretraining on SIIM.
 - The scientific value of the current hybrid design.
 
@@ -109,6 +114,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Implement the selected pretrained baseline only after the protocol and output package are fixed in repo memory.
-2. Keep the first baseline comparison constrained to the fixed trusted protocol instead of reopening optimizer, crop, or post-processing scope.
-3. Emit the fixed baseline-gate evidence package under `artifacts/runs/<run_id>/` instead of leaking outputs back into `results/`.
+1. Emit the fixed baseline-gate evidence package under `artifacts/runs/<run_id>/` for the pretrained path instead of leaking outputs back into `results/`.
+2. Execute the first authoritative pretrained baseline run end-to-end on the trusted dataset once the run-directory output path exists.
+3. Keep the first baseline comparison constrained to the fixed trusted protocol instead of reopening optimizer, crop, or post-processing scope.

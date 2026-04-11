@@ -4,7 +4,7 @@
 
 # --- Model ---
 model:
-  type: "baseline"              # "baseline" or "hybrid"
+  type: "baseline"              # "baseline", "pretrained_resnet34_unet", or "hybrid"
   in_channels: 1
   num_classes: 1
   base_filters: 64
