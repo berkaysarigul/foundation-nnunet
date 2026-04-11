@@ -7,13 +7,11 @@ Usage:
 
 import argparse
 import logging
-import os
 import random
 from pathlib import Path
 from typing import Any
 
 import numpy as np
-import pandas as pd
 import torch
 import yaml
 from torch.utils.data import DataLoader, WeightedRandomSampler
@@ -24,6 +22,14 @@ from src.data.dataset import PneumothoraxDataset
 from src.models.unet import UNet
 from src.training.losses import DiceFocalLoss
 from src.training.metrics import dice_score, iou_score
+from src.training.run_artifacts import (
+    build_best_checkpoint_metadata,
+    build_run_metadata,
+    prepare_run_artifacts,
+    write_config_snapshot,
+    write_history_csv,
+    write_yaml,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -304,13 +310,19 @@ def build_model(cfg: dict) -> torch.nn.Module:
     )
 
 
-def train(cfg: dict) -> float:
+def train(
+    cfg: dict,
+    *,
+    config_path: str | Path = "configs/config.yaml",
+    run_dir: str | Path | None = None,
+) -> float:
     # ------------------------------------------------------------------
     # Setup
     # ------------------------------------------------------------------
     set_seeds(cfg["seed"])
     device = resolve_device(cfg["device"])
     logger.info("Device: %s", device)
+    repo_root = Path(__file__).resolve().parents[2]
 
     model_type   = cfg["model"]["type"]
     data_dir     = cfg["data"]["processed_dir"]
@@ -321,9 +333,12 @@ def train(cfg: dict) -> float:
     batch_size   = cfg["training"]["batch_size"]
     epochs       = cfg["training"]["epochs"]
     patience     = cfg["training"]["early_stopping_patience"]
-
-    Path("checkpoints").mkdir(exist_ok=True)
-    Path("results").mkdir(exist_ok=True)
+    run_artifacts = prepare_run_artifacts(
+        model_type,
+        run_dir=run_dir,
+        run_root=repo_root / "artifacts" / "runs",
+    )
+    logger.info("Authoritative run directory: %s", run_artifacts.run_dir)
 
     # ------------------------------------------------------------------
     # Datasets & DataLoaders
@@ -380,12 +395,22 @@ def train(cfg: dict) -> float:
     # ------------------------------------------------------------------
     # Resume from checkpoint if available
     # ------------------------------------------------------------------
-    best_dice = 0.0
+    best_dice = float("-inf")
     patience_counter = 0
     history = {"train_loss": [], "val_loss": [], "val_dice": [], "val_dice_pos": [], "val_iou": []}
     start_epoch = 1
 
-    resume_path = Path(f"checkpoints/last_{model_type}.pth")
+    resume_path = run_artifacts.last_checkpoint_path
+    run_metadata = build_run_metadata(
+        cfg=cfg,
+        config_path=config_path,
+        repo_root=repo_root,
+        run_id=run_artifacts.run_id,
+        resume_checkpoint_path=resume_path if resume_path.exists() else None,
+    )
+    write_yaml(run_artifacts.run_metadata_path, run_metadata)
+    write_config_snapshot(run_artifacts.config_snapshot_path, cfg)
+
     if resume_path.exists():
         logger.info("Resuming from %s", resume_path)
         resume = torch.load(resume_path, map_location=device, weights_only=False)
@@ -473,8 +498,17 @@ def train(cfg: dict) -> float:
         if val_dice_pos_mean > best_dice:
             best_dice = val_dice_pos_mean
             patience_counter = 0
-            ckpt_path = f"checkpoints/best_{model_type}.pth"
+            ckpt_path = run_artifacts.best_checkpoint_path
             torch.save(model.state_dict(), ckpt_path)
+            best_checkpoint_metadata = build_best_checkpoint_metadata(
+                checkpoint_path=ckpt_path,
+                cfg=cfg,
+                repo_root=repo_root,
+                epoch=epoch,
+                best_metric_value=best_dice,
+                training_components=training_components,
+            )
+            write_yaml(run_artifacts.best_checkpoint_metadata_path, best_checkpoint_metadata)
             logger.info("  → Best model saved (Dice pos: %.4f) → %s", best_dice, ckpt_path)
         else:
             patience_counter += 1
@@ -491,7 +525,7 @@ def train(cfg: dict) -> float:
                 "patience_counter": patience_counter,
                 "history":          history,
             },
-            f"checkpoints/last_{model_type}.pth",
+            run_artifacts.last_checkpoint_path,
         )
 
         # === EARLY STOPPING ===
@@ -502,9 +536,8 @@ def train(cfg: dict) -> float:
     # ------------------------------------------------------------------
     # Save history
     # ------------------------------------------------------------------
-    history_path = f"results/{model_type}_history.csv"
-    pd.DataFrame(history).to_csv(history_path, index=False)
-    logger.info("Training history saved to %s", history_path)
+    write_history_csv(run_artifacts.history_path, history)
+    logger.info("Training history saved to %s", run_artifacts.history_path)
     logger.info("Best Val Dice: %.4f", best_dice)
 
     return best_dice
@@ -513,12 +546,17 @@ def train(cfg: dict) -> float:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Train Foundation-nnU-Net")
     parser.add_argument("--config", default="configs/config.yaml", help="Path to config.yaml")
+    parser.add_argument(
+        "--run_dir",
+        default=None,
+        help="Optional authoritative run directory. If omitted, trainer creates a new directory under artifacts/runs/.",
+    )
     args = parser.parse_args()
 
     with open(args.config) as f:
         cfg = yaml.safe_load(f)
 
-    train(cfg)
+    train(cfg, config_path=args.config, run_dir=args.run_dir)
 
 
 if __name__ == "__main__":

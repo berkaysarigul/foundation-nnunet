@@ -250,7 +250,8 @@ Current strategic direction:
   - [x] Record why this baseline is the publication anchor.
   - [x] Specify required outputs: tuned validation threshold, test report, qualitative examples.
   - [x] Implement the selected pretrained baseline model path in the current repo stack.
-  - [ ] Emit authoritative run metadata and baseline-gate evidence package for the pretrained path.
+  - [x] Emit authoritative training-side run directory, metadata, config snapshot, history, and best-checkpoint metadata under `artifacts/runs/<run_id>/`.
+  - [ ] Emit evaluation-side threshold/report/qualitative artifacts under the same authoritative run directory.
   - [ ] Execute the first authoritative pretrained baseline run end-to-end on the trusted dataset.
 - Success criteria:
   - At least one strong supervised baseline is reproducible end-to-end on the trusted dataset.
