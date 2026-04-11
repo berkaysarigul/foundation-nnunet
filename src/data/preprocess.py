@@ -159,6 +159,7 @@ def process_mask(
 
 _TEST_SIZE = 0.15
 _VAL_SIZE_FROM_TRAIN_VAL = 0.17647058823529413
+_SPLIT_POLICY_NAME = "stratified_two_stage_70_15_15_image_level_binary_label"
 
 
 def create_splits(
@@ -360,6 +361,7 @@ def main(
         image_size=img_size,
         seed=seed,
         resolved_rle_mode=resolved_rle_mode,
+        split_policy=_SPLIT_POLICY_NAME,
         skipped_images=skipped,
         splits=splits,
         mask_variant_manifest=mask_variant_manifest,

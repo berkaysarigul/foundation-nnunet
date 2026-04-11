@@ -133,7 +133,7 @@ Current strategic direction:
   - Label, overlay, split leakage, and reproducibility checklist items.
 
 ### P1.1 Stratify the train/val/test split
-- Status: [~]
+- Status: [x]
 - Dependencies: P0.7
 - Affected files/modules: `src/data/preprocess.py`, processed split manifest
 - Why it matters: the current split has low but unnecessary class-ratio drift and is weaker for publication.
@@ -142,7 +142,7 @@ Current strategic direction:
   - [x] Decide whether to preserve current image IDs or regenerate the split.
   - [x] Record the split policy and seed in `DECISIONS.md`.
   - [x] Implement deterministic stratified split generation in `src/data/preprocess.py`.
-  - [ ] Regenerate `splits.json` under the stratified policy and refresh split fingerprints/manifests.
+  - [x] Regenerate `splits.json` under the stratified policy and refresh split fingerprints/manifests.
 - Success criteria:
   - Split ratios are stable and leakage-free.
 - Validation needed before close:
@@ -372,11 +372,10 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P1.1 Stratify the train/val/test split
-2. P1.6 Build strong pretrained baseline after trust gates pass
-3. P1.7 Decide whether ROI / crop strategy is required
-4. P1.8 Decide whether the current hybrid is worth further investment
-5. P1.5 Repair config-driven trainer instantiation
-6. P1.4 Add validation-only threshold and post-processing tuning
-7. P1.2 Unify trainer/evaluator output schema
-8. P1.3 Repair Hausdorff metric or remove it from claims
+1. P1.5 Repair config-driven trainer instantiation
+2. P1.4 Add validation-only threshold and post-processing tuning
+3. P1.6 Build strong pretrained baseline after trust gates pass
+4. P1.7 Decide whether ROI / crop strategy is required
+5. P1.8 Decide whether the current hybrid is worth further investment
+6. P1.2 Unify trainer/evaluator output schema
+7. P1.3 Repair Hausdorff metric or remove it from claims

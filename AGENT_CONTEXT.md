@@ -1,16 +1,16 @@
 # Foundation-nnU-Net Agent Context
 
 Current phase:
-- Phase 2 evaluation correctness / baseline gate prep
+- Phase 3 baseline preparation
 
 Current blocker:
-- The repository now has a trusted regenerated dataset plus corrected per-image validation metrics with demonstrated trainer/evaluator parity on the same saved predictions. The deterministic publication-facing split policy is now implemented in code, but the on-disk trusted split, split fingerprint, and dataset manifest have not yet been regenerated under that policy.
+- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, and a refreshed publication-facing stratified split. The next blocker is training-pipeline readiness for baseline experiments, especially config-driven trainer behavior and validation-only threshold selection.
 
 Highest-priority open tasks:
-1. Regenerate `splits.json` under the deterministic stratified policy and update the split fingerprint.
-2. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
-3. Preserve strict separation between training mask variants and official reporting mask variants in all future runs.
-4. Repair config-driven trainer instantiation before large ablation sweeps.
+1. Repair config-driven trainer instantiation before large ablation sweeps.
+2. Add validation-only threshold and post-processing tuning.
+3. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
+4. Preserve strict separation between training mask variants and official reporting mask variants in all future runs.
 5. Keep hybrid work paused until a strong supervised baseline exists.
 
 What is already trusted:
@@ -39,7 +39,7 @@ What is already trusted:
 - The accepted DICOM intensity policy is now: preserve native 8-bit intensities when already in display range, apply modality/VOI transforms only if present, invert `MONOCHROME1` if encountered, and use Windows long-path-safe reads for local preprocessing.
 - `scripts/audit_dicom_intensity.py` is now the canonical metadata audit entrypoint and `tests/test_dicom_intensity_policy.py` is the canonical unit-test harness for the intensity policy.
 - The canonical trusted processed dataset root is now `data/processed/pneumothorax_trusted_v1`.
-- `data/processed/pneumothorax_trusted_v1/dataset_manifest.json` is now the authoritative dataset manifest, with dataset fingerprint `dc198ef70c4e5420e36b22dfb5f6d3ae28a9872bf64ee2e94a193ee711e06c12` and split fingerprint `3fe21a9e65cf883e5303aaad327238a69745f93bfa084b08f364ed058ad4bfc9`.
+- `data/processed/pneumothorax_trusted_v1/dataset_manifest.json` is now the authoritative dataset manifest, with dataset fingerprint `c47230301897c0b474bef236a09e6151b74911d75e739575ab91043bc6cc7b6d` and split fingerprint `40d562818cf8f128b0c14bfaccb8d7dae2a49b9380aac48832d70d70cb0dc695`.
 - The trusted regenerated dataset currently contains 10,675 images, 2,379 positive studies, and 8,296 negative studies under the accepted local raw bundle.
 - `scripts/validate_processed_dataset.py` is now the canonical end-to-end validation entrypoint for the trusted processed dataset contract.
 - `configs/config.yaml` now points `data.processed_dir` to `data/processed/pneumothorax_trusted_v1`.
@@ -57,12 +57,13 @@ What is already trusted:
 - The current trusted split does not meet that publication-facing target closely enough to preserve: train `22.6610%`, val `21.2235%`, test `21.5980%` versus dataset-wide `22.2857%`, so a regenerated stratified split is now the accepted direction.
 - The final deterministic publication-facing split policy is now fixed: two-stage stratified `train_test_split` with seed `42`, `15%` test, then `17.647058823529413%` validation from the remaining `train_val`, using image-level labels from `original_masks`, and sorted final split IDs.
 - `src/data/preprocess.py::create_splits` now implements that deterministic two-stage stratified policy in code.
+- `scripts/regenerate_trusted_split.py` is now the canonical helper for refreshing `splits.json` and `dataset_manifest.json` under the fixed stratified policy.
+- The refreshed trusted split now matches the policy target closely: train `22.2862%`, val `22.2846%`, test `22.2846%` versus dataset-wide `22.2857%`.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
 - Historical metrics and plots under `results/`, which remain legacy-only artifacts.
 - Any future run that bypasses the trusted dataset root or corrected metric path.
-- The on-disk split inside `data/processed/pneumothorax_trusted_v1`, because it still reflects the pre-stratification split fingerprint until regeneration is rerun.
 - Any claim involving Foundation X as clean external pretraining on SIIM.
 - The scientific value of the current hybrid design.
 
@@ -70,6 +71,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Regenerate `splits.json` and manifest fingerprints under the stratified policy.
-2. Validate split leakage and class-ratio targets on the regenerated split.
-3. Repair config-driven trainer instantiation before serious baseline sweeps.
+1. Repair config-driven trainer instantiation before serious baseline sweeps.
+2. Add validation-only threshold tuning on top of the corrected metric path.
+3. Start the strong supervised baseline only after those two pipeline blockers are cleared.
