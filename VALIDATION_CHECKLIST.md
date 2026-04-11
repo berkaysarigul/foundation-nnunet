@@ -65,10 +65,12 @@ What to do if it fails:
 
 What to check:
 - Train/val/test image IDs are disjoint and class ratios meet the accepted split policy.
+- For publication-facing stratified splits, the class label used for stratification is the binary image-level label derived from `original_masks` foreground presence, not `dilated_masks`.
 
 How to check it:
 - Perform explicit set-intersection checks and compute positive/negative ratios for each split.
 - Verify split seed and policy against the dataset manifest.
+- For a regenerated stratified split, verify each split's positive ratio stays within `1.0` absolute percentage point of the dataset-wide positive ratio unless integer rounding makes that impossible.
 - For the current trusted dataset version, run `py -3 scripts/validate_processed_dataset.py --dataset_dir data/processed/pneumothorax_trusted_v1` and verify:
   - split union equals the processed image ID set
   - no split overlap is reported
@@ -76,6 +78,7 @@ How to check it:
 
 Failure symptoms:
 - Any overlap, missing IDs, duplicated IDs, or unexpected class-ratio drift.
+- Stratification labels are computed from `dilated_masks` or another non-official target definition.
 
 What to do if it fails:
 - Regenerate the split deterministically and update the split fingerprint.

@@ -4,10 +4,10 @@ Current phase:
 - Phase 2 evaluation correctness / baseline gate prep
 
 Current blocker:
-- The repository now has a trusted regenerated dataset plus corrected per-image validation metrics with demonstrated trainer/evaluator parity on the same saved predictions. The next blocker is moving from trust recovery into publication-facing split policy and baseline preparation without reopening metric ambiguity.
+- The repository now has a trusted regenerated dataset plus corrected per-image validation metrics with demonstrated trainer/evaluator parity on the same saved predictions. The next blocker is completing the publication-facing stratified split policy and regeneration path before baseline work resumes.
 
 Highest-priority open tasks:
-1. Regenerate the train/val/test split under an explicit stratified policy for publication-facing use.
+1. Decide whether to preserve the current split IDs or regenerate a new stratified split.
 2. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
 3. Preserve strict separation between training mask variants and official reporting mask variants in all future runs.
 4. Repair config-driven trainer instantiation before large ablation sweeps.
@@ -53,6 +53,7 @@ What is already trusted:
 - `tests/test_trainer_validation_aggregation.py` is now the canonical regression harness for trainer-side all-image validation aggregation.
 - `scheduler.step(val_dice_pos_mean)` and best-checkpoint ranking now operate on the corrected positive-image mean Dice path.
 - `tests/test_trainer_evaluator_parity.py` now proves that trainer-side aggregated Dice/IoU/positive-Dice match evaluator-side per-image records on the same saved prediction fixture.
+- The accepted publication-facing stratification target is now the binary image-level positive/negative label derived from `original_masks` foreground presence, with target split proportions `70 / 15 / 15` and a desired per-split positive-ratio deviation of at most `1.0` absolute percentage point from the dataset-wide ratio.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
@@ -65,6 +66,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Stratify the train/val/test split for publication-facing experiments.
-2. Repair config-driven trainer instantiation before serious baseline sweeps.
-3. Add validation-only threshold tuning once the split policy is locked.
+1. Decide whether to preserve the current split IDs or regenerate a new stratified split.
+2. Record the final split policy and seed in code/repo memory after that choice.
+3. Repair config-driven trainer instantiation before serious baseline sweeps.

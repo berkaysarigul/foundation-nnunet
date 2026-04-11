@@ -133,12 +133,12 @@ Current strategic direction:
   - Label, overlay, split leakage, and reproducibility checklist items.
 
 ### P1.1 Stratify the train/val/test split
-- Status: [ ]
+- Status: [~]
 - Dependencies: P0.7
 - Affected files/modules: `src/data/preprocess.py`, processed split manifest
 - Why it matters: the current split has low but unnecessary class-ratio drift and is weaker for publication.
 - Subtasks:
-  - [ ] Define stratification target at image level for positive/negative class balance.
+  - [x] Define stratification target at image level for positive/negative class balance.
   - [ ] Decide whether to preserve current image IDs or regenerate the split.
   - [ ] Record the split policy and seed in `DECISIONS.md`.
 - Success criteria:

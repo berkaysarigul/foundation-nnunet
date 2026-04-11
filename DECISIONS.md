@@ -444,6 +444,31 @@ Impact on experiments / methodology:
 - Explicitly requesting `absolute_pairs` on the shipped local CSV should fail fast instead of silently producing wrong masks.
 - P0.4 will add golden regression checks for this accepted contract.
 
+## 2026-04-11 / D-021
+
+Decision:
+- The stratification target for publication-facing train/val/test splits is the binary image-level label:
+  - `positive` if the image's accepted `original_masks` target contains any foreground pixel
+  - `negative` otherwise
+- Stratification must be defined against the official/original target, not `dilated_masks`.
+- Target split proportions remain `70 / 15 / 15`.
+- A regenerated stratified split should preserve the global positive ratio in each split as closely as integer constraints allow, with a validation target of at most `1.0` absolute percentage point deviation from the dataset-wide positive ratio for each split.
+
+Reason:
+- P1.1 requires a concrete stratification objective before deciding whether to preserve the current image IDs or regenerate the split.
+- Using `original_masks` avoids letting the training-only dilation policy influence publication-facing split semantics.
+- The current unstratified split already has only modest drift, so the target should be "match the global image-level class ratio closely" rather than inventing a more complex balancing rule.
+
+Alternatives considered:
+- Stratify using `dilated_masks`.
+- Stratify on pixel-level foreground fraction instead of image-level positive/negative.
+- Accept the existing unstratified split as-is for publication use.
+
+Impact on experiments / methodology:
+- Any future stratified split regeneration must derive labels from `original_masks` or the equivalent accepted raw-label definition.
+- Validation of the stratified split should check class-ratio deviation against the dataset-wide positive ratio, not just overlap-free IDs.
+- This decision defines the target class balance only; it does not yet decide whether the current split IDs are preserved or regenerated.
+
 ## Open decisions requiring evidence
 
 ### OD-004
