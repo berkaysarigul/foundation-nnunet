@@ -32,6 +32,21 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def compute_validation_overlap_totals(
+    preds: torch.Tensor,
+    masks: torch.Tensor,
+    threshold: float = 0.5,
+) -> dict[str, float]:
+    """Return summed per-image overlap scores for trainer-side validation aggregation."""
+    per_image_dice = dice_score(preds, masks, threshold=threshold, reduction="none")
+    per_image_iou = iou_score(preds, masks, threshold=threshold, reduction="none")
+    return {
+        "dice_sum": float(per_image_dice.sum().item()),
+        "iou_sum": float(per_image_iou.sum().item()),
+        "image_count": int(per_image_dice.numel()),
+    }
+
+
 def set_seeds(seed: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
@@ -225,6 +240,7 @@ def train(cfg: dict) -> float:
         # === VALIDATION ===
         model.eval()
         val_loss = val_dice_sum = val_iou_sum = 0.0
+        val_metric_image_count = 0
         val_dice_pos_sum = 0.0
         val_dice_pos_count = 0
         with torch.no_grad():
@@ -232,8 +248,10 @@ def train(cfg: dict) -> float:
                 images, masks = images.to(device), masks.to(device)
                 preds = model(images)
                 val_loss     += criterion(preds, masks).item()
-                val_dice_sum += dice_score(preds, masks).item()
-                val_iou_sum  += iou_score(preds, masks).item()
+                overlap_totals = compute_validation_overlap_totals(preds, masks)
+                val_dice_sum += overlap_totals["dice_sum"]
+                val_iou_sum  += overlap_totals["iou_sum"]
+                val_metric_image_count += overlap_totals["image_count"]
 
                 # Per-batch positive-only Dice: select images that have GT foreground
                 is_pos = masks.sum(dim=(1, 2, 3)) > 0
@@ -242,8 +260,8 @@ def train(cfg: dict) -> float:
                     val_dice_pos_count += 1
 
         val_loss         /= len(val_loader)
-        val_dice_mean     = val_dice_sum / len(val_loader)
-        val_iou_mean      = val_iou_sum  / len(val_loader)
+        val_dice_mean     = val_dice_sum / max(val_metric_image_count, 1)
+        val_iou_mean      = val_iou_sum  / max(val_metric_image_count, 1)
         val_dice_pos_mean = val_dice_pos_sum / max(val_dice_pos_count, 1)
 
         # ReduceLROnPlateau monitors positive-only Dice (maximize)

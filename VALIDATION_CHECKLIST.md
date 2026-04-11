@@ -122,6 +122,7 @@ How to check it:
   - one-empty-one-positive overlap metrics evaluate to `0.0`
   - `positive_mean` returns `NaN` when there are no positive target images
 - Run `py -3 -m unittest tests.test_evaluate_metrics_backend -v` and confirm evaluator-side per-image records are produced through `reduction="none"` rather than implicit batch-micro reduction.
+- Run `py -3 -m unittest tests.test_trainer_validation_aggregation -v` and confirm trainer-side all-image Dice/IoU means are reconstructed from per-image sums and counts, not from averaging per-batch micro metrics.
 - Verify per-image and positive-only reductions explicitly.
 - Verify that checkpoint-selection calculations exclude negative images from the primary metric and do not use batch-level micro aggregation.
 

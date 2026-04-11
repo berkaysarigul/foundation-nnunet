@@ -4,7 +4,7 @@ Current phase:
 - Phase 2 evaluation correctness
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, a tested shared metric reduction backend, and evaluator-side per-image wiring, but trainer-side validation aggregation is still mathematically wrong.
+- The repository now has a trusted regenerated dataset, a tested shared metric reduction backend, evaluator-side per-image wiring, and trainer-side all-image mean aggregation, but positive-only checkpoint selection and trainer/evaluator parity are still unresolved.
 
 Highest-priority open tasks:
 1. Rewrite validation metrics to operate per image on the trusted dataset path.
@@ -48,12 +48,15 @@ What is already trusted:
 - `tests/test_metrics_reduction.py` is now the canonical regression harness for metric reductions and empty-mask edge cases.
 - `src/evaluation/evaluate.py` now routes per-image overlap metrics through the shared backend with explicit `reduction="none"`.
 - `tests/test_evaluate_metrics_backend.py` is now the canonical evaluator-side regression harness for per-image metric wiring.
+- `src/training/trainer.py` now aggregates all-image validation Dice/IoU from per-image scores instead of averaging implicit batch-micro metrics over loader steps.
+- `tests/test_trainer_validation_aggregation.py` is now the canonical regression harness for trainer-side all-image validation aggregation.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
 - Historical metrics and plots under `results/`, which remain legacy-only artifacts.
 - Validation/model-selection numbers from the current trainer, because the code path has not yet been updated to honor the defined authoritative metric.
-- Trainer/evaluator parity, because evaluator now uses the shared backend explicitly but trainer-side validation aggregation is still using the old batch-level accumulation logic.
+- Positive-only checkpoint selection, because `val_dice_pos_mean` still uses the old batch-counting logic.
+- Trainer/evaluator parity, because all-image aggregation is now shared-backend based but parity on the same saved predictions has not yet been demonstrated.
 - Any claim involving Foundation X as clean external pretraining on SIIM.
 - The scientific value of the current hybrid design.
 
@@ -63,4 +66,4 @@ Current strategic direction:
 Next 3 actions:
 1. Rewrite validation metrics once the trusted dataset path exists.
 2. Fix positive-only validation counting on top of the corrected metric path.
-3. Decide whether to regenerate the split under stratification now that the trusted dataset contract is fixed.
+3. Prove trainer/evaluator parity on the same predictions after the positive-only path is fixed.
