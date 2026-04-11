@@ -579,7 +579,49 @@ Impact on experiments / methodology:
 - Near-term threshold sweeps are now constrained to a documented validation-only policy instead of ad hoc manual probing.
 - Any selected threshold outside the declared candidate grid is non-authoritative unless a later decision expands the search space.
 - Any tuned run using post-processing other than `none` remains out of bounds until that search surface is explicitly approved and recorded.
-- P1.4 is not yet complete: the selected threshold and post-processing state still need authoritative storage and test-time reuse.
+- Authoritative storage and test-time reuse of the selected threshold are handled separately in D-026.
+
+## 2026-04-11 / D-026
+
+Decision:
+- The authoritative persisted threshold-selection artifact is `<run_dir>/selection/selection_state.yaml`.
+- `selection_state.yaml` must record at least:
+  - `selection_split`
+  - `selection_metric`
+  - `selected_threshold`
+  - `selected_postprocess`
+  - `threshold_candidates`
+  - `threshold_summary`
+  - `model_type`
+  - `checkpoint_path`
+  - `dataset_root`
+  - `eval_mask_variant`
+  - `input_size`
+- Authoritative test evaluation must require `selection_state.yaml` input instead of silently defaulting to `0.5`.
+- Before reusing a saved threshold on test, evaluation must fail fast unless the saved selection state matches the current:
+  - `model_type`
+  - `checkpoint_path`
+  - `dataset_root`
+  - `eval_mask_variant`
+  - `input_size`
+
+Reason:
+- P1.4 required the chosen threshold to be persisted and replayed on test without ambiguity.
+- A saved threshold is only scientifically meaningful if it is tied to the exact model checkpoint and evaluation context that produced it on validation.
+- Requiring the canonical `selection/selection_state.yaml` path aligns implementation with the already accepted run-artifact contract in D-010.
+- Failing fast on mismatched reuse closes a provenance hole where the wrong threshold file could otherwise be applied to a different checkpoint or dataset silently.
+
+Alternatives considered:
+- Keep the selected threshold only in memory or chat history.
+- Store only the scalar threshold without the surrounding evaluation context.
+- Allow test evaluation to fall back to `0.5` when no saved selection state is supplied.
+- Allow arbitrary filenames and directories for the persisted threshold artifact.
+
+Impact on experiments / methodology:
+- Test metrics are no longer authoritative unless they are produced with an explicit, matching `selection_state.yaml`.
+- Validation threshold selection is now an auditable artifact rather than an informal parameter choice.
+- Any selection-state file whose context does not match the current test evaluation must be treated as invalid evidence rather than "close enough."
+- P1.4 is now complete for the immediate `postprocess=none` path; broader post-processing search remains a later decision.
 
 ## Open decisions requiring evidence
 

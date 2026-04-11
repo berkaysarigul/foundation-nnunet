@@ -1,13 +1,18 @@
-"""Regression tests for validation-only threshold selection policy."""
+"""Regression tests for threshold selection, persistence, and reuse."""
 
 from __future__ import annotations
 
+import tempfile
 import unittest
+from pathlib import Path
 
 import torch
 
 from src.evaluation.evaluate import (
+    load_selection_state,
+    resolve_test_evaluation_selection,
     resolve_threshold_selection_config,
+    save_selection_state,
     tune_threshold_on_validation_predictions,
 )
 
@@ -19,6 +24,9 @@ class TestThresholdSelection(unittest.TestCase):
         metric: str = "val_dice_pos_mean",
         threshold_candidates: list[float] | None = None,
         postprocess: str = "none",
+        processed_dir: str = "data/processed/pneumothorax_trusted_v1",
+        eval_mask_variant: str = "original_masks",
+        input_size: int = 512,
     ) -> dict:
         return {
             "selection": {
@@ -27,8 +35,38 @@ class TestThresholdSelection(unittest.TestCase):
                     threshold_candidates if threshold_candidates is not None else [0.3, 0.5, 0.7]
                 ),
                 "postprocess": postprocess,
-            }
+            },
+            "data": {
+                "processed_dir": processed_dir,
+                "eval_mask_variant": eval_mask_variant,
+                "input_size": input_size,
+            },
         }
+
+    def make_selection_result(self, cfg: dict | None = None) -> dict:
+        preds = torch.tensor(
+            [
+                [[[0.60, 0.20], [0.20, 0.20]]],
+                [[[0.60, 0.60], [0.60, 0.60]]],
+                [[[0.60, 0.60], [0.60, 0.60]]],
+                [[[0.60, 0.60], [0.60, 0.60]]],
+            ],
+            dtype=torch.float32,
+        )
+        masks = torch.tensor(
+            [
+                [[[1.0, 0.0], [0.0, 0.0]]],
+                [[[0.0, 0.0], [0.0, 0.0]]],
+                [[[0.0, 0.0], [0.0, 0.0]]],
+                [[[0.0, 0.0], [0.0, 0.0]]],
+            ],
+            dtype=torch.float32,
+        )
+        return tune_threshold_on_validation_predictions(
+            preds,
+            masks,
+            cfg if cfg is not None else self.make_cfg(threshold_candidates=[0.5, 0.7]),
+        )
 
     def test_resolve_threshold_selection_config_normalizes_and_sorts(self) -> None:
         cfg = self.make_cfg(
@@ -121,6 +159,87 @@ class TestThresholdSelection(unittest.TestCase):
         selection = tune_threshold_on_validation_predictions(preds, masks, cfg)
 
         self.assertAlmostEqual(selection["selected_threshold"], 0.5)
+
+    def test_selection_state_round_trip_and_test_reuse(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            selection_path = tmp_path / "run_001" / "selection" / "selection_state.yaml"
+            checkpoint_path = tmp_path / "checkpoints" / "best_baseline.pth"
+            processed_dir = tmp_path / "data" / "processed" / "trusted_v1"
+            cfg = self.make_cfg(processed_dir=str(processed_dir))
+            selection_result = self.make_selection_result(cfg)
+
+            saved_state = save_selection_state(
+                selection_path,
+                selection_result,
+                cfg,
+                checkpoint_path=str(checkpoint_path),
+                model_type="baseline",
+            )
+            loaded_state = load_selection_state(selection_path)
+            selected_threshold, resolved_state = resolve_test_evaluation_selection(
+                cfg,
+                checkpoint_path=str(checkpoint_path),
+                model_type="baseline",
+                selection_state_path=selection_path,
+            )
+
+            self.assertEqual(loaded_state["selection_metric"], "val_dice_pos_mean")
+            self.assertEqual(loaded_state["selected_postprocess"], "none")
+            self.assertAlmostEqual(saved_state["selected_threshold"], 0.5)
+            self.assertAlmostEqual(selected_threshold, saved_state["selected_threshold"])
+            self.assertEqual(resolved_state["dataset_root"], loaded_state["dataset_root"])
+
+    def test_selection_state_requires_authoritative_path_shape(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            bad_path = tmp_path / "selection_state.yaml"
+            cfg = self.make_cfg()
+            selection_result = self.make_selection_result(cfg)
+
+            with self.assertRaisesRegex(ValueError, "selection"):
+                save_selection_state(
+                    bad_path,
+                    selection_result,
+                    cfg,
+                    checkpoint_path=str(tmp_path / "best_baseline.pth"),
+                    model_type="baseline",
+                )
+
+    def test_test_reuse_rejects_mismatched_context(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            tmp_path = Path(tmp_dir)
+            selection_path = tmp_path / "run_001" / "selection" / "selection_state.yaml"
+            checkpoint_path = tmp_path / "checkpoints" / "best_baseline.pth"
+            cfg = self.make_cfg(processed_dir=str(tmp_path / "data" / "processed" / "trusted_v1"))
+            selection_result = self.make_selection_result(cfg)
+            save_selection_state(
+                selection_path,
+                selection_result,
+                cfg,
+                checkpoint_path=str(checkpoint_path),
+                model_type="baseline",
+            )
+
+            mismatched_cfg = self.make_cfg(
+                processed_dir=str(tmp_path / "data" / "processed" / "other_v1")
+            )
+
+            with self.assertRaisesRegex(ValueError, "dataset_root"):
+                resolve_test_evaluation_selection(
+                    mismatched_cfg,
+                    checkpoint_path=str(checkpoint_path),
+                    model_type="baseline",
+                    selection_state_path=selection_path,
+                )
+
+            with self.assertRaisesRegex(ValueError, "requires --selection_state_input"):
+                resolve_test_evaluation_selection(
+                    cfg,
+                    checkpoint_path=str(checkpoint_path),
+                    model_type="baseline",
+                    selection_state_path=None,
+                )
 
 
 if __name__ == "__main__":

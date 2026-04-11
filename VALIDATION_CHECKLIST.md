@@ -202,6 +202,9 @@ How to check it:
     - `selection.postprocess=none`
   - selection prefers the threshold that maximizes positive-only validation Dice rather than all-image mean Dice
   - exact-score ties resolve deterministically back toward `0.5`
+- Confirm the persisted threshold artifact path matches `<run_dir>/selection/selection_state.yaml`.
+- Confirm test evaluation refuses to run without `selection_state.yaml`.
+- Confirm test evaluation refuses to reuse `selection_state.yaml` when `model_type`, `checkpoint_path`, `dataset_root`, `eval_mask_variant`, or `input_size` do not match the current evaluation context.
 - Review the tuning script/run metadata and ensure the selected threshold is frozen before test evaluation.
 
 Failure symptoms:
@@ -241,6 +244,18 @@ How to check it:
   - `<run_dir>/checkpoints/best_checkpoint_metadata.yaml`
   - `<run_dir>/selection/selection_state.yaml`
   - `<run_dir>/qualitative/validation_samples/`
+- Inspect `selection_state.yaml` and confirm it records:
+  - `selection_split`
+  - `selection_metric`
+  - `selected_threshold`
+  - `selected_postprocess`
+  - `threshold_candidates`
+  - `threshold_summary`
+  - `model_type`
+  - `checkpoint_path`
+  - `dataset_root`
+  - `eval_mask_variant`
+  - `input_size`
 - Confirm the minimum metadata record includes:
   - `run_id`
   - `started_at`

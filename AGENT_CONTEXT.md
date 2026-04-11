@@ -4,14 +4,14 @@ Current phase:
 - Phase 3 baseline preparation
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, and a coded validation-only threshold-selection policy. The next blocker is persisting the selected threshold/post-processing state and reusing it on test without breaking provenance.
+- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, and a complete validation-only threshold-selection path with authoritative persistence and test-time reuse. The next blocker is establishing the strong pretrained supervised baseline that will anchor the publication path.
 
 Highest-priority open tasks:
-1. Store the selected validation threshold/post-processing state and reuse it on test.
+1. Select one primary pretrained baseline family for immediate implementation.
 2. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
 3. Preserve strict separation between training mask variants and official reporting mask variants in all future runs.
-4. Start the strong supervised baseline only after threshold-selection discipline is complete end-to-end.
-5. Keep hybrid work paused until a strong supervised baseline exists.
+4. Keep hybrid work paused until a strong supervised baseline exists.
+5. Delay output-schema cleanup until the pretrained baseline path exists.
 
 What is already trusted:
 - The high-level repo structure and module boundaries.
@@ -74,15 +74,17 @@ What is already trusted:
   - `selection.threshold_candidates`: `0.05` to `0.95` inclusive in `0.05` steps
   - `selection.postprocess`: `none`
 - Threshold selection now fails fast if asked to tune on any split other than `val`.
-- `tests/test_threshold_selection.py` is now the canonical regression harness for validation-only threshold selection.
+- Validation threshold selection is now persisted to `<run_dir>/selection/selection_state.yaml`.
+- Test evaluation now requires `selection_state.yaml` input and validates that its `model_type`, `checkpoint_path`, `dataset_root`, `eval_mask_variant`, and `input_size` match the current evaluation context before using the selected threshold.
+- `tests/test_threshold_selection.py` is now the canonical regression harness for validation-only threshold selection, selection-state persistence, and selection-state reuse.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
 - Historical metrics and plots under `results/`, which remain legacy-only artifacts.
 - Any future run that bypasses the trusted dataset root or corrected metric path.
 - Any trainer config outside the accepted immediate surface until a later decision expands it.
-- Any threshold or post-processing choice that is not recorded and replayed through an authoritative provenance path.
 - Any post-processing mode beyond `none` until a later explicit decision expands the search space.
+- Any pretrained baseline result until a real pretrained encoder path is selected, implemented, and run end-to-end.
 - Any claim involving Foundation X as clean external pretraining on SIIM.
 - The scientific value of the current hybrid design.
 
@@ -90,6 +92,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Define how the chosen threshold and post-processing state are stored and reused on test.
-2. Wire authoritative evaluation to consume the selected threshold instead of an ad hoc default.
-3. Start the strong supervised baseline only after threshold-selection discipline is complete end-to-end.
+1. Select one primary pretrained baseline family for immediate implementation and record why it is the publication anchor.
+2. Define the fair training protocol for that baseline relative to the corrected current U-Net.
+3. Implement the pretrained baseline only after the family and protocol are fixed in repo memory.

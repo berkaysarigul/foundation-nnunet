@@ -209,14 +209,14 @@ Current strategic direction:
   - Metric correctness checklist.
 
 ### P1.4 Add validation-only threshold and post-processing tuning
-- Status: [~]
+- Status: [x]
 - Dependencies: P0.8, P0.9
 - Affected files/modules: `src/evaluation/evaluate.py`, training/evaluation configuration, run metadata
 - Why it matters: sparse-mask segmentation often improves materially with threshold and contour/min-area tuning.
 - Subtasks:
   - [x] Define search space for threshold and optional post-processing.
   - [x] Decide which validation metric is optimized.
-  - [ ] Define how the chosen threshold is stored and reused on test.
+  - [x] Define how the chosen threshold is stored and reused on test.
   - [x] Define rules preventing test-set leakage.
 - Success criteria:
   - Threshold selection is reproducible and test-set clean.
@@ -372,9 +372,8 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P1.4 Add validation-only threshold and post-processing tuning
-2. P1.6 Build strong pretrained baseline after trust gates pass
-3. P1.7 Decide whether ROI / crop strategy is required
-4. P1.8 Decide whether the current hybrid is worth further investment
-5. P1.2 Unify trainer/evaluator output schema
-6. P1.3 Repair Hausdorff metric or remove it from claims
+1. P1.6 Build strong pretrained baseline after trust gates pass
+2. P1.7 Decide whether ROI / crop strategy is required
+3. P1.8 Decide whether the current hybrid is worth further investment
+4. P1.2 Unify trainer/evaluator output schema
+5. P1.3 Repair Hausdorff metric or remove it from claims
