@@ -141,7 +141,8 @@ Current strategic direction:
   - [x] Define stratification target at image level for positive/negative class balance.
   - [x] Decide whether to preserve current image IDs or regenerate the split.
   - [x] Record the split policy and seed in `DECISIONS.md`.
-  - [ ] Implement deterministic stratified split regeneration and refresh split fingerprints/manifests.
+  - [x] Implement deterministic stratified split generation in `src/data/preprocess.py`.
+  - [ ] Regenerate `splits.json` under the stratified policy and refresh split fingerprints/manifests.
 - Success criteria:
   - Split ratios are stable and leakage-free.
 - Validation needed before close:

@@ -68,6 +68,11 @@ What to check:
 - For publication-facing stratified splits, the class label used for stratification is the binary image-level label derived from `original_masks` foreground presence, not `dilated_masks`.
 
 How to check it:
+- Run `py -3 -m unittest tests.test_stratified_splits -v` and confirm the deterministic split helper is:
+  - reproducible for the same seed
+  - disjoint across train/val/test
+  - sorted by image ID in each split
+  - class-ratio preserving on a synthetic binary-label fixture
 - Perform explicit set-intersection checks and compute positive/negative ratios for each split.
 - Verify split seed and policy against the dataset manifest.
 - For the publication-facing regenerated split, verify the policy matches D-023 exactly:

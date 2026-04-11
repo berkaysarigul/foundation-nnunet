@@ -157,14 +157,40 @@ def process_mask(
 # Split
 # ---------------------------------------------------------------------------
 
+_TEST_SIZE = 0.15
+_VAL_SIZE_FROM_TRAIN_VAL = 0.17647058823529413
+
+
 def create_splits(
     image_ids: list[str],
+    positive_ids: set[str],
     seed: int,
 ) -> dict[str, list[str]]:
-    """70% train / 15% val / 15% test split (stratification not applied here)."""
-    train_val, test = train_test_split(image_ids, test_size=0.15, random_state=seed)
-    # 15% of original is about 17.65% of train_val.
-    train, val = train_test_split(train_val, test_size=0.1765, random_state=seed)
+    """Return the deterministic publication-facing stratified split policy.
+
+    Policy tracked in D-023:
+    - stage 1: stratified train_val / test split with test_size=0.15
+    - stage 2: stratified train / val split with val_size=0.17647058823529413
+    - image-level binary labels are derived from original-mask foreground presence
+    - final split IDs are sorted for stable manifests and diffs
+    """
+    sorted_ids = sorted(image_ids)
+    labels = [1 if image_id in positive_ids else 0 for image_id in sorted_ids]
+
+    train_val, test = train_test_split(
+        sorted_ids,
+        test_size=_TEST_SIZE,
+        random_state=seed,
+        stratify=labels,
+    )
+
+    train_val_labels = [1 if image_id in positive_ids else 0 for image_id in train_val]
+    train, val = train_test_split(
+        train_val,
+        test_size=_VAL_SIZE_FROM_TRAIN_VAL,
+        random_state=seed,
+        stratify=train_val_labels,
+    )
     return {"train": sorted(train), "val": sorted(val), "test": sorted(test)}
 
 
@@ -282,7 +308,7 @@ def main(
     # ------------------------------------------------------------------
     # 4. Create and save splits
     # ------------------------------------------------------------------
-    splits = create_splits(image_ids, seed)
+    splits = create_splits(image_ids, positive_ids, seed)
     splits_path = out_path / "splits.json"
     with open(splits_path, "w", encoding="utf-8") as handle:
         json.dump(splits, handle, indent=2)
