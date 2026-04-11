@@ -27,14 +27,14 @@ training:
   epochs: 150
   batch_size: 8                 # 512: bs=8 (reduced for VRAM vs 256: bs=16)
   learning_rate: 0.0001
-  optimizer: "AdamW"
+  optimizer: "AdamW"            # supported immediate options: "AdamW", "Adam"
   weight_decay: 0.01
-  scheduler: "ReduceLROnPlateau"
+  scheduler: "ReduceLROnPlateau"  # supported immediate options: "ReduceLROnPlateau", "none"
   early_stopping_patience: 30
 
 # --- Loss ---
 loss:
-  type: "dice_focal"
+  type: "dice_focal"            # supported immediate option: "dice_focal"
 
 # --- Other ---
 seed: 42

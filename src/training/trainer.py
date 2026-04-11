@@ -10,6 +10,7 @@ import logging
 import os
 import random
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -30,6 +31,159 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 logger = logging.getLogger(__name__)
+
+
+LOSS_ALIASES = {
+    "dicefocal": "dice_focal",
+    "dicefocalloss": "dice_focal",
+}
+
+OPTIMIZER_ALIASES = {
+    "adamw": "AdamW",
+    "adam": "Adam",
+}
+
+SCHEDULER_ALIASES = {
+    "reducelronplateau": "ReduceLROnPlateau",
+    "plateau": "ReduceLROnPlateau",
+    "none": "none",
+    "disabled": "none",
+    "off": "none",
+}
+
+
+def normalize_component_name(value: str) -> str:
+    return "".join(ch for ch in str(value).lower() if ch.isalnum())
+
+
+def resolve_component_choice(
+    raw_value: str,
+    aliases: dict[str, str],
+    field_name: str,
+) -> str:
+    normalized = normalize_component_name(raw_value)
+    canonical = aliases.get(normalized)
+    if canonical is None:
+        supported_values = ", ".join(sorted(set(aliases.values())))
+        raise ValueError(
+            f"Unsupported {field_name}: {raw_value!r}. Supported values: {supported_values}."
+        )
+    return canonical
+
+
+def resolve_training_component_config(cfg: dict[str, Any]) -> dict[str, str]:
+    return {
+        "loss": resolve_component_choice(
+            cfg["loss"]["type"],
+            LOSS_ALIASES,
+            "loss.type",
+        ),
+        "optimizer": resolve_component_choice(
+            cfg["training"]["optimizer"],
+            OPTIMIZER_ALIASES,
+            "training.optimizer",
+        ),
+        "scheduler": resolve_component_choice(
+            cfg["training"].get("scheduler", "none"),
+            SCHEDULER_ALIASES,
+            "training.scheduler",
+        ),
+    }
+
+
+def build_loss(training_components: dict[str, str]) -> torch.nn.Module:
+    loss_name = training_components["loss"]
+    if loss_name == "dice_focal":
+        return DiceFocalLoss()
+    raise ValueError(f"Unsupported resolved loss: {loss_name!r}")
+
+
+def build_optimizer(
+    cfg: dict[str, Any],
+    model: torch.nn.Module,
+    training_components: dict[str, str],
+) -> torch.optim.Optimizer:
+    optimizer_name = training_components["optimizer"]
+    parameters = [param for param in model.parameters() if param.requires_grad]
+    learning_rate = cfg["training"]["learning_rate"]
+    weight_decay = cfg["training"]["weight_decay"]
+
+    if optimizer_name == "AdamW":
+        return torch.optim.AdamW(
+            parameters,
+            lr=learning_rate,
+            weight_decay=weight_decay,
+        )
+    if optimizer_name == "Adam":
+        return torch.optim.Adam(
+            parameters,
+            lr=learning_rate,
+            weight_decay=weight_decay,
+        )
+    raise ValueError(f"Unsupported resolved optimizer: {optimizer_name!r}")
+
+
+def build_scheduler(
+    optimizer: torch.optim.Optimizer,
+    training_components: dict[str, str],
+) -> torch.optim.lr_scheduler.ReduceLROnPlateau | None:
+    scheduler_name = training_components["scheduler"]
+    if scheduler_name == "ReduceLROnPlateau":
+        return torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer,
+            mode="max",
+            factor=0.5,
+            patience=10,
+            min_lr=1e-6,
+        )
+    if scheduler_name == "none":
+        return None
+    raise ValueError(f"Unsupported resolved scheduler: {scheduler_name!r}")
+
+
+def step_scheduler(
+    scheduler: torch.optim.lr_scheduler.ReduceLROnPlateau | None,
+    monitor_value: float,
+) -> None:
+    if scheduler is None:
+        return
+    scheduler.step(monitor_value)
+
+
+def validate_resume_training_components(
+    resume_state: dict[str, Any],
+    expected_training_components: dict[str, str],
+) -> None:
+    resume_training_components = resume_state.get("training_components")
+    if resume_training_components is None:
+        raise ValueError(
+            "Legacy resume checkpoint is missing training_components metadata. "
+            "Delete checkpoints/last_*.pth or start a fresh authoritative run."
+        )
+
+    normalized_resume_training_components = {
+        "loss": resolve_component_choice(
+            resume_training_components["loss"],
+            LOSS_ALIASES,
+            "resume.training_components.loss",
+        ),
+        "optimizer": resolve_component_choice(
+            resume_training_components["optimizer"],
+            OPTIMIZER_ALIASES,
+            "resume.training_components.optimizer",
+        ),
+        "scheduler": resolve_component_choice(
+            resume_training_components["scheduler"],
+            SCHEDULER_ALIASES,
+            "resume.training_components.scheduler",
+        ),
+    }
+    if normalized_resume_training_components != expected_training_components:
+        raise ValueError(
+            "Resume checkpoint training_components do not match the current config. "
+            f"checkpoint={normalized_resume_training_components}, "
+            f"config={expected_training_components}"
+        )
 
 
 def compute_validation_overlap_totals(
@@ -154,8 +308,6 @@ def train(cfg: dict) -> float:
     eval_mask_variant = cfg["data"].get("eval_mask_variant", "original_masks")
     batch_size   = cfg["training"]["batch_size"]
     epochs       = cfg["training"]["epochs"]
-    lr           = cfg["training"]["learning_rate"]
-    weight_decay = cfg["training"]["weight_decay"]
     patience     = cfg["training"]["early_stopping_patience"]
 
     Path("checkpoints").mkdir(exist_ok=True)
@@ -202,14 +354,16 @@ def train(cfg: dict) -> float:
     # ------------------------------------------------------------------
     # Loss, Optimizer, Scheduler
     # ------------------------------------------------------------------
-    criterion = DiceFocalLoss()
-    optimizer = torch.optim.AdamW(
-        filter(lambda p: p.requires_grad, model.parameters()),
-        lr=lr, weight_decay=weight_decay,
+    training_components = resolve_training_component_config(cfg)
+    logger.info(
+        "Training components | loss=%s | optimizer=%s | scheduler=%s",
+        training_components["loss"],
+        training_components["optimizer"],
+        training_components["scheduler"],
     )
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode="max", factor=0.5, patience=10, min_lr=1e-6,
-    )
+    criterion = build_loss(training_components)
+    optimizer = build_optimizer(cfg, model, training_components)
+    scheduler = build_scheduler(optimizer, training_components)
 
     # ------------------------------------------------------------------
     # Resume from checkpoint if available
@@ -223,9 +377,16 @@ def train(cfg: dict) -> float:
     if resume_path.exists():
         logger.info("Resuming from %s", resume_path)
         resume = torch.load(resume_path, map_location=device, weights_only=False)
+        validate_resume_training_components(resume, training_components)
         model.load_state_dict(resume["model"])
         optimizer.load_state_dict(resume["optimizer"])
-        scheduler.load_state_dict(resume["scheduler"])
+        if scheduler is not None:
+            scheduler_state = resume.get("scheduler")
+            if scheduler_state is None:
+                raise ValueError(
+                    "Resume checkpoint is missing scheduler state for the configured scheduler."
+                )
+            scheduler.load_state_dict(scheduler_state)
         start_epoch      = resume["epoch"] + 1
         best_dice        = resume["best_dice"]
         patience_counter = resume["patience_counter"]
@@ -282,7 +443,7 @@ def train(cfg: dict) -> float:
         val_dice_pos_mean = val_dice_pos_sum / max(val_dice_pos_count, 1)
 
         # ReduceLROnPlateau monitors positive-only Dice (maximize)
-        scheduler.step(val_dice_pos_mean)
+        step_scheduler(scheduler, val_dice_pos_mean)
 
         # === LOG ===
         history["train_loss"].append(train_loss)
@@ -312,7 +473,8 @@ def train(cfg: dict) -> float:
                 "epoch":            epoch,
                 "model":            model.state_dict(),
                 "optimizer":        optimizer.state_dict(),
-                "scheduler":        scheduler.state_dict(),
+                "scheduler":        scheduler.state_dict() if scheduler is not None else None,
+                "training_components": training_components,
                 "best_dice":        best_dice,
                 "patience_counter": patience_counter,
                 "history":          history,

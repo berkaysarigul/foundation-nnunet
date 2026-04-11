@@ -520,6 +520,34 @@ Impact on experiments / methodology:
 - Any future split fingerprint change under `pneumothorax_trusted_v1` should be attributable to this policy update rather than an arbitrary seed change.
 - Validation should confirm both the seed and the staged stratified procedure match this decision.
 
+## 2026-04-11 / D-024
+
+Decision:
+- The accepted immediate trainer config surface for authoritative baseline work is:
+  - `loss.type`: `dice_focal` only
+  - `training.optimizer`: `AdamW` or `Adam`
+  - `training.scheduler`: `ReduceLROnPlateau` or `none`
+- Unsupported values must fail fast during trainer startup instead of silently falling back to hardcoded defaults.
+- Resume checkpoints used for authoritative runs must carry canonical `training_components` metadata, and legacy `checkpoints/last_*.pth` files without that metadata must be rejected.
+
+Reason:
+- P1.5 required a small, trusted, immediately usable configuration surface before ablation sweeps or baseline training can be considered auditable.
+- `DiceFocalLoss` is the only currently implemented and trusted loss in the repository, so expanding loss support now would widen scope without corresponding validation.
+- `Adam` is the minimal additional optimizer needed for near-term controlled ablations relative to `AdamW` without introducing new hyperparameter fields.
+- `ReduceLROnPlateau` remains aligned with the corrected positive-only checkpoint-selection metric, while `none` is the only additional scheduler mode needed immediately for controlled comparisons.
+- Legacy resume checkpoints without explicit component metadata would allow old hardcoded behavior to leak into new config-driven runs.
+
+Alternatives considered:
+- Keep silently hardcoding `DiceFocalLoss`, `AdamW`, and `ReduceLROnPlateau`.
+- Expand the surface immediately to additional losses, `SGD`, or cosine/one-cycle schedulers before those options are separately validated.
+- Allow legacy `last_*.pth` checkpoints to resume without component metadata and trust the operator to notice mismatches manually.
+
+Impact on experiments / methodology:
+- Near-term trainer-side ablations may vary optimizer and scheduler only within this accepted surface; anything beyond it remains out of bounds until a later explicit decision expands support.
+- `loss.type` is now part of the authoritative config contract even though the immediate accepted surface contains only one trusted option.
+- Changing `training.optimizer` or `training.scheduler` inside the accepted surface now changes trainer behavior explicitly and audibly instead of being ignored.
+- Pre-fix resume checkpoints without `training_components` metadata are non-authoritative for continued config-driven runs and should be discarded rather than resumed.
+
 ## Open decisions requiring evidence
 
 ### OD-004

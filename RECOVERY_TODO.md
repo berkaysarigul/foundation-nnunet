@@ -224,14 +224,14 @@ Current strategic direction:
   - Threshold tuning discipline checklist.
 
 ### P1.5 Repair config-driven trainer instantiation
-- Status: [~]
+- Status: [x]
 - Dependencies: P0.2
 - Affected files/modules: `src/training/trainer.py`, `configs/config.yaml`
 - Why it matters: ablations are unreliable if YAML values do not actually control loss, optimizer, and scheduler behavior.
 - Subtasks:
   - [x] Inventory which config fields are currently ignored (`training.optimizer`, `training.scheduler`, `loss.type` are currently ignored by the trainer path).
-  - [ ] Define which options must be supported immediately versus later.
-  - [ ] Record the accepted configuration surface in `DECISIONS.md`.
+  - [x] Define which options must be supported immediately versus later.
+  - [x] Record the accepted configuration surface in `DECISIONS.md`.
 - Success criteria:
   - Changing config changes behavior in a controlled, auditable way.
 - Validation needed before close:
@@ -372,10 +372,9 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P1.5 Repair config-driven trainer instantiation
-2. P1.4 Add validation-only threshold and post-processing tuning
-3. P1.6 Build strong pretrained baseline after trust gates pass
-4. P1.7 Decide whether ROI / crop strategy is required
-5. P1.8 Decide whether the current hybrid is worth further investment
-6. P1.2 Unify trainer/evaluator output schema
-7. P1.3 Repair Hausdorff metric or remove it from claims
+1. P1.4 Add validation-only threshold and post-processing tuning
+2. P1.6 Build strong pretrained baseline after trust gates pass
+3. P1.7 Decide whether ROI / crop strategy is required
+4. P1.8 Decide whether the current hybrid is worth further investment
+5. P1.2 Unify trainer/evaluator output schema
+6. P1.3 Repair Hausdorff metric or remove it from claims

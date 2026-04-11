@@ -209,6 +209,12 @@ What to check:
 
 How to check it:
 - Inspect run directories and confirm required metadata files are present and internally consistent.
+- Run `py -3 -m unittest tests.test_trainer_config_surface -v` and confirm:
+  - `loss.type=dice_focal` instantiates the trusted `DiceFocalLoss`
+  - `training.optimizer` selects `AdamW` or `Adam` exactly as requested
+  - `training.scheduler` selects `ReduceLROnPlateau` or `none` exactly as requested
+  - unsupported trainer config values fail fast instead of silently falling back
+  - legacy `checkpoints/last_*.pth` resume files without `training_components` metadata are rejected
 - Inspect `data/processed/pneumothorax_trusted_v1/dataset_manifest.json` and confirm it records:
   - `dataset_version`
   - `dataset_fingerprint`

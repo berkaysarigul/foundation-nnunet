@@ -4,13 +4,13 @@ Current phase:
 - Phase 3 baseline preparation
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, and a refreshed publication-facing stratified split. The next blocker is training-pipeline readiness for baseline experiments, especially config-driven trainer behavior and validation-only threshold selection. The current trainer still hardcodes `DiceFocalLoss`, `AdamW`, and `ReduceLROnPlateau`, so `loss.type`, `training.optimizer`, and `training.scheduler` do not yet control behavior.
+- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, and an accepted immediate trainer config surface. The next blocker is validation-only threshold and post-processing selection on top of the corrected metric path before launching the strong supervised baseline.
 
 Highest-priority open tasks:
-1. Repair config-driven trainer instantiation before large ablation sweeps.
-2. Add validation-only threshold and post-processing tuning.
-3. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
-4. Preserve strict separation between training mask variants and official reporting mask variants in all future runs.
+1. Add validation-only threshold and post-processing tuning.
+2. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
+3. Preserve strict separation between training mask variants and official reporting mask variants in all future runs.
+4. Start the strong supervised baseline only after threshold-selection discipline is in place.
 5. Keep hybrid work paused until a strong supervised baseline exists.
 
 What is already trusted:
@@ -59,12 +59,21 @@ What is already trusted:
 - `src/data/preprocess.py::create_splits` now implements that deterministic two-stage stratified policy in code.
 - `scripts/regenerate_trusted_split.py` is now the canonical helper for refreshing `splits.json` and `dataset_manifest.json` under the fixed stratified policy.
 - The refreshed trusted split now matches the policy target closely: train `22.2862%`, val `22.2846%`, test `22.2846%` versus dataset-wide `22.2857%`.
-- The current config/trainer mismatch inventory is now explicit: `configs/config.yaml` exposes `loss.type`, `training.optimizer`, and `training.scheduler`, but `src/training/trainer.py` still hardcodes `DiceFocalLoss`, `torch.optim.AdamW`, and `torch.optim.lr_scheduler.ReduceLROnPlateau`.
+- The previous config/trainer mismatch inventory has now been resolved for the accepted immediate surface.
+- `src/training/trainer.py` now resolves an accepted immediate config surface instead of silently hardcoding training components.
+- The accepted immediate trainer config surface is now:
+  - `loss.type`: `dice_focal`
+  - `training.optimizer`: `AdamW` or `Adam`
+  - `training.scheduler`: `ReduceLROnPlateau` or `none`
+- Unsupported trainer config values now fail fast at startup instead of silently falling back.
+- Resume checkpoints for authoritative runs must now carry canonical `training_components` metadata; legacy `checkpoints/last_*.pth` files without that metadata are rejected.
+- `tests/test_trainer_config_surface.py` is now the canonical regression harness for the accepted immediate trainer config surface.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
 - Historical metrics and plots under `results/`, which remain legacy-only artifacts.
 - Any future run that bypasses the trusted dataset root or corrected metric path.
+- Any trainer config outside the accepted immediate surface until a later decision expands it.
 - Any claim involving Foundation X as clean external pretraining on SIIM.
 - The scientific value of the current hybrid design.
 
@@ -72,6 +81,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Decide which subset of the currently ignored config surface must be supported immediately in `src/training/trainer.py`.
-2. Add validation-only threshold tuning on top of the corrected metric path.
-3. Start the strong supervised baseline only after those two pipeline blockers are cleared.
+1. Add validation-only threshold tuning on top of the corrected metric path.
+2. Define how the chosen threshold and post-processing state are stored and reused on test.
+3. Start the strong supervised baseline only after threshold-selection discipline is in place.
