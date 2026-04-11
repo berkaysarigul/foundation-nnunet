@@ -4,10 +4,10 @@ Current phase:
 - Phase 2 evaluation correctness / baseline gate prep
 
 Current blocker:
-- The repository now has a trusted regenerated dataset plus corrected per-image validation metrics with demonstrated trainer/evaluator parity on the same saved predictions. The next blocker is implementing the regenerated publication-facing stratified split after deciding that the current split IDs should not be preserved.
+- The repository now has a trusted regenerated dataset plus corrected per-image validation metrics with demonstrated trainer/evaluator parity on the same saved predictions. The next blocker is implementing the deterministic publication-facing stratified split that has now been fully specified in repo memory.
 
 Highest-priority open tasks:
-1. Record the final split policy and seed in code/repo memory, then regenerate the split deterministically.
+1. Implement deterministic stratified split regeneration under the fixed policy and update the split fingerprint.
 2. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
 3. Preserve strict separation between training mask variants and official reporting mask variants in all future runs.
 4. Repair config-driven trainer instantiation before large ablation sweeps.
@@ -55,6 +55,7 @@ What is already trusted:
 - `tests/test_trainer_evaluator_parity.py` now proves that trainer-side aggregated Dice/IoU/positive-Dice match evaluator-side per-image records on the same saved prediction fixture.
 - The accepted publication-facing stratification target is now the binary image-level positive/negative label derived from `original_masks` foreground presence, with target split proportions `70 / 15 / 15` and a desired per-split positive-ratio deviation of at most `1.0` absolute percentage point from the dataset-wide ratio.
 - The current trusted split does not meet that publication-facing target closely enough to preserve: train `22.6610%`, val `21.2235%`, test `21.5980%` versus dataset-wide `22.2857%`, so a regenerated stratified split is now the accepted direction.
+- The final deterministic publication-facing split policy is now fixed: two-stage stratified `train_test_split` with seed `42`, `15%` test, then `17.647058823529413%` validation from the remaining `train_val`, using image-level labels from `original_masks`, and sorted final split IDs.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
@@ -67,6 +68,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Record the final split policy and seed in code/repo memory.
-2. Implement deterministic stratified split regeneration and update the split fingerprint.
+1. Implement deterministic stratified split regeneration and update the split fingerprint.
+2. Validate split leakage and class-ratio targets on the regenerated split.
 3. Repair config-driven trainer instantiation before serious baseline sweeps.

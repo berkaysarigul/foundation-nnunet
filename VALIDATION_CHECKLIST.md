@@ -70,6 +70,12 @@ What to check:
 How to check it:
 - Perform explicit set-intersection checks and compute positive/negative ratios for each split.
 - Verify split seed and policy against the dataset manifest.
+- For the publication-facing regenerated split, verify the policy matches D-023 exactly:
+  - two-stage stratified `train_test_split`
+  - `random_state=42`
+  - first split `test_size=0.15`
+  - second split `test_size=0.17647058823529413` on the remaining `train_val`
+  - final split IDs stored in sorted order
 - For a regenerated stratified split, verify each split's positive ratio stays within `1.0` absolute percentage point of the dataset-wide positive ratio unless integer rounding makes that impossible.
 - For the current trusted dataset version, run `py -3 scripts/validate_processed_dataset.py --dataset_dir data/processed/pneumothorax_trusted_v1` and verify:
   - split union equals the processed image ID set

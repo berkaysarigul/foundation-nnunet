@@ -494,6 +494,32 @@ Impact on experiments / methodology:
 - The next split task should implement deterministic regeneration under the accepted stratified policy and then update the split fingerprint.
 - Strong baseline work should prefer the regenerated stratified split once it exists.
 
+## 2026-04-11 / D-023
+
+Decision:
+- The publication-facing stratified split policy is:
+  - deterministic two-stage `train_test_split` with `random_state=42`
+  - stage 1: split all image IDs into `train_val` and `test` with `test_size=0.15`
+  - stage 2: split `train_val` into `train` and `val` with `test_size=0.17647058823529413`
+  - both stages use `stratify=` on the binary image-level labels defined in D-021
+  - each final split is stored in sorted image-ID order for stable manifests and diffs
+- The accepted publication-facing split seed remains `42`.
+
+Reason:
+- P1.1 needed the exact deterministic split mechanism pinned down before regenerating `splits.json`.
+- Keeping seed `42` preserves continuity with the existing recovery dataset while changing only the split policy itself.
+- A two-stage stratified split reproduces the intended `70 / 15 / 15` proportions with standard tooling and keeps the logic easy to audit.
+
+Alternatives considered:
+- Change the seed while introducing stratification.
+- Use one custom splitter implementation instead of two standard `train_test_split` calls.
+- Use unsorted output order and rely on downstream code not to care.
+
+Impact on experiments / methodology:
+- The next split-regeneration implementation must follow this exact two-stage seeded policy.
+- Any future split fingerprint change under `pneumothorax_trusted_v1` should be attributable to this policy update rather than an arbitrary seed change.
+- Validation should confirm both the seed and the staged stratified procedure match this decision.
+
 ## Open decisions requiring evidence
 
 ### OD-004
