@@ -248,7 +248,7 @@ Current strategic direction:
   - [x] Select one primary pretrained baseline family for immediate implementation.
   - [x] Define fair training protocol relative to the corrected current baseline.
   - [x] Record why this baseline is the publication anchor.
-  - [ ] Specify required outputs: tuned validation threshold, test report, qualitative examples.
+  - [x] Specify required outputs: tuned validation threshold, test report, qualitative examples.
 - Success criteria:
   - At least one strong supervised baseline is reproducible end-to-end on the trusted dataset.
 - Validation needed before close:

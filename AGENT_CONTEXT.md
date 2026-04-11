@@ -4,14 +4,14 @@ Current phase:
 - Phase 3 baseline preparation
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, and a fixed fair comparison protocol. The next blocker is specifying the required authoritative output package for that baseline run before implementation starts.
+- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, and a fixed baseline-gate output package. The next blocker is implementing the selected pretrained baseline inside that fixed protocol without widening scope.
 
 Highest-priority open tasks:
-1. Specify the required authoritative outputs for the chosen pretrained baseline run: tuned validation threshold, test report, and qualitative examples.
-2. Implement the chosen pretrained baseline only after the protocol and output package are fixed in repo memory.
-3. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
-4. Keep hybrid work paused until a strong supervised baseline exists.
-5. Delay output-schema cleanup until the pretrained baseline path exists.
+1. Implement the chosen pretrained baseline only after the protocol and output package are fixed in repo memory.
+2. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
+3. Keep hybrid work paused until a strong supervised baseline exists.
+4. Delay output-schema cleanup until the pretrained baseline path exists.
+5. Keep ROI/crop work out of scope until the strong baseline is actually measured.
 
 What is already trusted:
 - The high-level repo structure and module boundaries.
@@ -85,6 +85,13 @@ What is already trusted:
   - keep the current augmentation/sampling/training surface fixed: `get_train_transforms()`, the existing weighted train sampler policy, `loss.type=dice_focal`, `training.optimizer=AdamW`, `training.learning_rate=1e-4`, `training.weight_decay=0.01`, `training.scheduler=ReduceLROnPlateau`, `training.batch_size=8`, `training.epochs=150`, `training.early_stopping_patience=30`, and `seed=42`
   - keep the corrected selection/reporting path fixed: checkpoint ranking by `val_dice_pos_mean`, validation-only threshold selection under D-025/D-026, and `selection.postprocess=none`
   - allow only the architecture/initialization change for the first comparison: no ROI/crop, no test-time augmentation, no model-specific hyperparameter sweep, no staged freezing/unfreezing, no hybrid features, and no alternate dataset variant; any grayscale adaptation required by the pretrained encoder must stay inside the model path rather than introducing a separate RGB dataset pipeline
+- The required authoritative output package for the first pretrained baseline gate is now fixed:
+  - D-010 minimum training outputs still apply under the run directory
+  - the tuned validation threshold artifact remains the canonical `<run_dir>/selection/selection_state.yaml`
+  - the held-out test report must include a machine-readable per-image file at `<run_dir>/reports/test_metrics.csv` plus an aggregated summary at `<run_dir>/reports/test_summary.yaml`
+  - qualitative evidence must include both `<run_dir>/qualitative/validation_samples/` and `<run_dir>/qualitative/test_samples/`
+  - each qualitative directory must carry a manifest describing the selected image IDs so the evidence package is auditable rather than ad hoc
+  - exact trainer/evaluator output column naming remains deferred to P1.2, but the baseline-gate package must already be sufficient to recover real image IDs, split identity, eval mask variant, threshold/postprocess context, and corrected per-image metrics
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
@@ -94,6 +101,7 @@ What is still untrusted:
 - Any post-processing mode beyond `none` until a later explicit decision expands the search space.
 - Any pretrained baseline result until the selected `ResNet34` encoder path is implemented and run end-to-end under the trusted protocol.
 - Any initial baseline comparison that changes more than the architecture/initialization relative to the fixed protocol above.
+- Any initial pretrained baseline result that lacks the fixed baseline-gate output package under its authoritative run directory.
 - Any claim involving Foundation X as clean external pretraining on SIIM.
 - The scientific value of the current hybrid design.
 
@@ -101,6 +109,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Specify the required authoritative outputs for the selected `ImageNet-pretrained ResNet34 encoder U-Net` run: tuned validation threshold, test report, and qualitative examples.
-2. Implement the selected pretrained baseline only after the protocol and output package are fixed in repo memory.
-3. Keep the first baseline comparison constrained to the fixed trusted protocol instead of reopening optimizer, crop, or post-processing scope.
+1. Implement the selected pretrained baseline only after the protocol and output package are fixed in repo memory.
+2. Keep the first baseline comparison constrained to the fixed trusted protocol instead of reopening optimizer, crop, or post-processing scope.
+3. Emit the fixed baseline-gate evidence package under `artifacts/runs/<run_id>/` instead of leaking outputs back into `results/`.

@@ -321,6 +321,7 @@ What to do if it fails:
 What to check:
 - A strong pretrained supervised baseline exists before hybrid work resumes.
 - The first corrected comparison between the plain U-Net and the pretrained `ResNet34` encoder baseline respects the fixed fairness protocol rather than changing multiple knobs at once.
+- The first corrected pretrained baseline run carries the fixed baseline-gate evidence package, not just a checkpoint and console output.
 
 How to check it:
 - Confirm a trusted pretrained-encoder baseline has run end-to-end with corrected metrics, threshold selection, and reproducible outputs.
@@ -337,11 +338,22 @@ How to check it:
   - same validation-only threshold selection path with `selection.postprocess=none`
 - Confirm the initial pretrained baseline is fine-tuned end-to-end and that any grayscale adaptation stays inside the model path rather than introducing a separate RGB dataset pipeline.
 - Confirm the first comparison does not add ROI/crop preprocessing, test-time augmentation, hybrid/Foundation X components, or model-specific hyperparameter retuning for only one arm.
+- Confirm the baseline-gate run directory includes:
+  - `<run_dir>/selection/selection_state.yaml`
+  - `<run_dir>/reports/test_metrics.csv`
+  - `<run_dir>/reports/test_summary.yaml`
+  - `<run_dir>/qualitative/validation_samples/`
+  - `<run_dir>/qualitative/test_samples/`
+- Confirm `reports/test_metrics.csv` is produced from the held-out `test` split using the same best checkpoint and reused `selection_state.yaml` context that the run declares as authoritative.
+- Confirm the test report package is sufficient to recover real image IDs, split identity, eval mask variant, selected threshold/postprocess context, and corrected per-image test metrics, even if the final cross-file schema harmonization remains a later P1.2 task.
+- Confirm each qualitative package includes a manifest listing the selected image IDs; reject notebook screenshots or ad hoc copied images as substitutes for the authoritative qualitative package.
 
 Failure symptoms:
 - Hybrid work starts while the baseline is still the weak random-init U-Net or while trust blockers remain open.
 - The pretrained baseline run uses a different data root, split, optimizer, scheduler, loss, threshold policy, or other non-architectural change relative to the corrected plain U-Net comparison arm.
 - The first pretrained run quietly adds crop strategy, post-processing, TTA, staged freezing, or a separate RGB dataset path.
+- The initial pretrained baseline run is missing `reports/test_metrics.csv`, `reports/test_summary.yaml`, or either qualitative package.
+- The qualitative directories contain cherry-picked images with no manifest, or the test report cannot be tied back to the authoritative checkpoint and saved threshold-selection state.
 
 What to do if it fails:
 - Pause hybrid work and return to Phase 3 baseline tasks.

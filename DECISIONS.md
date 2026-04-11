@@ -704,6 +704,41 @@ Impact on experiments / methodology:
 - The first corrected comparison between the plain U-Net and pretrained baseline is now explicitly a single-variable architecture/initialization comparison.
 - Any initial pretrained-baseline result that changes additional knobs relative to this fixed protocol is non-authoritative for the paper-path baseline gate and should not be used for hybrid keep/drop decisions.
 
+## 2026-04-11 / D-029
+
+Decision:
+- The first authoritative `ImageNet-pretrained ResNet34 encoder U-Net` baseline run is baseline-gate eligible only if, in addition to the minimum training outputs already required by D-010, its run directory also contains the following evidence package:
+  - tuned validation-threshold artifact at `<run_dir>/selection/selection_state.yaml`
+  - machine-readable held-out test report at `<run_dir>/reports/test_metrics.csv`
+  - aggregated held-out test summary at `<run_dir>/reports/test_summary.yaml`
+  - qualitative validation package at `<run_dir>/qualitative/validation_samples/`
+  - qualitative test package at `<run_dir>/qualitative/test_samples/`
+- The baseline-gate test report package must be generated from the same best checkpoint and reused `selection_state.yaml` context that the run declares as authoritative.
+- The exact trainer/evaluator output schema and final column naming remain a separate P1.2 task, but the baseline-gate test report package must already be sufficient to recover:
+  - real image IDs
+  - split identity
+  - eval mask variant
+  - selected threshold and selected post-processing context
+  - corrected per-image test metrics
+- Each qualitative package must include a manifest recording which image IDs were selected into the package so the qualitative evidence is auditable and not ad hoc. The qualitative package is required for both validation and test splits; screenshots copied out of notebooks or chat are not substitutes.
+
+Reason:
+- P1.6 required the output package for the first strong pretrained baseline to be fixed before implementation starts.
+- D-010 already defined a minimum training-run output floor, but it did not yet pin the held-out test evidence package needed for the actual baseline gate.
+- The repository already has a canonical validation-threshold artifact path under D-026, so the missing piece was defining the authoritative test report and qualitative evidence package that must accompany the first pretrained baseline claim.
+- Requiring manifests for qualitative samples closes a cherry-picking hole while still leaving the exact sampling strategy open for implementation.
+
+Alternatives considered:
+- Treat the D-010 minimum training outputs as sufficient and leave test reporting/qualitative evidence informal.
+- Require only a scalar test summary with no machine-readable per-image report.
+- Accept notebook screenshots or ad hoc exported images as qualitative evidence.
+- Fully lock the final CSV column schema now, even though P1.2 is the dedicated output-schema task.
+
+Impact on experiments / methodology:
+- The next implementation task must write the first pretrained baseline's evidence under `artifacts/runs/<run_id>/` as a complete package, not just a checkpoint plus console logs.
+- A pretrained baseline result without `reports/test_metrics.csv`, `reports/test_summary.yaml`, and auditable validation/test qualitative packages is non-authoritative for the baseline gate even if the training loop itself ran successfully.
+- P1.2 remains responsible for harmonizing exact trainer/evaluator output schema and naming, but it should refine this package rather than reopen whether the package itself is required.
+
 ## Open decisions requiring evidence
 
 ### OD-004
