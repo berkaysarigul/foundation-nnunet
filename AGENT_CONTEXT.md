@@ -4,10 +4,10 @@ Current phase:
 - Phase 3 baseline preparation
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, trainer-side authoritative run artifact emission, a validated evaluation-side artifact path under the same authoritative run directory, and now a dedicated authoritative pretrained-run config in the repo. The next blocker is executing the first end-to-end trusted pretrained baseline run with that config on a GPU-capable environment, because the current desktop runtime reports `torch 2.11.0+cpu` with `cuda_available=False`.
+- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, trainer-side authoritative run artifact emission, a validated evaluation-side artifact path under the same authoritative run directory, a dedicated authoritative pretrained-run config, and now a Colab-friendly single entrypoint that chains `train -> select -> test` under one authoritative run directory. The next blocker is executing that first end-to-end trusted pretrained baseline run on a GPU-capable Colab/runtime, because the current desktop runtime reports `torch 2.11.0+cpu` with `cuda_available=False`.
 
 Highest-priority open tasks:
-1. Execute the first authoritative pretrained baseline run end-to-end on a GPU-capable environment using `configs/pretrained_resnet34_authoritative.yaml`.
+1. Execute the first authoritative pretrained baseline run end-to-end on a GPU-capable Colab/runtime using `scripts/run_authoritative_pretrained_baseline.py --config configs/pretrained_resnet34_authoritative.yaml`.
 2. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
 3. Keep hybrid work paused until a strong supervised baseline exists.
 4. Keep ROI/crop work out of scope until the strong baseline is actually measured.
@@ -118,6 +118,9 @@ What is already trusted:
 - `tests/test_evaluation_run_outputs.py` is now the canonical evaluator-side regression harness for authoritative run-directory output emission, and it passes alongside `tests.test_threshold_selection`, `tests.test_run_artifacts`, and `tests.test_evaluate_metrics_backend` under `C:\Users\beko5\AppData\Local\Programs\Python\Python310\python.exe`.
 - `configs/pretrained_resnet34_authoritative.yaml` is now the dedicated config for the first authoritative `pretrained_resnet34_unet` baseline run and locks the fixed D-028 protocol while changing only the architecture/initialization path relative to the corrected plain U-Net baseline.
 - `tests/test_authoritative_pretrained_config.py` is now the canonical regression harness for that dedicated pretrained baseline config, and it passes alongside `tests.test_trainer_config_surface` under `C:\Users\beko5\AppData\Local\Programs\Python\Python310\python.exe`.
+- `scripts/run_authoritative_pretrained_baseline.py` is now the Colab-friendly single entrypoint for the first authoritative pretrained baseline and chains `train`, validation threshold selection, and test evaluation under one authoritative `run_dir`.
+- The authoritative pretrained runner fails fast on off-protocol config values instead of silently allowing a widened comparison surface.
+- `tests/test_authoritative_pretrained_runner.py` is now the canonical regression harness for the authoritative pretrained runner and proves that `stage=all` reuses one authoritative `run_dir` across `train -> select -> test` while non-`all` stages require an explicit `--run_dir`.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
@@ -128,7 +131,7 @@ What is still untrusted:
 - Any pretrained baseline result until the selected `ResNet34` encoder path is implemented and run end-to-end under the trusted protocol.
 - Any initial baseline comparison that changes more than the architecture/initialization relative to the fixed protocol above.
 - Any initial pretrained baseline result that lacks the fixed baseline-gate output package under its authoritative run directory.
-- The real pretrained forward/training path on this local desktop environment, because the current runtime is CPU-only (`torch 2.11.0+cpu`, `cuda_available=False`) and is not suitable for the authoritative pretrained baseline run.
+- The real pretrained forward/training path on this local desktop environment, because the current runtime is CPU-only (`torch 2.11.0+cpu`, `cuda_available=False`) and is not suitable for the authoritative pretrained baseline run even though the Colab-oriented runner is now in place.
 - Any claim involving Foundation X as clean external pretraining on SIIM.
 - The scientific value of the current hybrid design.
 
@@ -136,6 +139,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Execute the first authoritative pretrained baseline run end-to-end on a GPU-capable environment with `configs/pretrained_resnet34_authoritative.yaml` and the validated run-directory evidence path.
+1. Execute the first authoritative pretrained baseline run end-to-end on a GPU-capable Colab/runtime with `scripts/run_authoritative_pretrained_baseline.py --config configs/pretrained_resnet34_authoritative.yaml`.
 2. Compare that authoritative pretrained baseline against the corrected plain U-Net under the fixed one-variable protocol.
 3. Keep the first baseline comparison constrained to the fixed trusted protocol instead of reopening optimizer, crop, or post-processing scope.
