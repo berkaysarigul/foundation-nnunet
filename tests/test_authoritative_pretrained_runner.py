@@ -19,6 +19,12 @@ class TestAuthoritativePretrainedRunner(unittest.TestCase):
 
         module["validate_authoritative_pretrained_protocol"](cfg)
 
+    def test_protocol_validation_accepts_dedicated_roi_crop_config(self) -> None:
+        module = load_runner_module()
+        cfg = module["load_config"]("configs/pretrained_resnet34_roi_crop_authoritative.yaml")
+
+        module["validate_authoritative_pretrained_protocol"](cfg)
+
     def test_protocol_validation_rejects_off_protocol_config(self) -> None:
         module = load_runner_module()
         cfg = module["load_config"]("configs/pretrained_resnet34_authoritative.yaml")

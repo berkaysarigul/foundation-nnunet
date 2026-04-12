@@ -330,6 +330,7 @@ def train(
     num_workers  = cfg["data"]["num_workers"]
     train_mask_variant = cfg["data"].get("train_mask_variant", "dilated_masks")
     eval_mask_variant = cfg["data"].get("eval_mask_variant", "original_masks")
+    train_crop = cfg["data"].get("train_crop")
     batch_size   = cfg["training"]["batch_size"]
     epochs       = cfg["training"]["epochs"]
     patience     = cfg["training"]["early_stopping_patience"]
@@ -347,6 +348,7 @@ def train(
         data_dir, split="train", img_size=input_size,
         transform=get_train_transforms(),
         mask_variant=train_mask_variant,
+        train_crop=train_crop,
     )
     val_ds = PneumothoraxDataset(
         data_dir, split="val", img_size=input_size, transform=None,
@@ -363,11 +365,12 @@ def train(
         num_workers=num_workers, pin_memory=device.type == "cuda",
     )
     logger.info(
-        "Train: %d samples | Val: %d samples | train_mask_variant=%s | eval_mask_variant=%s",
+        "Train: %d samples | Val: %d samples | train_mask_variant=%s | eval_mask_variant=%s | train_crop=%s",
         len(train_ds),
         len(val_ds),
         train_ds.mask_variant,
         val_ds.mask_variant,
+        train_ds.train_crop["mode"] if train_ds.train_crop is not None else "none",
     )
 
     # ------------------------------------------------------------------

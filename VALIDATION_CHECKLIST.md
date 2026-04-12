@@ -395,6 +395,15 @@ How to check it:
   - crop size is `384 x 384`
   - every crop is resized back to `512 x 512` before entering the model stack
   - `val` and `test` remain full-image with no crop path
+- Run `py -3 -m unittest tests.test_train_roi_crop_policy -v` and confirm:
+  - positive train crops enlarge the sparse ROI after resize-back-to-`512`
+  - negative train crops preserve empty masks and output shape `(1, 512, 512)`
+  - `data.train_crop` is rejected outside `split='train'`
+  - `data.train_crop` fails fast unless `data.input_size=512`
+- Run `py -3 -m unittest tests.test_authoritative_pretrained_roi_crop_config -v` and confirm `configs/pretrained_resnet34_roi_crop_authoritative.yaml` keeps the shared authoritative pretrained protocol fixed while setting only:
+  - `data.train_crop.mode=roi_train_only`
+  - `data.train_crop.crop_size=384`
+- Run `py -3 -m unittest tests.test_authoritative_pretrained_runner -v` and confirm the authoritative pretrained runner accepts the dedicated crop config without widening the shared protocol surface.
 - Confirm no ground-truth mask, selected threshold, or test-derived signal influences crop placement on `val` or `test`.
 - Confirm the crop comparison keeps the same trusted dataset root, split, optimizer, scheduler, threshold-selection policy, and evaluation artifact path as the current trusted full-image baseline.
 
@@ -402,6 +411,7 @@ Failure symptoms:
 - Validation/test use label-guided crops or any other ROI shortcut.
 - The crop arm silently changes tensor size, dataset root, optimizer, threshold policy, or other non-crop variables at the same time.
 - The first crop implementation introduces an additional ROI detector, sliding-window inference path, or test-time crop ensemble beyond the D-031 scope.
+- The dedicated crop config drifts away from `384 x 384` train-only ROI crops while still being treated as the immediate `P1.7` compare arm.
 
 What to do if it fails:
 - Reject the crop result as non-authoritative for `P1.7`.

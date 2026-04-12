@@ -270,7 +270,8 @@ Current strategic direction:
 - Subtasks:
   - [x] Define baseline performance threshold below which crop/ROI work becomes mandatory.
     - Validation note (2026-04-12): D-030 now fixes the `P1.7` gate at held-out `test` positive-only Dice mean `< 0.60` on the first authoritative full-image pretrained baseline. The current trusted full-image baseline reported `0.4951`, so the crop/ROI gate is triggered and a controlled crop/ROI comparison is now mandatory on the critical path.
-  - [ ] Compare full-image training against a justified crop strategy.
+  - [~] Compare full-image training against a justified crop strategy.
+    - Progress note (2026-04-12): the fixed D-031 train-only ROI crop arm is now implemented in `src/data/dataset.py` and wired through `src/training/trainer.py`; `configs/pretrained_resnet34_roi_crop_authoritative.yaml` now locks the crop-comparison protocol; and `py -3 -m unittest tests.test_train_roi_crop_policy -v`, `tests.test_authoritative_pretrained_roi_crop_config -v`, and `tests.test_authoritative_pretrained_runner -v` all passed. The authoritative GPU comparison run itself is still pending.
   - [x] Record any crop policy and its leakage constraints in `DECISIONS.md`.
     - Validation note (2026-04-12): D-031 now fixes the immediate `P1.7` comparison arm as a train-only mask-guided `384 x 384` ROI crop for positive train images, matched random `384 x 384` crops for negative train images, resize-back-to-`512` before the model, and full-image `val/test` evaluation with no label-guided eval crop path.
 - Success criteria:

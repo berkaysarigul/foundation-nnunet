@@ -1,0 +1,53 @@
+# ==========================================================
+# Authoritative ROI-Crop Comparison Config (Phase P1.7 / D-031)
+# ==========================================================
+#
+# Relative to the trusted full-image pretrained baseline, only the accepted
+# D-031 train-time crop policy changes.
+
+# --- Model ---
+model:
+  type: "pretrained_resnet34_unet"
+  in_channels: 1
+  num_classes: 1
+  base_filters: 64
+
+# --- Foundation X ---
+foundation_x:
+  checkpoint_path: "checkpoints/foundation_x.pth"
+  frozen: true
+
+# --- Data ---
+data:
+  processed_dir: "data/processed/pneumothorax_trusted_v1"
+  input_size: 512
+  num_workers: 4
+  train_mask_variant: "dilated_masks"
+  eval_mask_variant: "original_masks"
+  train_crop:
+    mode: "roi_train_only"
+    crop_size: 384
+
+# --- Training ---
+training:
+  epochs: 150
+  batch_size: 8
+  learning_rate: 0.0001
+  optimizer: "AdamW"
+  weight_decay: 0.01
+  scheduler: "ReduceLROnPlateau"
+  early_stopping_patience: 30
+
+# --- Loss ---
+loss:
+  type: "dice_focal"
+
+# --- Selection ---
+selection:
+  metric: "val_dice_pos_mean"
+  threshold_candidates: [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95]
+  postprocess: "none"
+
+# --- Other ---
+seed: 42
+device: "auto"
