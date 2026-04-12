@@ -1,16 +1,16 @@
 # Foundation-nnU-Net Agent Context
 
 Current phase:
-- Phase 3 baseline preparation
+- Phase 3 baseline follow-up
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, trainer-side authoritative run artifact emission, a validated evaluation-side artifact path under the same authoritative run directory, a dedicated authoritative pretrained-run config, a Colab-friendly single entrypoint that chains `train -> select -> test` under one authoritative run directory, and now a safe `select_test` runner stage for continuing from an existing `best_checkpoint.pth` without reopening training. The next blocker is still executing that first end-to-end trusted pretrained baseline run on a GPU-capable Colab/runtime, because the current desktop runtime reports `torch 2.11.0+cpu` with `cuda_available=False`.
+- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, trainer-side authoritative run artifact emission, a validated evaluation-side artifact path under the same authoritative run directory, a dedicated authoritative pretrained-run config, a Colab-friendly single entrypoint that chains `train -> select -> test` under one authoritative run directory, a safe `select_test` runner stage for continuing from an existing `best_checkpoint.pth` without reopening training, and now one completed authoritative pretrained baseline run on GPU/Colab. The next blocker is P1.7: deciding whether ROI/crop work is scientifically required now that a strong supervised baseline has been measured on the trusted dataset.
 
 Highest-priority open tasks:
-1. Execute the first authoritative pretrained baseline run end-to-end on a GPU-capable Colab/runtime using `scripts/run_authoritative_pretrained_baseline.py --config configs/pretrained_resnet34_authoritative.yaml`; if a live run is stopped after training (for example after observing collapse and preserving the current best checkpoint), continue with `--stage select_test --run_dir <authoritative_run_dir>` rather than `--stage all`.
+1. Define the baseline-performance gate below which ROI/crop work becomes mandatory (P1.7) using the new authoritative pretrained baseline evidence.
 2. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
-3. Keep hybrid work paused until a strong supervised baseline exists.
-4. Keep ROI/crop work out of scope until the strong baseline is actually measured.
+3. Keep hybrid work paused until the ROI/crop decision and baseline evidence are stable.
+4. Keep any future reruns on GPU-capable environments, because this local desktop runtime still reports `torch 2.11.0+cpu` with `cuda_available=False`.
 
 What is already trusted:
 - The high-level repo structure and module boundaries.
@@ -121,6 +121,7 @@ What is already trusted:
 - `scripts/run_authoritative_pretrained_baseline.py` is now the Colab-friendly single entrypoint for the first authoritative pretrained baseline and supports `stage=all`, `train`, `select`, `test`, and `select_test` under one authoritative `run_dir`.
 - The authoritative pretrained runner fails fast on off-protocol config values instead of silently allowing a widened comparison surface.
 - `tests/test_authoritative_pretrained_runner.py` is now the canonical regression harness for the authoritative pretrained runner and proves that `stage=all` reuses one authoritative `run_dir` across `train -> select -> test`, `stage=select_test` reuses an existing best checkpoint without invoking training, and non-`all` stages require an explicit `--run_dir`.
+- The first authoritative pretrained baseline run has now completed on GPU/Colab under `/content/drive/MyDrive/foundation_nnunet_runs/resnet34_authoritative_v1`: training was manually stopped after epoch 20 once validation collapsed to empty-mask predictions, the best checkpoint remained epoch 9 with `val_dice_pos_mean=0.5024`, `--stage select_test` reused that checkpoint, `selection_state.yaml` selected threshold `0.95`, and the held-out `test_summary.yaml` reported `1602` test images (`357` positive / `1245` negative) with positive-only Dice mean `0.4951`.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
@@ -128,10 +129,8 @@ What is still untrusted:
 - Any future run that bypasses the trusted dataset root or corrected metric path.
 - Any trainer config outside the accepted immediate surface until a later decision expands it.
 - Any post-processing mode beyond `none` until a later explicit decision expands the search space.
-- Any pretrained baseline result until the selected `ResNet34` encoder path is implemented and run end-to-end under the trusted protocol.
 - Any initial baseline comparison that changes more than the architecture/initialization relative to the fixed protocol above.
-- Any initial pretrained baseline result that lacks the fixed baseline-gate output package under its authoritative run directory.
-- The real pretrained forward/training path on this local desktop environment, because the current runtime is CPU-only (`torch 2.11.0+cpu`, `cuda_available=False`) and is not suitable for the authoritative pretrained baseline run even though the Colab-oriented runner is now in place.
+- Any future pretrained baseline result that lacks the fixed baseline-gate output package under its authoritative run directory.
 - Any claim involving Foundation X as clean external pretraining on SIIM.
 - The scientific value of the current hybrid design.
 
@@ -139,6 +138,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Execute the first authoritative pretrained baseline run end-to-end on a GPU-capable Colab/runtime with `scripts/run_authoritative_pretrained_baseline.py --config configs/pretrained_resnet34_authoritative.yaml`, and if the live training pass is manually stopped after preserving the current best checkpoint, finish the evidence package with `--stage select_test --run_dir <authoritative_run_dir>`.
-2. Compare that authoritative pretrained baseline against the corrected plain U-Net under the fixed one-variable protocol.
-3. Keep the first baseline comparison constrained to the fixed trusted protocol instead of reopening optimizer, crop, or post-processing scope.
+1. Define the baseline-performance threshold below which crop/ROI work becomes mandatory, using the new authoritative pretrained baseline as the measured full-image reference.
+2. Decide whether a justified crop strategy comparison must actually be run under P1.7, without reopening optimizer, post-processing, or hybrid scope.
+3. Keep hybrid work paused until the baseline and ROI/crop gate are resolved.

@@ -240,7 +240,7 @@ Current strategic direction:
 ## Phase 3: Strong Supervised Baseline
 
 ### P1.6 Replace the weak baseline with a pretrained encoder baseline
-- Status: [~]
+- Status: [x]
 - Dependencies: P0.7, P0.8, P0.9, P1.4, P1.5
 - Affected files/modules: `src/models/`, `src/training/trainer.py`, config surface, experiment outputs
 - Why it matters: a plain randomly initialized U-Net is not a competitive paper baseline.
@@ -253,9 +253,10 @@ Current strategic direction:
   - [x] Emit authoritative training-side run directory, metadata, config snapshot, history, and best-checkpoint metadata under `artifacts/runs/<run_id>/`.
   - [x] Emit evaluation-side threshold/report/qualitative artifacts under the same authoritative run directory.
     - Validation note (2026-04-11): `C:\Users\beko5\AppData\Local\Programs\Python\Python310\python.exe -m unittest tests.test_evaluation_run_outputs -v`, `tests.test_threshold_selection -v`, `tests.test_run_artifacts -v`, and `tests.test_evaluate_metrics_backend -v` all passed.
-  - [ ] Execute the first authoritative pretrained baseline run end-to-end on the trusted dataset.
+  - [x] Execute the first authoritative pretrained baseline run end-to-end on the trusted dataset.
     - Progress note (2026-04-11): `configs/pretrained_resnet34_authoritative.yaml` now locks the fixed D-028 protocol for the first run, `scripts/run_authoritative_pretrained_baseline.py` now provides a Colab-friendly single entrypoint for `train -> select -> test`, and `tests.test_authoritative_pretrained_config -v` plus `tests.test_authoritative_pretrained_runner -v` pass. The current desktop runtime reports `torch 2.11.0+cpu` with `cuda_available=False`, so the actual end-to-end run remains pending on a GPU-capable environment rather than this local machine.
     - Progress note (2026-04-12): the authoritative pretrained runner now also supports `--stage select_test` so a live GPU/Colab run can be stopped after training and then continue safely from the existing `best_checkpoint.pth` through validation threshold selection and held-out test evaluation without accidentally resuming `--stage all`. Targeted regression: `C:\Users\beko5\AppData\Local\Programs\Python\Python310\python.exe -m unittest tests.test_authoritative_pretrained_runner -v` and `tests.test_authoritative_pretrained_config -v` passed.
+    - Validation note (2026-04-12): user-reported GPU/Colab run under `/content/drive/MyDrive/foundation_nnunet_runs/resnet34_authoritative_v1` trained through epoch 20, preserved the best checkpoint from epoch 9 (`val_dice_pos_mean=0.5024`), and then completed `--stage select_test`. The authoritative artifact package now includes `selection/selection_state.yaml` with `selected_threshold=0.95`, `reports/test_metrics.csv`, `reports/test_summary.yaml`, `qualitative/validation_samples/`, and `qualitative/test_samples/`. Reported held-out test summary: `1602` images (`357` positive / `1245` negative), positive-only Dice mean `0.4951`.
 - Success criteria:
   - At least one strong supervised baseline is reproducible end-to-end on the trusted dataset.
 - Validation needed before close:
@@ -379,8 +380,8 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P1.6 Build strong pretrained baseline after trust gates pass
-2. P1.7 Decide whether ROI / crop strategy is required
-3. P1.8 Decide whether the current hybrid is worth further investment
-4. P1.2 Unify trainer/evaluator output schema
-5. P1.3 Repair Hausdorff metric or remove it from claims
+1. P1.7 Decide whether ROI / crop strategy is required
+2. P1.8 Decide whether the current hybrid is worth further investment
+3. P1.2 Unify trainer/evaluator output schema
+4. P1.3 Repair Hausdorff metric or remove it from claims
+5. P1.12 Define leak-aware Foundation X methodology
