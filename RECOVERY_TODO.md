@@ -271,7 +271,8 @@ Current strategic direction:
   - [x] Define baseline performance threshold below which crop/ROI work becomes mandatory.
     - Validation note (2026-04-12): D-030 now fixes the `P1.7` gate at held-out `test` positive-only Dice mean `< 0.60` on the first authoritative full-image pretrained baseline. The current trusted full-image baseline reported `0.4951`, so the crop/ROI gate is triggered and a controlled crop/ROI comparison is now mandatory on the critical path.
   - [ ] Compare full-image training against a justified crop strategy.
-  - [ ] Record any crop policy and its leakage constraints in `DECISIONS.md`.
+  - [x] Record any crop policy and its leakage constraints in `DECISIONS.md`.
+    - Validation note (2026-04-12): D-031 now fixes the immediate `P1.7` comparison arm as a train-only mask-guided `384 x 384` ROI crop for positive train images, matched random `384 x 384` crops for negative train images, resize-back-to-`512` before the model, and full-image `val/test` evaluation with no label-guided eval crop path.
 - Success criteria:
   - Either cropping is justified and planned, or full-image training is retained with evidence.
 - Validation needed before close:

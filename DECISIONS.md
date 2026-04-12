@@ -763,11 +763,44 @@ Impact on experiments / methodology:
 - Hybrid work remains paused because the current trusted full-image baseline did not clear the crop/ROI gate.
 - Any crop/ROI comparison must keep the same trusted dataset root, split, corrected metric path, and non-crop protocol settings unless a later explicit decision changes that scope.
 
+## 2026-04-12 / D-031
+
+Decision:
+- The immediate `P1.7` crop/ROI comparison arm is fixed as a train-only ROI-crop policy layered onto the current trusted full-image pretrained baseline protocol; validation, threshold selection, and held-out test evaluation remain full-image.
+- The accepted immediate crop policy is:
+  - operate on the existing `512 x 512` trusted processed images; do not create a second processed dataset root
+  - for positive `train` images, derive a square ROI crop from the current training mask variant, using the mask bounding box as the anchor, expanding/clamping it to a `384 x 384` window with limited center jitter
+  - for negative `train` images, sample a random `384 x 384` crop from the same `512 x 512` image space
+  - resize every crop back to `512 x 512` before it enters the existing model stack so the architecture, batch surface, and evaluation tensor size stay otherwise unchanged
+  - keep `val` and `test` uncropped full images in the immediate comparison arm
+- The accepted immediate leakage constraints are:
+  - ground-truth masks may guide crop placement on the `train` split only
+  - `val` and `test` crop placement must not depend on ground-truth masks, test-time threshold state, or any separate ROI detector in this immediate comparison
+  - any future image-only ROI detector, lung crop heuristic, sliding-window inference, or test-time crop ensemble is out of scope for the immediate `P1.7` comparison and would require a later explicit decision
+
+Reason:
+- The current blocker is to test whether moderate train-time zoom into pneumothorax regions helps under the observed sparsity regime without reopening multiple variables at once.
+- Keeping validation and test evaluation full-image preserves direct comparability with the trusted baseline result and avoids label leakage on evaluation splits.
+- A `384 x 384` crop from the `512 x 512` processed image provides a conservative zoom-in rather than an aggressive patch regime, which keeps more thoracic context while still enlarging sparse targets.
+- Resizing crops back to `512 x 512` keeps the existing model path, batch surface, checkpoint/evaluator contracts, and corrected artifact pipeline intact for the first crop comparison.
+- Using the current training mask variant to anchor positive train crops avoids introducing a second target-definition branch inside the crop comparison arm.
+
+Alternatives considered:
+- Apply mask-guided crops on validation or test, which would leak target information.
+- Introduce a second cropped processed dataset root before proving the crop idea is worthwhile.
+- Use much smaller patch sizes such as `256 x 256`, which would widen the comparison into a more aggressive patch-training experiment.
+- Add a learned/image-only ROI detector or sliding-window inference immediately, which would introduce extra moving parts beyond the immediate crop question.
+
+Impact on experiments / methodology:
+- The next `P1.7` implementation task is now decision-complete: add the fixed train-only `384 x 384` ROI-crop arm, run it on GPU, and compare it against the trusted full-image baseline under the same corrected protocol.
+- The immediate crop comparison must differ from the trusted full-image baseline only by this train-time crop policy; optimizer, scheduler, threshold-selection policy, mask-variant contract, and evaluation path stay fixed.
+- Any crop result that changes evaluation to label-guided ROI selection or adds a second ROI mechanism is non-authoritative for the immediate `P1.7` decision.
+
 ## Open decisions requiring evidence
 
 ### OD-004
-- Topic: Which justified ROI/crop policy, if any, should replace or augment the current full-image baseline after the crop/ROI gate in D-030 was triggered.
-- Needed evidence: a controlled crop/ROI comparison against the trusted full-image baseline under the same corrected protocol.
+- Topic: Whether the fixed immediate train-only `384 x 384` ROI-crop policy from D-031 improves enough over the trusted full-image baseline to justify retaining crop/ROI on the paper-path baseline.
+- Needed evidence: an authoritative GPU run of the D-031 crop arm compared against the current trusted full-image baseline under the same corrected protocol.
 
 ### OD-005
 - Topic: Whether the hybrid is retained, redesigned, or deferred from the main paper.

@@ -4,10 +4,10 @@ Current phase:
 - Phase 3 baseline follow-up
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, trainer-side authoritative run artifact emission, a validated evaluation-side artifact path under the same authoritative run directory, a dedicated authoritative pretrained-run config, a Colab-friendly single entrypoint that chains `train -> select -> test` under one authoritative run directory, a safe `select_test` runner stage for continuing from an existing `best_checkpoint.pth` without reopening training, one completed authoritative pretrained baseline run on GPU/Colab, and now a fixed `P1.7` crop/ROI gate. The next blocker is no longer whether crop/ROI is needed; it is running a controlled crop/ROI comparison because the gate was triggered by the trusted full-image baseline result.
+- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, trainer-side authoritative run artifact emission, a validated evaluation-side artifact path under the same authoritative run directory, a dedicated authoritative pretrained-run config, a Colab-friendly single entrypoint that chains `train -> select -> test` under one authoritative run directory, a safe `select_test` runner stage for continuing from an existing `best_checkpoint.pth` without reopening training, one completed authoritative pretrained baseline run on GPU/Colab, a fixed `P1.7` crop/ROI gate, and now a fixed immediate crop-comparison policy. The next blocker is implementing and executing that single approved crop-comparison arm under the same corrected protocol.
 
 Highest-priority open tasks:
-1. Compare the current trusted full-image pretrained baseline against a justified crop/ROI strategy under the same corrected protocol, because the `P1.7` gate now treats `test` positive-only Dice `< 0.60` as mandatory evidence for crop/ROI follow-up and the trusted full-image baseline reported `0.4951`.
+1. Implement and run the fixed `P1.7` crop arm from D-031: train-only ROI crops with `384 x 384` windows on the trusted dataset, resize back to `512`, and keep validation/test full-image so the result stays comparable to the current trusted full-image baseline.
 2. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
 3. Keep hybrid work paused until the ROI/crop decision and baseline evidence are stable.
 4. Keep any future reruns on GPU-capable environments, because this local desktop runtime still reports `torch 2.11.0+cpu` with `cuda_available=False`.
@@ -123,6 +123,7 @@ What is already trusted:
 - `tests/test_authoritative_pretrained_runner.py` is now the canonical regression harness for the authoritative pretrained runner and proves that `stage=all` reuses one authoritative `run_dir` across `train -> select -> test`, `stage=select_test` reuses an existing best checkpoint without invoking training, and non-`all` stages require an explicit `--run_dir`.
 - The first authoritative pretrained baseline run has now completed on GPU/Colab under `/content/drive/MyDrive/foundation_nnunet_runs/resnet34_authoritative_v1`: training was manually stopped after epoch 20 once validation collapsed to empty-mask predictions, the best checkpoint remained epoch 9 with `val_dice_pos_mean=0.5024`, `--stage select_test` reused that checkpoint, `selection_state.yaml` selected threshold `0.95`, and the held-out `test_summary.yaml` reported `1602` test images (`357` positive / `1245` negative) with positive-only Dice mean `0.4951`.
 - D-030 now fixes the `P1.7` crop/ROI gate: if the best currently trusted full-image supervised baseline reports held-out `test` positive-only Dice mean below `0.60`, crop/ROI work becomes mandatory on the critical path. The current trusted full-image baseline result (`0.4951`) triggers that gate.
+- D-031 now fixes the immediate crop/ROI comparison policy: use train-only mask-guided `384 x 384` ROI crops for positive train images, matched random `384 x 384` crops for negative train images, resize every crop back to `512 x 512` before the model stack, and keep validation/test evaluation full-image with no label-guided evaluation crop path.
 
 What is still untrusted:
 - The existing processed dataset under `data/processed/pneumothorax/`, because it predates the corrected RLE contract and mask-variant separation.
@@ -131,7 +132,7 @@ What is still untrusted:
 - Any trainer config outside the accepted immediate surface until a later decision expands it.
 - Any post-processing mode beyond `none` until a later explicit decision expands the search space.
 - Any initial baseline comparison that changes more than the architecture/initialization relative to the fixed protocol above.
-- Any ROI/crop policy until it is compared against the trusted full-image baseline under the same corrected protocol and recorded in repo memory.
+- Any ROI/crop result until the fixed D-031 crop arm is actually implemented, run, and compared against the trusted full-image baseline under the same corrected protocol.
 - Any future pretrained baseline result that lacks the fixed baseline-gate output package under its authoritative run directory.
 - Any claim involving Foundation X as clean external pretraining on SIIM.
 - The scientific value of the current hybrid design.
@@ -140,6 +141,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
 
 Next 3 actions:
-1. Define a justified ROI/crop comparison arm against the current trusted full-image baseline without reopening optimizer, post-processing, or hybrid scope.
+1. Implement the fixed D-031 train-only ROI-crop arm in the current data/training stack without reopening optimizer, post-processing, or hybrid scope.
 2. Execute that controlled crop/ROI comparison on a GPU-capable environment and evaluate it through the same corrected artifact path.
 3. Keep hybrid work paused until the crop/ROI comparison resolves whether full-image training should be retained or replaced for the paper-path baseline.

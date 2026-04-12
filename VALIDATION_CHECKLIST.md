@@ -380,3 +380,29 @@ Failure symptoms:
 What to do if it fails:
 - Re-anchor the decision to the trusted baseline evidence package.
 - Reopen the `P1.7` gate decision before running or citing crop/ROI experiments.
+
+## 14. Immediate ROI / crop policy
+
+What to check:
+- The first `P1.7` crop comparison follows the fixed D-031 policy instead of inventing a new crop regime during implementation.
+- Train-time ROI use is leakage-safe and evaluation remains directly comparable to the trusted full-image baseline.
+
+How to check it:
+- Confirm the implemented immediate crop arm matches D-031 exactly:
+  - crop only on the `train` split
+  - positive `train` images use mask-guided square ROI crops derived from the current training mask variant
+  - negative `train` images use random square crops from the same `512 x 512` image space
+  - crop size is `384 x 384`
+  - every crop is resized back to `512 x 512` before entering the model stack
+  - `val` and `test` remain full-image with no crop path
+- Confirm no ground-truth mask, selected threshold, or test-derived signal influences crop placement on `val` or `test`.
+- Confirm the crop comparison keeps the same trusted dataset root, split, optimizer, scheduler, threshold-selection policy, and evaluation artifact path as the current trusted full-image baseline.
+
+Failure symptoms:
+- Validation/test use label-guided crops or any other ROI shortcut.
+- The crop arm silently changes tensor size, dataset root, optimizer, threshold policy, or other non-crop variables at the same time.
+- The first crop implementation introduces an additional ROI detector, sliding-window inference path, or test-time crop ensemble beyond the D-031 scope.
+
+What to do if it fails:
+- Reject the crop result as non-authoritative for `P1.7`.
+- Re-implement the comparison so only the approved D-031 train-time crop policy changes.
