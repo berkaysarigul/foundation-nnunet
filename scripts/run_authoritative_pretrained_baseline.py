@@ -117,8 +117,12 @@ def run_stage(
             run_dir=resolved_run_dir,
         )
 
-    if stage in {"all", "select"}:
-        require_existing_best_checkpoint(run_artifacts.best_checkpoint_path, stage="select")
+    if stage in {"all", "select", "select_test"}:
+        select_stage_name = "select_test" if stage == "select_test" else "select"
+        require_existing_best_checkpoint(
+            run_artifacts.best_checkpoint_path,
+            stage=select_stage_name,
+        )
         select_threshold_and_save(
             cfg,
             checkpoint_path=str(run_artifacts.best_checkpoint_path),
@@ -126,8 +130,12 @@ def run_stage(
             selection_state_path=run_artifacts.selection_state_path,
         )
 
-    if stage in {"all", "test"}:
-        require_existing_best_checkpoint(run_artifacts.best_checkpoint_path, stage="test")
+    if stage in {"all", "test", "select_test"}:
+        test_stage_name = "select_test" if stage == "select_test" else "test"
+        require_existing_best_checkpoint(
+            run_artifacts.best_checkpoint_path,
+            stage=test_stage_name,
+        )
         evaluate(
             cfg,
             checkpoint_path=str(run_artifacts.best_checkpoint_path),
@@ -157,9 +165,13 @@ def main() -> None:
     )
     parser.add_argument(
         "--stage",
-        choices=("all", "train", "select", "test"),
+        choices=("all", "train", "select", "test", "select_test"),
         default="all",
-        help="Which part of the authoritative baseline pipeline to execute.",
+        help=(
+            "Which part of the authoritative baseline pipeline to execute. "
+            "'select_test' reuses an existing best checkpoint and runs "
+            "validation threshold selection followed by test evaluation."
+        ),
     )
     args = parser.parse_args()
 

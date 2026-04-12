@@ -96,6 +96,60 @@ class TestAuthoritativePretrainedRunner(unittest.TestCase):
             globals_dict["select_threshold_and_save"] = original_select
             globals_dict["evaluate"] = original_evaluate
 
+    def test_select_test_stage_reuses_existing_best_checkpoint_without_training(self) -> None:
+        module = load_runner_module()
+        run_stage = module["run_stage"]
+        globals_dict = run_stage.__globals__
+
+        call_log: list[tuple[str, object, object]] = []
+
+        def fake_train(cfg, *, config_path, run_dir):
+            raise AssertionError("select_test stage must not invoke train()")
+
+        def fake_select(cfg, *, checkpoint_path, model_type, selection_state_path):
+            selection_path = Path(selection_state_path)
+            selection_path.parent.mkdir(parents=True, exist_ok=True)
+            selection_path.write_text("selected_threshold: 0.5\n", encoding="utf-8")
+            call_log.append(("select", Path(checkpoint_path), selection_path))
+            return {"selected_threshold": 0.5}
+
+        def fake_evaluate(cfg, *, checkpoint_path, model_type, selection_state_path):
+            call_log.append(("test", Path(checkpoint_path), Path(selection_state_path)))
+            return None
+
+        original_train = globals_dict["train"]
+        original_select = globals_dict["select_threshold_and_save"]
+        original_evaluate = globals_dict["evaluate"]
+
+        try:
+            globals_dict["train"] = fake_train
+            globals_dict["select_threshold_and_save"] = fake_select
+            globals_dict["evaluate"] = fake_evaluate
+
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                run_dir = Path(tmp_dir) / "artifacts" / "runs" / "run_001"
+                checkpoint_path = run_dir / "checkpoints" / "best_checkpoint.pth"
+                checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
+                checkpoint_path.write_bytes(b"checkpoint")
+
+                resolved_run_dir = run_stage(
+                    config_path="configs/pretrained_resnet34_authoritative.yaml",
+                    run_dir=run_dir,
+                    stage="select_test",
+                )
+
+                self.assertEqual(resolved_run_dir, run_dir.resolve())
+                self.assertEqual(call_log[0][0], "select")
+                self.assertEqual(call_log[1][0], "test")
+                self.assertEqual(call_log[0][1], checkpoint_path.resolve())
+                self.assertEqual(call_log[0][2], run_dir.resolve() / "selection" / "selection_state.yaml")
+                self.assertEqual(call_log[1][1], checkpoint_path.resolve())
+                self.assertEqual(call_log[1][2], run_dir.resolve() / "selection" / "selection_state.yaml")
+        finally:
+            globals_dict["train"] = original_train
+            globals_dict["select_threshold_and_save"] = original_select
+            globals_dict["evaluate"] = original_evaluate
+
 
 if __name__ == "__main__":
     unittest.main()
