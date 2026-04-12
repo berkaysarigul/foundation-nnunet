@@ -358,3 +358,25 @@ Failure symptoms:
 What to do if it fails:
 - Pause hybrid work and return to Phase 3 baseline tasks.
 - Treat the comparison as protocol-breaking and do not use it as the publication anchor or hybrid decision baseline.
+
+## 13. ROI / crop gate
+
+What to check:
+- ROI/crop work is driven by the explicit `P1.7` gate in D-030 rather than ad hoc dissatisfaction with a run.
+- If the current trusted full-image baseline reports held-out `test` positive-only Dice mean below `0.60`, a controlled crop/ROI comparison is treated as mandatory before hybrid work resumes or the full-image baseline is accepted as the paper-path anchor.
+
+How to check it:
+- Confirm the current trusted full-image baseline evidence package records a held-out `test` positive-only Dice mean and that the value is read from authoritative repo memory, not from legacy artifacts.
+- Confirm D-030 remains the source-of-truth gate:
+  - `test` positive-only Dice mean `< 0.60` => crop/ROI comparison is mandatory
+  - `test` positive-only Dice mean `>= 0.60` => crop/ROI work may remain deferred unless another later decision changes scope
+- If the gate is triggered, confirm the subsequent crop/ROI comparison keeps the same trusted dataset root, split, corrected metric path, and non-crop training/evaluation protocol unless a later explicit decision records a justified change.
+
+Failure symptoms:
+- Crop/ROI work starts or is skipped without checking the D-030 gate first.
+- The gate is triggered but the next comparison silently changes optimizer, threshold policy, dataset root, or other non-crop variables at the same time.
+- The crop/ROI decision is justified from legacy artifacts or chat memory instead of the authoritative baseline evidence package.
+
+What to do if it fails:
+- Re-anchor the decision to the trusted baseline evidence package.
+- Reopen the `P1.7` gate decision before running or citing crop/ROI experiments.

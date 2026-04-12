@@ -739,11 +739,35 @@ Impact on experiments / methodology:
 - A pretrained baseline result without `reports/test_metrics.csv`, `reports/test_summary.yaml`, and auditable validation/test qualitative packages is non-authoritative for the baseline gate even if the training loop itself ran successfully.
 - P1.2 remains responsible for harmonizing exact trainer/evaluator output schema and naming, but it should refine this package rather than reopen whether the package itself is required.
 
+## 2026-04-12 / D-030
+
+Decision:
+- The `P1.7` ROI/crop gate is now defined against the first authoritative full-image pretrained baseline result, using the held-out `test` positive-only Dice mean from the baseline-gate evidence package as the decision metric for whether crop/ROI work becomes mandatory on the critical path.
+- Crop/ROI work becomes mandatory if the best currently trusted full-image supervised baseline reports `test` positive-only Dice mean below `0.60`.
+- Under the current authoritative baseline result, the gate is triggered: the trusted full-image pretrained baseline reported positive-only Dice mean `0.4951`, so a justified crop/ROI comparison is now required before hybrid work or publication-path baseline framing can continue.
+
+Reason:
+- `P1.7` exists because image-level balancing does not by itself solve the extreme pixel sparsity in SIIM pneumothorax segmentation.
+- The trusted dataset manifest now confirms that foreground occupies only about `0.3049%` of all pixels overall (`foreground_fraction_all_pixels=0.0030487728788925277`) and that even positive images have a median of only `2125` foreground pixels at `512 x 512`, so a full-image baseline that remains below a clear positive-case overlap bar should not be treated as evidence that crop/ROI is unnecessary.
+- Using the held-out `test` positive-only Dice mean keeps the gate tied to the same corrected, publication-facing metric family already adopted for trustworthy segmentation assessment, while avoiding all-image averages that can be biased by negatives.
+- The threshold is fixed at `0.60` so the project does not treat a roughly half-overlap positive-case baseline as strong enough to rule out crop/ROI under this sparsity regime.
+
+Alternatives considered:
+- Leave the crop/ROI decision informal and decide ad hoc after each run.
+- Gate on validation metrics instead of the held-out baseline evidence package.
+- Gate on all-image Dice or IoU instead of positive-only Dice.
+- Set a looser threshold near the current result and defer crop/ROI despite the observed sparsity pressure.
+
+Impact on experiments / methodology:
+- `P1.7` is now active on the critical path: the threshold-definition subtask is complete, and the next task is a controlled crop/ROI comparison against the current trusted full-image baseline.
+- Hybrid work remains paused because the current trusted full-image baseline did not clear the crop/ROI gate.
+- Any crop/ROI comparison must keep the same trusted dataset root, split, corrected metric path, and non-crop protocol settings unless a later explicit decision changes that scope.
+
 ## Open decisions requiring evidence
 
 ### OD-004
-- Topic: Whether ROI/crop strategy is necessary after the strong baseline is measured.
-- Needed evidence: trusted baseline performance and sparsity analysis.
+- Topic: Which justified ROI/crop policy, if any, should replace or augment the current full-image baseline after the crop/ROI gate in D-030 was triggered.
+- Needed evidence: a controlled crop/ROI comparison against the trusted full-image baseline under the same corrected protocol.
 
 ### OD-005
 - Topic: Whether the hybrid is retained, redesigned, or deferred from the main paper.

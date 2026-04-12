@@ -263,12 +263,13 @@ Current strategic direction:
   - Reproducibility, threshold tuning, and metric correctness checklist items.
 
 ### P1.7 Decide whether ROI / crop strategy is required
-- Status: [ ]
+- Status: [~]
 - Dependencies: P1.6
 - Affected files/modules: `src/data/preprocess.py`, `src/data/dataset.py`, training configuration
 - Why it matters: image-level balancing alone does not solve extreme pixel sparsity.
 - Subtasks:
-  - [ ] Define baseline performance threshold below which crop/ROI work becomes mandatory.
+  - [x] Define baseline performance threshold below which crop/ROI work becomes mandatory.
+    - Validation note (2026-04-12): D-030 now fixes the `P1.7` gate at held-out `test` positive-only Dice mean `< 0.60` on the first authoritative full-image pretrained baseline. The current trusted full-image baseline reported `0.4951`, so the crop/ROI gate is triggered and a controlled crop/ROI comparison is now mandatory on the critical path.
   - [ ] Compare full-image training against a justified crop strategy.
   - [ ] Record any crop policy and its leakage constraints in `DECISIONS.md`.
 - Success criteria:
