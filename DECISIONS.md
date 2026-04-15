@@ -796,11 +796,31 @@ Impact on experiments / methodology:
 - The immediate crop comparison must differ from the trusted full-image baseline only by this train-time crop policy; optimizer, scheduler, threshold-selection policy, mask-variant contract, and evaluation path stay fixed.
 - Any crop result that changes evaluation to label-guided ROI selection or adds a second ROI mechanism is non-authoritative for the immediate `P1.7` decision.
 
-## Open decisions requiring evidence
+## 2026-04-15 / D-032
 
-### OD-004
-- Topic: Whether the fixed immediate train-only `384 x 384` ROI-crop policy from D-031 improves enough over the trusted full-image baseline to justify retaining crop/ROI on the paper-path baseline.
-- Needed evidence: an authoritative GPU run of the D-031 crop arm compared against the current trusted full-image baseline under the same corrected protocol.
+Decision:
+- The immediate D-031 train-only ROI/crop comparison arm does not replace the trusted full-image pretrained baseline as the current paper-path supervised anchor.
+- For the current recovery path, the trusted full-image pretrained baseline remains the primary supervised reference because the first authoritative D-031 crop run underperformed it on the held-out `test` positive-only Dice mean:
+  - full-image pretrained baseline: `0.4951`
+  - immediate D-031 crop comparison: `0.4625`
+- Immediate ROI/crop work is therefore resolved for the current critical path: the tested D-031 arm did not justify replacing the full-image baseline, and any further ROI/crop exploration would require a new explicit decision rather than continuing as the default next step.
+
+Reason:
+- `P1.7` required evidence either that a justified crop policy should be retained or that full-image training should remain the main path with evidence.
+- The authoritative GPU/Colab crop run under `/content/drive/MyDrive/foundation_nnunet_runs/resnet34_roi_crop_authoritative_v1` completed the required comparison under the same trusted dataset, corrected metric path, and authoritative artifact protocol as the full-image baseline.
+- Although the crop arm was competitive enough to be worth checking, it did not beat the held-out full-image result and also showed the same late empty-mask collapse pattern seen in the earlier run family, so there is no evidence-based basis to promote it over the current full-image anchor.
+
+Alternatives considered:
+- Keep ROI/crop active on the critical path despite the first authoritative crop run underperforming.
+- Treat the crop result as inconclusive and continue iterating ROI/crop policy before deciding whether to move on.
+- Replace the full-image baseline with the crop run anyway because it was “close enough.”
+
+Impact on experiments / methodology:
+- `P1.7` is now complete: the current paper-path supervised anchor remains the trusted full-image pretrained baseline.
+- The next critical-path decision moves to `P1.8`, namely whether the current hybrid is worth further investment relative to that trusted full-image baseline.
+- Any future ROI/crop work is now off the default critical path unless a later explicit decision reopens it with a new justification and comparison scope.
+
+## Open decisions requiring evidence
 
 ### OD-005
 - Topic: Whether the hybrid is retained, redesigned, or deferred from the main paper.

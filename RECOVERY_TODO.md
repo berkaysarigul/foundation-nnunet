@@ -263,15 +263,16 @@ Current strategic direction:
   - Reproducibility, threshold tuning, and metric correctness checklist items.
 
 ### P1.7 Decide whether ROI / crop strategy is required
-- Status: [~]
+- Status: [x]
 - Dependencies: P1.6
 - Affected files/modules: `src/data/preprocess.py`, `src/data/dataset.py`, training configuration
 - Why it matters: image-level balancing alone does not solve extreme pixel sparsity.
 - Subtasks:
   - [x] Define baseline performance threshold below which crop/ROI work becomes mandatory.
     - Validation note (2026-04-12): D-030 now fixes the `P1.7` gate at held-out `test` positive-only Dice mean `< 0.60` on the first authoritative full-image pretrained baseline. The current trusted full-image baseline reported `0.4951`, so the crop/ROI gate is triggered and a controlled crop/ROI comparison is now mandatory on the critical path.
-  - [~] Compare full-image training against a justified crop strategy.
-    - Progress note (2026-04-12): the fixed D-031 train-only ROI crop arm is now implemented in `src/data/dataset.py` and wired through `src/training/trainer.py`; `configs/pretrained_resnet34_roi_crop_authoritative.yaml` now locks the crop-comparison protocol; and `py -3 -m unittest tests.test_train_roi_crop_policy -v`, `tests.test_authoritative_pretrained_roi_crop_config -v`, and `tests.test_authoritative_pretrained_runner -v` all passed. The authoritative GPU comparison run itself is still pending.
+  - [x] Compare full-image training against a justified crop strategy.
+    - Progress note (2026-04-12): the fixed D-031 train-only ROI crop arm is now implemented in `src/data/dataset.py` and wired through `src/training/trainer.py`; `configs/pretrained_resnet34_roi_crop_authoritative.yaml` now locks the crop-comparison protocol; and `py -3 -m unittest tests.test_train_roi_crop_policy -v`, `tests.test_authoritative_pretrained_roi_crop_config -v`, and `tests.test_authoritative_pretrained_runner -v` all passed.
+    - Validation note (2026-04-15): user-reported GPU/Colab run under `/content/drive/MyDrive/foundation_nnunet_runs/resnet34_roi_crop_authoritative_v1` was manually stopped after validation collapse, preserved the best checkpoint from epoch 6 (`val_dice_pos_mean=0.4757`), and then completed `--stage select_test`. The authoritative artifact package now includes `selection/selection_state.yaml` with `selected_threshold=0.90`, `reports/test_metrics.csv`, `reports/test_summary.yaml`, `qualitative/validation_samples/`, and `qualitative/test_samples/`. Reported held-out test summary: `1602` images (`357` positive / `1245` negative), positive-only Dice mean `0.4625`, which did not beat the trusted full-image baseline result `0.4951`.
   - [x] Record any crop policy and its leakage constraints in `DECISIONS.md`.
     - Validation note (2026-04-12): D-031 now fixes the immediate `P1.7` comparison arm as a train-only mask-guided `384 x 384` ROI crop for positive train images, matched random `384 x 384` crops for negative train images, resize-back-to-`512` before the model, and full-image `val/test` evaluation with no label-guided eval crop path.
 - Success criteria:
@@ -383,8 +384,8 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P1.7 Decide whether ROI / crop strategy is required
-2. P1.8 Decide whether the current hybrid is worth further investment
-3. P1.2 Unify trainer/evaluator output schema
-4. P1.3 Repair Hausdorff metric or remove it from claims
-5. P1.12 Define leak-aware Foundation X methodology
+1. P1.8 Decide whether the current hybrid is worth further investment
+2. P1.2 Unify trainer/evaluator output schema
+3. P1.3 Repair Hausdorff metric or remove it from claims
+4. P1.12 Define leak-aware Foundation X methodology
+5. P2.1 Prepare repeated split / cross-validation upgrade path
