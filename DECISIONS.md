@@ -964,6 +964,35 @@ Impact on experiments / methodology:
 - Existing older checkpoints may still resume through the legacy in-memory aliases, but new authoritative CSVs should emit only the D-036 canonical names.
 - `P1.2` remains open for the remaining output-schema subtasks, especially explicit subset-tag handling and final metadata completeness checks.
 
+## 2026-04-15 / D-037
+
+Decision:
+- Evaluation outputs that enumerate individual evaluated images must now carry both:
+  - the exact dataset `image_id` used for that row or qualitative sample
+  - an explicit `subset_tag` describing positive/negative subset membership
+- The accepted immediate `subset_tag` vocabulary is:
+  - `positive`
+  - `negative`
+- Under the current authoritative evaluator path:
+  - `reports/test_metrics.csv` must preserve the exact dataset `image_id` for each per-image row and append `subset_tag` after the D-036 required ordered prefix
+  - validation/test qualitative manifests must preserve the same exact `image_id` values and include the same `subset_tag` field for each sampled image entry
+- The existing boolean `positive` field remains valid as a machine-friendly flag, but it is no longer the only subset-membership signal in authoritative evaluation outputs.
+
+Reason:
+- `P1.2` remained open after D-036 because the evaluator still expressed subset membership only indirectly through a boolean `positive` column.
+- For human audit and downstream aggregation, explicit subset labels are easier to scan and less error-prone than reconstructing subset identity from booleans or summary tables.
+- The authoritative report package already depends on exact image traceability, so the per-image CSV rows and qualitative manifests should make that traceability explicit rather than implicit.
+
+Alternatives considered:
+- Keep only the boolean `positive` field and rely on downstream readers to derive subset names.
+- Add subset tags only to summary YAML, not to per-image or qualitative outputs.
+- Rename the existing `positive` column instead of adding an explicit subset-tag field.
+
+Impact on experiments / methodology:
+- Authoritative evaluation outputs are now easier to audit because every per-image record and sampled qualitative entry explicitly says both "which image" and "which subset."
+- Existing D-036 canonical required columns stay stable; `subset_tag` is an additive evaluation field layered on top rather than a rewrite of the ordered required prefix.
+- `P1.2` remains open only for the final metadata-completeness subtask after this image-ID/subset-tag surface is fixed.
+
 ## Open decisions requiring evidence
 
 ### OD-005

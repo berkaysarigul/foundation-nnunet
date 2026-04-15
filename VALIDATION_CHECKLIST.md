@@ -301,6 +301,9 @@ How to check it:
     - `precision`
     - `recall`
     - `f1`
+  - confirm per-image evaluation outputs preserve exact dataset `image_id` values rather than synthetic row IDs
+  - confirm authoritative evaluation outputs that enumerate individual images also carry explicit `subset_tag` values (`positive` / `negative`) instead of relying only on the boolean `positive` flag
+  - confirm validation/test qualitative manifests preserve the same `image_id` and `subset_tag` fields for each sampled image entry
 
 Failure symptoms:
 - Missing config snapshot, unclear dataset version, unknown threshold, or ambiguous checkpoint origin.

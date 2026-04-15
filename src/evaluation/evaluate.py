@@ -114,6 +114,7 @@ QUALITATIVE_SELECTION_POLICY = "first_n_per_class_in_dataset_order"
 class QualitativeSample:
     image_id: str
     positive: bool
+    subset_tag: str
     metrics: dict[str, float]
     image_uint8: np.ndarray
     target_mask_uint8: np.ndarray
@@ -572,6 +573,10 @@ def summarize_metric_values(values: list[float]) -> dict[str, float | None]:
     }
 
 
+def resolve_subset_tag(*, positive: bool) -> str:
+    return "positive" if positive else "negative"
+
+
 def build_test_summary_payload(
     df: pd.DataFrame,
     selection_state: dict[str, Any],
@@ -654,6 +659,7 @@ def build_qualitative_manifest(
             {
                 "image_id": sample.image_id,
                 "positive": bool(sample.positive),
+                "subset_tag": sample.subset_tag,
                 "metrics": {name: float(value) for name, value in sample.metrics.items()},
                 "files": {
                     "image": f"{sample_prefix}_image.png",
@@ -741,6 +747,7 @@ def collect_split_records_and_samples(
             image, mask = image.to(device), mask.to(device)
             pred = model(image)
             is_positive = bool(mask.sum().item() > 0)
+            subset_tag = resolve_subset_tag(positive=is_positive)
             metrics = compute_per_image_metrics(pred, mask, threshold=threshold)
             image_id = dataset.image_ids[idx]
 
@@ -748,6 +755,7 @@ def collect_split_records_and_samples(
                 {
                     "image_id": image_id,
                     "split": split,
+                    "subset_tag": subset_tag,
                     "model_type": model_type,
                     "checkpoint_path": canonicalize_path(checkpoint_path),
                     "eval_mask_variant": selection_state["eval_mask_variant"],
@@ -773,6 +781,7 @@ def collect_split_records_and_samples(
                     QualitativeSample(
                         image_id=image_id,
                         positive=is_positive,
+                        subset_tag=subset_tag,
                         metrics=metrics,
                         image_uint8=tensor_image_to_uint8(image),
                         target_mask_uint8=tensor_mask_to_uint8(mask),

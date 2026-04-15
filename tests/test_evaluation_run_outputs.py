@@ -114,6 +114,10 @@ class TestEvaluationRunOutputs(unittest.TestCase):
                 [sample["image_id"] for sample in manifest["samples"]],
                 ["pos_001", "neg_001"],
             )
+            self.assertEqual(
+                [sample["subset_tag"] for sample in manifest["samples"]],
+                ["positive", "negative"],
+            )
 
             run_metadata = yaml.safe_load(run_metadata_path.read_text(encoding="utf-8"))
             self.assertAlmostEqual(payload["selected_threshold"], 0.5)
@@ -165,6 +169,8 @@ class TestEvaluationRunOutputs(unittest.TestCase):
                 list(df.columns[: len(EVALUATION_CSV_COLUMNS)]),
                 list(EVALUATION_CSV_COLUMNS),
             )
+            self.assertEqual(df["image_id"].tolist(), ["pos_001", "neg_001"])
+            self.assertEqual(df["subset_tag"].tolist(), ["positive", "negative"])
             self.assertEqual(df["split"].tolist(), ["test", "test"])
             self.assertEqual(df["eval_mask_variant"].tolist(), ["original_masks", "original_masks"])
             self.assertEqual(df["selected_postprocess"].tolist(), ["none", "none"])
@@ -178,6 +184,14 @@ class TestEvaluationRunOutputs(unittest.TestCase):
             manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
             self.assertEqual(manifest["split"], "test")
             self.assertEqual(len(manifest["samples"]), 2)
+            self.assertEqual(
+                [sample["image_id"] for sample in manifest["samples"]],
+                ["pos_001", "neg_001"],
+            )
+            self.assertEqual(
+                [sample["subset_tag"] for sample in manifest["samples"]],
+                ["positive", "negative"],
+            )
 
             run_metadata = yaml.safe_load(run_metadata_path.read_text(encoding="utf-8"))
             self.assertAlmostEqual(run_metadata["selected_threshold"], 0.5)

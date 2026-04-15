@@ -189,7 +189,8 @@ Current strategic direction:
 - Subtasks:
   - [x] Define mandatory columns and naming for history CSVs and evaluation CSVs.
     - Validation note (2026-04-15): D-036 now fixes the canonical ordered schema for authoritative `metrics/history.csv` and `reports/test_metrics.csv`. The trainer now upgrades legacy resume-history aliases (`val_dice`, `val_dice_pos`, `val_iou`) into canonical `_mean` column names before emitting `history.csv`, the evaluator now writes `test_metrics.csv` through a shared canonical writer, and `py -3 -m unittest tests.test_run_artifacts -v`, `tests.test_evaluation_run_outputs -v`, and `tests.test_trainer_config_surface -v` all passed.
-  - [ ] Ensure evaluation outputs carry real image IDs and subset tags.
+  - [x] Ensure evaluation outputs carry real image IDs and subset tags.
+    - Validation note (2026-04-15): D-037 now fixes the immediate per-image evaluation traceability contract: authoritative evaluator rows and qualitative manifest entries must preserve exact dataset `image_id` values and explicit `subset_tag` values (`positive` / `negative`). `py -3 -m unittest tests.test_evaluation_run_outputs -v` and `tests.test_run_artifacts -v` passed after wiring `subset_tag` into per-image report rows and validation/test qualitative manifests.
   - [ ] Ensure saved thresholds and mask variants are included in output metadata.
 - Success criteria:
   - Output files are self-explanatory and traceable.
