@@ -247,6 +247,7 @@ How to check it:
 - Inspect `selection_state.yaml` and confirm it records:
   - `selection_split`
   - `selection_metric`
+  - `selection_state_path`
   - `selected_threshold`
   - `selected_postprocess`
   - `threshold_candidates`
@@ -254,6 +255,7 @@ How to check it:
   - `model_type`
   - `checkpoint_path`
   - `dataset_root`
+  - `train_mask_variant`
   - `eval_mask_variant`
   - `input_size`
 - Confirm the minimum metadata record includes:
@@ -304,6 +306,11 @@ How to check it:
   - confirm per-image evaluation outputs preserve exact dataset `image_id` values rather than synthetic row IDs
   - confirm authoritative evaluation outputs that enumerate individual images also carry explicit `subset_tag` values (`positive` / `negative`) instead of relying only on the boolean `positive` flag
   - confirm validation/test qualitative manifests preserve the same `image_id` and `subset_tag` fields for each sampled image entry
+  - confirm threshold-reusing evaluation outputs preserve metadata completeness:
+    - per-image `reports/test_metrics.csv` rows include `selection_state_path`, `train_mask_variant`, `eval_mask_variant`, `selected_threshold`, and `selected_postprocess`
+    - `reports/test_summary.yaml` includes the same reused-threshold and mask-variant context
+    - validation/test qualitative manifests include the same reused-threshold and mask-variant context
+  - run `py -3 -m unittest tests.test_threshold_selection -v` and confirm test-time selection-state reuse rejects mismatched `train_mask_variant` in addition to other context mismatches
 
 Failure symptoms:
 - Missing config snapshot, unclear dataset version, unknown threshold, or ambiguous checkpoint origin.
@@ -311,6 +318,8 @@ Failure symptoms:
 - Missing distinction between training and evaluation mask variants.
 - Missing required training outputs even when metadata exists.
 - Newly emitted authoritative CSVs still use ambiguous legacy history names or drift away from the D-036 ordered required columns.
+- Saved-threshold outputs require cross-reading multiple files to recover threshold provenance or training/evaluation mask-variant roles.
+- Test-time selection-state reuse accepts a mismatched `train_mask_variant` without error.
 
 What to do if it fails:
 - Do not promote the run into result summaries.

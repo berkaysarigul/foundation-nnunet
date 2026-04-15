@@ -182,7 +182,7 @@ Current strategic direction:
   - Metric correctness checklist.
 
 ### P1.2 Unify trainer/evaluator output schema
-- Status: [~]
+- Status: [x]
 - Dependencies: P0.8, P0.9, P0.2
 - Affected files/modules: `src/training/trainer.py`, `src/evaluation/evaluate.py`, authoritative run output layout
 - Why it matters: current outputs are inconsistent and easy to misinterpret.
@@ -191,7 +191,8 @@ Current strategic direction:
     - Validation note (2026-04-15): D-036 now fixes the canonical ordered schema for authoritative `metrics/history.csv` and `reports/test_metrics.csv`. The trainer now upgrades legacy resume-history aliases (`val_dice`, `val_dice_pos`, `val_iou`) into canonical `_mean` column names before emitting `history.csv`, the evaluator now writes `test_metrics.csv` through a shared canonical writer, and `py -3 -m unittest tests.test_run_artifacts -v`, `tests.test_evaluation_run_outputs -v`, and `tests.test_trainer_config_surface -v` all passed.
   - [x] Ensure evaluation outputs carry real image IDs and subset tags.
     - Validation note (2026-04-15): D-037 now fixes the immediate per-image evaluation traceability contract: authoritative evaluator rows and qualitative manifest entries must preserve exact dataset `image_id` values and explicit `subset_tag` values (`positive` / `negative`). `py -3 -m unittest tests.test_evaluation_run_outputs -v` and `tests.test_run_artifacts -v` passed after wiring `subset_tag` into per-image report rows and validation/test qualitative manifests.
-  - [ ] Ensure saved thresholds and mask variants are included in output metadata.
+  - [x] Ensure saved thresholds and mask variants are included in output metadata.
+    - Validation note (2026-04-15): D-038 now fixes the final metadata-completeness contract for authoritative evaluation outputs. `selection_state.yaml` now carries `selection_state_path`, `train_mask_variant`, and `eval_mask_variant`; test-summary, qualitative manifests, and per-image evaluation rows now carry the reused `selection_state_path`, `train_mask_variant`, `eval_mask_variant`, `selected_threshold`, and `selected_postprocess`; and test-time selection-state reuse now validates `train_mask_variant` alongside the prior context checks. `py -3 -m unittest tests.test_threshold_selection -v`, `tests.test_evaluation_run_outputs -v`, and `tests.test_run_artifacts -v` all passed.
 - Success criteria:
   - Output files are self-explanatory and traceable.
 - Validation needed before close:

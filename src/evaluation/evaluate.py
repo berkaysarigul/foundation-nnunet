@@ -102,6 +102,7 @@ REQUIRED_SELECTION_STATE_KEYS = {
     "model_type",
     "checkpoint_path",
     "dataset_root",
+    "train_mask_variant",
     "eval_mask_variant",
     "input_size",
 }
@@ -379,6 +380,8 @@ def build_selection_state_payload(
     cfg: dict[str, Any],
     checkpoint_path: str,
     model_type: str,
+    *,
+    selection_state_path: str | Path,
 ) -> dict[str, Any]:
     return {
         "selection_split": selection_result["split"],
@@ -392,6 +395,8 @@ def build_selection_state_payload(
         "model_type": model_type,
         "checkpoint_path": canonicalize_path(checkpoint_path),
         "dataset_root": canonicalize_path(cfg["data"]["processed_dir"]),
+        "selection_state_path": canonicalize_path(selection_state_path),
+        "train_mask_variant": cfg["data"].get("train_mask_variant", "dilated_masks"),
         "eval_mask_variant": cfg["data"].get("eval_mask_variant", "original_masks"),
         "input_size": int(cfg["data"]["input_size"]),
     }
@@ -411,6 +416,7 @@ def save_selection_state(
         cfg,
         checkpoint_path=checkpoint_path,
         model_type=model_type,
+        selection_state_path=path,
     )
     with path.open("w", encoding="utf-8") as handle:
         yaml.safe_dump(payload, handle, sort_keys=False)
@@ -449,6 +455,7 @@ def load_selection_state(selection_state_path: str | Path) -> dict[str, Any]:
         )
     state["checkpoint_path"] = canonicalize_path(state["checkpoint_path"])
     state["dataset_root"] = canonicalize_path(state["dataset_root"])
+    state["selection_state_path"] = canonicalize_path(path)
     state["input_size"] = int(state["input_size"])
     return state
 
@@ -468,6 +475,7 @@ def resolve_test_evaluation_selection(
     state = load_selection_state(selection_state_path)
     expected_checkpoint_path = canonicalize_path(checkpoint_path)
     expected_dataset_root = canonicalize_path(cfg["data"]["processed_dir"])
+    expected_train_mask_variant = cfg["data"].get("train_mask_variant", "dilated_masks")
     expected_eval_mask_variant = cfg["data"].get("eval_mask_variant", "original_masks")
     expected_input_size = int(cfg["data"]["input_size"])
 
@@ -483,6 +491,10 @@ def resolve_test_evaluation_selection(
     if state["dataset_root"] != expected_dataset_root:
         raise ValueError(
             "selection state dataset_root does not match the current evaluation dataset_root."
+        )
+    if state["train_mask_variant"] != expected_train_mask_variant:
+        raise ValueError(
+            "selection state train_mask_variant does not match the current evaluation mask variant policy."
         )
     if state["eval_mask_variant"] != expected_eval_mask_variant:
         raise ValueError(
@@ -601,6 +613,8 @@ def build_test_summary_payload(
         "model_type": model_type,
         "checkpoint_path": canonicalize_path(checkpoint_path),
         "dataset_root": selection_state["dataset_root"],
+        "selection_state_path": selection_state["selection_state_path"],
+        "train_mask_variant": selection_state["train_mask_variant"],
         "eval_mask_variant": selection_state["eval_mask_variant"],
         "input_size": int(selection_state["input_size"]),
         "selection_metric": selection_state["selection_metric"],
@@ -675,6 +689,8 @@ def build_qualitative_manifest(
         "model_type": model_type,
         "checkpoint_path": canonicalize_path(checkpoint_path),
         "dataset_root": selection_state["dataset_root"],
+        "selection_state_path": selection_state["selection_state_path"],
+        "train_mask_variant": selection_state["train_mask_variant"],
         "eval_mask_variant": selection_state["eval_mask_variant"],
         "input_size": int(selection_state["input_size"]),
         "selection_metric": selection_state["selection_metric"],
@@ -758,6 +774,8 @@ def collect_split_records_and_samples(
                     "subset_tag": subset_tag,
                     "model_type": model_type,
                     "checkpoint_path": canonicalize_path(checkpoint_path),
+                    "selection_state_path": selection_state["selection_state_path"],
+                    "train_mask_variant": selection_state["train_mask_variant"],
                     "eval_mask_variant": selection_state["eval_mask_variant"],
                     "selection_metric": selection_state["selection_metric"],
                     "selected_threshold": threshold,

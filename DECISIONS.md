@@ -993,6 +993,42 @@ Impact on experiments / methodology:
 - Existing D-036 canonical required columns stay stable; `subset_tag` is an additive evaluation field layered on top rather than a rewrite of the ordered required prefix.
 - `P1.2` remains open only for the final metadata-completeness subtask after this image-ID/subset-tag surface is fixed.
 
+## 2026-04-15 / D-038
+
+Decision:
+- The final `P1.2` output-metadata completeness contract is now fixed for authoritative evaluation artifacts that depend on saved threshold reuse.
+- The persisted `selection/selection_state.yaml` must now include:
+  - `selection_state_path`
+  - `train_mask_variant`
+  - `eval_mask_variant`
+  - the selected threshold/postprocess fields already required earlier
+- Any authoritative evaluation artifact derived from a reused `selection_state.yaml` must now expose, in its own metadata surface:
+  - the reused `selection_state_path`
+  - `train_mask_variant`
+  - `eval_mask_variant`
+  - `selected_threshold`
+  - `selected_postprocess`
+- Under the current stack, this completeness rule applies at least to:
+  - per-image `reports/test_metrics.csv` rows as additive metadata columns
+  - `reports/test_summary.yaml`
+  - validation/test qualitative `manifest.yaml` files
+- Selection-state reuse during test evaluation must now validate `train_mask_variant` in addition to the already-recorded checkpoint, dataset root, evaluation mask variant, and input size.
+
+Reason:
+- `P1.2` remained open after D-036 and D-037 because threshold reuse and mask-variant context were still split across files in a way that made downstream auditing harder than necessary.
+- The repository already treated `selection_state.yaml` as the canonical saved-threshold artifact, so downstream outputs should explicitly point back to that artifact rather than only restating a scalar threshold value.
+- Both training-target and evaluation-target mask variants matter scientifically in this repo, so evaluation outputs are incomplete if they expose only `eval_mask_variant` and omit `train_mask_variant`.
+
+Alternatives considered:
+- Treat run-level metadata as sufficient and keep report/manifest metadata thinner.
+- Record only scalar threshold values in downstream outputs without an explicit pointer back to `selection_state.yaml`.
+- Carry only `eval_mask_variant` and assume `train_mask_variant` can always be recovered later from another file.
+
+Impact on experiments / methodology:
+- `P1.2` is now decision-complete: authoritative trainer/evaluator outputs have an explicit schema contract, explicit image/subset traceability, and explicit threshold/mask-variant metadata completeness.
+- Future report review can trace any held-out metric row or qualitative sample back to the exact reused threshold artifact and both mask-variant roles without opening a second file first.
+- The next critical-path blocker now moves to `P1.3` rather than remaining inside schema cleanup.
+
 ## Open decisions requiring evidence
 
 ### OD-005

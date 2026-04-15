@@ -110,6 +110,10 @@ class TestEvaluationRunOutputs(unittest.TestCase):
             self.assertTrue(manifest_path.exists())
             manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
             self.assertEqual(manifest["split"], "val")
+            self.assertEqual(manifest["selection_state_path"], str(selection_path.resolve()))
+            self.assertEqual(manifest["train_mask_variant"], "dilated_masks")
+            self.assertEqual(manifest["eval_mask_variant"], "original_masks")
+            self.assertAlmostEqual(manifest["selected_threshold"], 0.5)
             self.assertEqual(
                 [sample["image_id"] for sample in manifest["samples"]],
                 ["pos_001", "neg_001"],
@@ -172,17 +176,29 @@ class TestEvaluationRunOutputs(unittest.TestCase):
             self.assertEqual(df["image_id"].tolist(), ["pos_001", "neg_001"])
             self.assertEqual(df["subset_tag"].tolist(), ["positive", "negative"])
             self.assertEqual(df["split"].tolist(), ["test", "test"])
+            self.assertEqual(
+                df["selection_state_path"].tolist(),
+                [str(selection_path.resolve()), str(selection_path.resolve())],
+            )
+            self.assertEqual(df["train_mask_variant"].tolist(), ["dilated_masks", "dilated_masks"])
             self.assertEqual(df["eval_mask_variant"].tolist(), ["original_masks", "original_masks"])
             self.assertEqual(df["selected_postprocess"].tolist(), ["none", "none"])
             self.assertEqual(df["selected_threshold"].tolist(), [0.5, 0.5])
 
             summary = yaml.safe_load(summary_path.read_text(encoding="utf-8"))
             self.assertEqual(summary["split"], "test")
+            self.assertEqual(summary["selection_state_path"], str(selection_path.resolve()))
+            self.assertEqual(summary["train_mask_variant"], "dilated_masks")
+            self.assertEqual(summary["eval_mask_variant"], "original_masks")
             self.assertAlmostEqual(summary["selected_threshold"], 0.5)
             self.assertEqual(summary["selected_postprocess"], "none")
 
             manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
             self.assertEqual(manifest["split"], "test")
+            self.assertEqual(manifest["selection_state_path"], str(selection_path.resolve()))
+            self.assertEqual(manifest["train_mask_variant"], "dilated_masks")
+            self.assertEqual(manifest["eval_mask_variant"], "original_masks")
+            self.assertAlmostEqual(manifest["selected_threshold"], 0.5)
             self.assertEqual(len(manifest["samples"]), 2)
             self.assertEqual(
                 [sample["image_id"] for sample in manifest["samples"]],

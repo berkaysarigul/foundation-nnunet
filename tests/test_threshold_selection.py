@@ -25,6 +25,7 @@ class TestThresholdSelection(unittest.TestCase):
         threshold_candidates: list[float] | None = None,
         postprocess: str = "none",
         processed_dir: str = "data/processed/pneumothorax_trusted_v1",
+        train_mask_variant: str = "dilated_masks",
         eval_mask_variant: str = "original_masks",
         input_size: int = 512,
     ) -> dict:
@@ -38,6 +39,7 @@ class TestThresholdSelection(unittest.TestCase):
             },
             "data": {
                 "processed_dir": processed_dir,
+                "train_mask_variant": train_mask_variant,
                 "eval_mask_variant": eval_mask_variant,
                 "input_size": input_size,
             },
@@ -189,6 +191,11 @@ class TestThresholdSelection(unittest.TestCase):
             self.assertAlmostEqual(saved_state["selected_threshold"], 0.5)
             self.assertAlmostEqual(selected_threshold, saved_state["selected_threshold"])
             self.assertEqual(resolved_state["dataset_root"], loaded_state["dataset_root"])
+            self.assertEqual(
+                loaded_state["selection_state_path"],
+                str(selection_path.resolve()),
+            )
+            self.assertEqual(loaded_state["train_mask_variant"], "dilated_masks")
 
     def test_selection_state_requires_authoritative_path_shape(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -228,6 +235,19 @@ class TestThresholdSelection(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "dataset_root"):
                 resolve_test_evaluation_selection(
                     mismatched_cfg,
+                    checkpoint_path=str(checkpoint_path),
+                    model_type="baseline",
+                    selection_state_path=selection_path,
+                )
+
+            mismatched_mask_cfg = self.make_cfg(
+                processed_dir=str(tmp_path / "data" / "processed" / "trusted_v1"),
+                train_mask_variant="original_masks",
+            )
+
+            with self.assertRaisesRegex(ValueError, "train_mask_variant"):
+                resolve_test_evaluation_selection(
+                    mismatched_mask_cfg,
                     checkpoint_path=str(checkpoint_path),
                     model_type="baseline",
                     selection_state_path=selection_path,
