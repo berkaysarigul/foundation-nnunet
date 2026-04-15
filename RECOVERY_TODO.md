@@ -283,7 +283,7 @@ Current strategic direction:
 ## Phase 4: Hybrid Redesign Decision
 
 ### P1.8 Decide whether the current hybrid is worth further investment
-- Status: [~]
+- Status: [x]
 - Dependencies: P1.6
 - Affected files/modules: `src/models/hybrid.py`, `src/models/backbone.py`, methodological framing docs
 - Why it matters: the current hybrid is both technically broken and methodologically sensitive.
@@ -292,7 +292,8 @@ Current strategic direction:
     - Validation note (2026-04-15): D-033 now fixes the default `P1.8` state as `defer`, not `keep`. Any future hybrid candidate must first clear the already-open engineering-integrity repairs (`P1.9` through `P1.11`) and then beat the trusted full-image pretrained baseline (`0.4951` held-out `test` positive-only Dice) by at least `+0.02` absolute, i.e. reach `>= 0.5151`, before hybrid work can re-enter the active critical path.
   - [x] Record the evidence required to justify continued hybrid work.
     - Validation note (2026-04-15): D-034 now fixes the minimum hybrid-reopening evidence package: a baseline-gate-equivalent authoritative run directory, an explicit held-out comparison back to the trusted full-image baseline (`0.4951`) and the D-033 keep threshold (`>= 0.5151`), and explicit engineering-integrity proofs for gradient flow, fusion alignment, and branch normalization. `VALIDATION_CHECKLIST.md` now includes a dedicated hybrid keep/drop evidence review section for this contract.
-  - [ ] Record the paper framing constraints imposed by Foundation X pretraining on SIIM.
+  - [x] Record the paper framing constraints imposed by Foundation X pretraining on SIIM.
+    - Validation note (2026-04-15): D-035 now fixes the allowed framing under the current checkpoint provenance: Foundation X may appear only as leakage-aware in-domain transfer / ablation work, not as clean external pretraining or target-unseen generalization on SIIM. `VALIDATION_CHECKLIST.md` now includes a dedicated Foundation X framing review section for this claim boundary.
 - Success criteria:
   - There is an explicit keep/drop decision rule rather than open-ended hybrid tuning.
 - Validation needed before close:
@@ -386,8 +387,8 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P1.8 Decide whether the current hybrid is worth further investment
-2. P1.2 Unify trainer/evaluator output schema
-3. P1.3 Repair Hausdorff metric or remove it from claims
-4. P1.12 Define leak-aware Foundation X methodology
-5. P2.1 Prepare repeated split / cross-validation upgrade path
+1. P1.2 Unify trainer/evaluator output schema
+2. P1.3 Repair Hausdorff metric or remove it from claims
+3. P1.12 Define leak-aware Foundation X methodology
+4. P2.1 Prepare repeated split / cross-validation upgrade path
+5. P2.2 Notebook and documentation cleanup

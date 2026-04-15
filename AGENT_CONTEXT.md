@@ -1,16 +1,16 @@
 # Foundation-nnU-Net Agent Context
 
 Current phase:
-- Phase 4 hybrid decision gate
+- Post-hybrid-gate reporting and methodology cleanup
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, trainer-side authoritative run artifact emission, a validated evaluation-side artifact path under the same authoritative run directory, a dedicated authoritative pretrained-run config, a Colab-friendly single entrypoint that chains `train -> select -> test` under one authoritative run directory, a safe `select_test` runner stage for continuing from an existing `best_checkpoint.pth` without reopening training, one completed authoritative pretrained baseline run on GPU/Colab, a fixed `P1.7` crop/ROI gate, a fixed immediate crop-comparison policy, an implemented D-031 train-only ROI crop path in code, one completed authoritative crop comparison run on GPU/Colab, a fixed D-033 defer-by-default hybrid gate, and now a fixed D-034 hybrid evidence contract. The next blocker is recording the Foundation X paper-framing constraints required before any future hybrid reopening.
+- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, trainer-side authoritative run artifact emission, a validated evaluation-side artifact path under the same authoritative run directory, a dedicated authoritative pretrained-run config, a Colab-friendly single entrypoint that chains `train -> select -> test` under one authoritative run directory, a safe `select_test` runner stage for continuing from an existing `best_checkpoint.pth` without reopening training, one completed authoritative pretrained baseline run on GPU/Colab, a fixed `P1.7` crop/ROI gate, a fixed immediate crop-comparison policy, an implemented D-031 train-only ROI crop path in code, one completed authoritative crop comparison run on GPU/Colab, a fixed D-033 defer-by-default hybrid gate, a fixed D-034 hybrid evidence contract, and now a fixed D-035 Foundation X framing boundary. The next blocker is returning to trusted reporting cleanup, starting with `P1.2` output-schema unification.
 
 Highest-priority open tasks:
-1. Record the Foundation X paper-framing constraints imposed by SIIM exposure before any future hybrid reopening.
-2. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
-3. Keep hybrid work paused unless a future candidate clears D-033 with the full D-034 evidence package.
-4. Keep any future reruns on GPU-capable environments, because this local desktop runtime still reports `torch 2.11.0+cpu` with `cuda_available=False`.
+1. Unify trainer/evaluator output schema under `P1.2` so authoritative reports are easier to audit.
+2. Repair or remove the unsafe Hausdorff path under `P1.3`.
+3. Define the final leak-aware Foundation X methodology under `P1.12` without reopening the D-035 claim boundary.
+4. Keep hybrid work paused unless a future candidate clears D-033 with the full D-034 evidence package on a GPU-capable environment.
 
 What is already trusted:
 - The high-level repo structure and module boundaries.
@@ -144,9 +144,9 @@ What is still untrusted:
 - The scientific value of the current hybrid design.
 
 Current strategic direction:
-- Fix trust issues first, then build a strong pretrained CNN baseline, then keep the hybrid deferred unless it clears the recorded D-033 gate with the full D-034 evidence package.
+- Fix trust issues first, then build a strong pretrained CNN baseline, then keep the hybrid deferred unless it clears the recorded D-033 gate with the full D-034 evidence package and stays inside the D-035 claim boundary.
 
 Next 3 actions:
-1. Record the Foundation X paper-framing constraints that still apply even if a future hybrid candidate clears the performance bar.
-2. Keep hybrid work paused while continuing claim-safety cleanup tasks (`P1.2`, `P1.3`, `P1.12`) in the same trusted evaluation regime.
-3. If hybrid is ever reopened, require the full D-034 evidence package on the same trusted GPU-capable evaluation regime.
+1. Execute `P1.2` so authoritative training/evaluation outputs become easier to audit and compare.
+2. Execute `P1.3` so no unsafe Hausdorff claim leaks into later reporting.
+3. Keep `P1.12` focused on formal methodology/reporting rules within the already-fixed D-035 boundary.

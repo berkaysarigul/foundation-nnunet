@@ -461,3 +461,32 @@ What to do if it fails:
 - Keep the hybrid deferred.
 - Do not promote the run into critical-path work, paper tables, or architectural conclusions.
 - Reopen the missing evidence items before spending further time on hybrid optimization.
+
+## 16. Foundation X framing boundary
+
+What to check:
+- Any Foundation X or hybrid result reported under the current checkpoint provenance stays inside the D-035 claim boundary.
+- No document, notebook, table, or summary presents Foundation X as clean external pretraining or target-unseen generalization on SIIM.
+
+How to check it:
+- Review the relevant result summary, manuscript text, notebook narrative, or decision note against D-006 and D-035.
+- Confirm the allowed framing remains one of:
+  - leakage-aware in-domain transfer
+  - secondary ablation against the trusted full-image pretrained baseline
+  - engineering analysis under explicit SIIM-exposure caveats
+- Confirm the following claim classes are absent:
+  - clean external-pretraining generalization on SIIM
+  - target-unseen transfer into SIIM
+  - broader foundation-model knowledge isolated from SIIM exposure
+  - Foundation X replacing the trusted full-image pretrained baseline as the default headline anchor solely because it scored higher on the current split
+- If a future hybrid candidate is discussed after clearing D-033 and D-034, confirm the write-up still labels it as leakage-aware secondary evidence unless a later explicit decision introduces a verified non-SIIM-exposed checkpoint.
+
+Failure symptoms:
+- Foundation X is described as generic external transfer or clean pretraining on SIIM.
+- A hybrid result is promoted to the main paper claim without explicit SIIM-exposure caveats.
+- The trusted full-image pretrained baseline is displaced as the headline anchor without a separate methodology decision that changes the D-035 boundary.
+
+What to do if it fails:
+- Downgrade the wording to the D-035 leakage-aware framing.
+- Remove the unsupported claim from paper/reporting artifacts.
+- Reopen methodology review before citing the result as evidence.

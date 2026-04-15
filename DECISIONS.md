@@ -885,8 +885,38 @@ Impact on experiments / methodology:
 - Any future hybrid candidate must prove both interpretability of the implementation and baseline-relative value before it can compete for critical-path time.
 - The remaining `P1.8` work is now the Foundation X paper-framing boundary, not whether scalar evidence alone is enough.
 
+## 2026-04-15 / D-035
+
+Decision:
+- Under the current checkpoint provenance, any future Foundation X hybrid result may be framed only as leakage-aware in-domain transfer or ablation work, not as clean external pretraining or target-unseen generalization on SIIM.
+- Unless a later run uses a verified non-SIIM-exposed Foundation X checkpoint, the allowed paper/path framing is limited to:
+  - secondary ablation against the trusted full-image pretrained baseline
+  - in-domain transfer analysis using a SIIM-exposed initialization source
+  - engineering evidence about whether Foundation X features add value despite the exposure caveat
+- Under the current setup, the following claim classes are forbidden:
+  - describing Foundation X as clean external pretraining for SIIM
+  - presenting a Foundation X hybrid result as evidence of target-unseen transfer or cross-dataset generalization into SIIM
+  - implying that any hybrid gain isolates broader foundation-model knowledge rather than a SIIM-exposed initialization advantage
+  - replacing the trusted full-image pretrained baseline as the default headline paper anchor solely because a SIIM-exposed Foundation X hybrid performs better on the current split
+- Even if a future hybrid candidate clears D-033 and D-034, it remains a leakage-aware secondary comparison under the current checkpoint provenance unless a later explicit methodology decision broadens that claim boundary.
+
+Reason:
+- D-006 already established that the Foundation X pretraining corpus includes SIIM exposure, which means the main scientific risk is claim inflation rather than raw metric reporting alone.
+- D-033 and D-034 now define when hybrid work is technically worth reopening; this separate decision is needed so a future reopening does not silently expand the paper claim boundary beyond what the data provenance supports.
+- Keeping the trusted full-image supervised baseline as the headline anchor preserves a clean comparison point even if a SIIM-exposed Foundation X hybrid later becomes competitive.
+
+Alternatives considered:
+- Treat any future hybrid win as sufficient to promote Foundation X to the main paper contribution despite the exposure caveat.
+- Defer all Foundation X framing decisions entirely until the final paper-writing stage.
+- Remove Foundation X from all future discussion immediately, even as a leakage-aware ablation.
+
+Impact on experiments / methodology:
+- `P1.8` is now decision-complete: the hybrid is deferred by default, requires D-033 and D-034 to reopen, and remains leakage-aware secondary evidence under the current checkpoint provenance.
+- `P1.12` is now narrower: it should formalize the final leak-aware methodology around an already-fixed claim boundary, not reopen whether clean external-transfer claims are allowed.
+- Any future document, notebook, or result summary that describes Foundation X outside this framing must be treated as methodologically non-authoritative.
+
 ## Open decisions requiring evidence
 
 ### OD-005
 - Topic: Whether the hybrid is retained, redesigned, or deferred from the main paper.
-- Needed evidence: a future hybrid candidate that clears D-033 and ships the D-034 evidence package, plus leak-aware framing, gradient-flow verification, and aligned fusion design.
+- Needed evidence: a future hybrid candidate that clears D-033 and ships the D-034 evidence package, plus leak-aware framing consistent with D-035, gradient-flow verification, and aligned fusion design.
