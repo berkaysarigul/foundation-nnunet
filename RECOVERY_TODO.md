@@ -290,7 +290,8 @@ Current strategic direction:
 - Subtasks:
   - [x] Define a keep/drop gate relative to the strong supervised baseline.
     - Validation note (2026-04-15): D-033 now fixes the default `P1.8` state as `defer`, not `keep`. Any future hybrid candidate must first clear the already-open engineering-integrity repairs (`P1.9` through `P1.11`) and then beat the trusted full-image pretrained baseline (`0.4951` held-out `test` positive-only Dice) by at least `+0.02` absolute, i.e. reach `>= 0.5151`, before hybrid work can re-enter the active critical path.
-  - [ ] Record the evidence required to justify continued hybrid work.
+  - [x] Record the evidence required to justify continued hybrid work.
+    - Validation note (2026-04-15): D-034 now fixes the minimum hybrid-reopening evidence package: a baseline-gate-equivalent authoritative run directory, an explicit held-out comparison back to the trusted full-image baseline (`0.4951`) and the D-033 keep threshold (`>= 0.5151`), and explicit engineering-integrity proofs for gradient flow, fusion alignment, and branch normalization. `VALIDATION_CHECKLIST.md` now includes a dedicated hybrid keep/drop evidence review section for this contract.
   - [ ] Record the paper framing constraints imposed by Foundation X pretraining on SIIM.
 - Success criteria:
   - There is an explicit keep/drop decision rule rather than open-ended hybrid tuning.

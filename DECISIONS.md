@@ -846,8 +846,47 @@ Impact on experiments / methodology:
 - `P1.9`, `P1.10`, and `P1.11` remain conditional follow-up tasks rather than automatic next steps.
 - The remaining `P1.8` work is now narrower: record the exact evidence checklist and the Foundation X paper-framing constraints needed before any future hybrid reopening.
 
+## 2026-04-15 / D-034
+
+Decision:
+- Continued hybrid work is justified only if a future hybrid candidate ships a minimum reopening evidence package, not just a scalar metric or notebook screenshot.
+- The minimum D-034 evidence package for any future hybrid reopening is:
+  - one authoritative hybrid run directory under the same trusted evaluation regime used by the current full-image baseline, carrying the same minimum artifact family already required for baseline-gate work:
+    - `<run_dir>/metadata/run_metadata.yaml`
+    - `<run_dir>/metadata/config_snapshot.yaml`
+    - `<run_dir>/metrics/history.csv`
+    - `<run_dir>/checkpoints/best_checkpoint.pth`
+    - `<run_dir>/checkpoints/best_checkpoint_metadata.yaml`
+    - `<run_dir>/selection/selection_state.yaml`
+    - `<run_dir>/reports/test_metrics.csv`
+    - `<run_dir>/reports/test_summary.yaml`
+    - `<run_dir>/qualitative/validation_samples/`
+    - `<run_dir>/qualitative/test_samples/`
+  - an explicit comparison record back to the trusted full-image pretrained baseline run, including the exact held-out `test` positive-only Dice delta relative to `0.4951` and whether the candidate cleared the D-033 keep threshold `>= 0.5151`
+  - an explicit engineering-integrity proof set showing:
+    - backbone gradient behavior is correct for the intended frozen/unfrozen mode
+    - fusion-stage shapes are asserted and documented at the active input size
+    - hybrid branch-normalization policy is recorded in config and run metadata rather than left implicit
+- Console logs, copied notebook cells, or a single manually reported metric do not count as sufficient evidence for reopening hybrid work.
+- A future hybrid candidate that numerically beats `0.5151` without the rest of this evidence package still does not clear D-033.
+
+Reason:
+- The hybrid branch combines higher engineering risk with a tighter methodological claim boundary than the trusted supervised baseline, so its proof burden must be higher than "one promising score."
+- The recovery path has already shown that unaudited metrics, copied logs, and non-authoritative artifacts are not enough to support project-level decisions.
+- Reusing the baseline-gate artifact family keeps any future hybrid comparison auditable and directly comparable to the already trusted baseline evidence.
+
+Alternatives considered:
+- Allow any future held-out metric win to reopen hybrid work immediately.
+- Require only engineering proofs and leave held-out comparison artifacts informal.
+- Require only a side-by-side metric table and skip implementation-integrity evidence.
+
+Impact on experiments / methodology:
+- The second `P1.8` subtask is now decision-complete: hybrid reopening requires an auditable evidence package, not just a promising run.
+- Any future hybrid candidate must prove both interpretability of the implementation and baseline-relative value before it can compete for critical-path time.
+- The remaining `P1.8` work is now the Foundation X paper-framing boundary, not whether scalar evidence alone is enough.
+
 ## Open decisions requiring evidence
 
 ### OD-005
 - Topic: Whether the hybrid is retained, redesigned, or deferred from the main paper.
-- Needed evidence: a future hybrid candidate that clears D-033, plus leak-aware framing, gradient-flow verification, and aligned fusion design.
+- Needed evidence: a future hybrid candidate that clears D-033 and ships the D-034 evidence package, plus leak-aware framing, gradient-flow verification, and aligned fusion design.

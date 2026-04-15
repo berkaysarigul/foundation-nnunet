@@ -416,3 +416,48 @@ Failure symptoms:
 What to do if it fails:
 - Reject the crop result as non-authoritative for `P1.7`.
 - Re-implement the comparison so only the approved D-031 train-time crop policy changes.
+
+## 15. Hybrid keep / drop evidence
+
+What to check:
+- No future hybrid candidate is treated as keep-worthy unless it clears both the D-033 performance bar and the D-034 evidence contract.
+- Hybrid reopening evidence must be auditable from artifacts, not reconstructed from notebook screenshots or copied console logs.
+
+How to check it:
+- Confirm the future hybrid run uses the same trusted evaluation regime required by D-033:
+  - trusted dataset root
+  - corrected metric path
+  - validation-only threshold selection
+  - authoritative run-artifact structure
+- Confirm the run directory includes the minimum D-034 artifact family:
+  - `<run_dir>/metadata/run_metadata.yaml`
+  - `<run_dir>/metadata/config_snapshot.yaml`
+  - `<run_dir>/metrics/history.csv`
+  - `<run_dir>/checkpoints/best_checkpoint.pth`
+  - `<run_dir>/checkpoints/best_checkpoint_metadata.yaml`
+  - `<run_dir>/selection/selection_state.yaml`
+  - `<run_dir>/reports/test_metrics.csv`
+  - `<run_dir>/reports/test_summary.yaml`
+  - `<run_dir>/qualitative/validation_samples/`
+  - `<run_dir>/qualitative/test_samples/`
+- Confirm there is an explicit baseline comparison record tying the hybrid candidate back to the trusted full-image pretrained baseline and reporting:
+  - the baseline reference score `0.4951`
+  - the hybrid candidate held-out `test` positive-only Dice
+  - the absolute delta versus baseline
+  - whether the candidate cleared the D-033 keep threshold `>= 0.5151`
+- Confirm the engineering-integrity proof set exists and is reviewable:
+  - frozen/unfrozen backbone gradient behavior is validated
+  - fusion-stage shapes are asserted/documented at the active input size
+  - branch-normalization policy is explicit in config and run metadata
+- Reject notebook screenshots, copied logs, or a single manually reported scalar as sufficient evidence on their own.
+
+Failure symptoms:
+- A hybrid run reports a promising score but lacks the authoritative artifact bundle.
+- The comparison is made against the wrong reference arm, such as the failed crop run instead of the trusted full-image baseline.
+- Gradient-flow, fusion-alignment, or normalization evidence is missing, implicit, or only described informally in chat/notebooks.
+- A future hybrid candidate numerically exceeds `0.5151` but cannot be audited from artifacts alone.
+
+What to do if it fails:
+- Keep the hybrid deferred.
+- Do not promote the run into critical-path work, paper tables, or architectural conclusions.
+- Reopen the missing evidence items before spending further time on hybrid optimization.
