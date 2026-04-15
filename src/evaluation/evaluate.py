@@ -46,7 +46,7 @@ from src.training.metrics import (
     precision_score,
     recall_score,
 )
-from src.training.run_artifacts import prepare_run_artifacts, write_yaml
+from src.training.run_artifacts import prepare_run_artifacts, write_evaluation_csv, write_yaml
 
 logging.basicConfig(
     level=logging.INFO,
@@ -958,8 +958,7 @@ def evaluate(
         model_type=model_type,
         selection_state=selection_state,
     )
-    df = pd.DataFrame(records)
-    df.to_csv(run_artifacts.test_metrics_path, index=False)
+    df = write_evaluation_csv(run_artifacts.test_metrics_path, records)
     write_yaml(
         run_artifacts.test_summary_path,
         build_test_summary_payload(df, selection_state, checkpoint_path, model_type),

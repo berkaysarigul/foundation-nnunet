@@ -915,6 +915,55 @@ Impact on experiments / methodology:
 - `P1.12` is now narrower: it should formalize the final leak-aware methodology around an already-fixed claim boundary, not reopen whether clean external-transfer claims are allowed.
 - Any future document, notebook, or result summary that describes Foundation X outside this framing must be treated as methodologically non-authoritative.
 
+## 2026-04-15 / D-036
+
+Decision:
+- The first exact authoritative CSV schema contract under `P1.2` is now fixed for trainer history and evaluator per-image reports.
+- The mandatory canonical `history.csv` columns, in order, are:
+  - `epoch`
+  - `train_loss`
+  - `val_loss`
+  - `val_dice_mean`
+  - `val_dice_pos_mean`
+  - `val_iou_mean`
+- Legacy in-memory trainer keys remain upgrade-only aliases for resume compatibility:
+  - `val_dice` -> `val_dice_mean`
+  - `val_dice_pos` -> `val_dice_pos_mean`
+  - `val_iou` -> `val_iou_mean`
+- The mandatory canonical `reports/test_metrics.csv` columns, in order, are:
+  - `image_id`
+  - `split`
+  - `model_type`
+  - `checkpoint_path`
+  - `eval_mask_variant`
+  - `selection_metric`
+  - `selected_threshold`
+  - `selected_postprocess`
+  - `positive`
+  - `dice`
+  - `iou`
+  - `hausdorff`
+  - `precision`
+  - `recall`
+  - `f1`
+- Future optional columns may be appended after these canonical columns, but authoritative CSV writers must preserve this mandatory ordered prefix.
+
+Reason:
+- `P1.2` exists because the current trainer history and evaluator reports are easy to misread when column names drift away from the corrected metric definitions.
+- The trainer had already moved to per-image mean aggregation, but its saved history still used ambiguous names like `val_dice` and `val_iou`, which no longer made the reduction semantics obvious.
+- D-029 intentionally deferred exact schema locking until a dedicated `P1.2` pass; that dedicated pass now needs a stable ordered contract so future reports are easier to audit across runs and code paths.
+
+Alternatives considered:
+- Leave the current ambiguous history naming in place and document the meaning informally.
+- Fully defer exact CSV naming until every later `P1.2` subtask is also complete.
+- Lock an even larger schema now, including subset-tag additions that remain a separate open `P1.2` task.
+
+Impact on experiments / methodology:
+- Future authoritative `history.csv` outputs must use explicit `_mean` suffixes for corrected validation reductions rather than the older ambiguous metric names.
+- Future authoritative `reports/test_metrics.csv` outputs now have a fixed ordered required prefix, making cross-run parsing and review easier without blocking later additive fields.
+- Existing older checkpoints may still resume through the legacy in-memory aliases, but new authoritative CSVs should emit only the D-036 canonical names.
+- `P1.2` remains open for the remaining output-schema subtasks, especially explicit subset-tag handling and final metadata completeness checks.
+
 ## Open decisions requiring evidence
 
 ### OD-005

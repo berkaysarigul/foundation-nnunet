@@ -4,7 +4,7 @@ Current phase:
 - Post-hybrid-gate reporting and methodology cleanup
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, trainer-side authoritative run artifact emission, a validated evaluation-side artifact path under the same authoritative run directory, a dedicated authoritative pretrained-run config, a Colab-friendly single entrypoint that chains `train -> select -> test` under one authoritative run directory, a safe `select_test` runner stage for continuing from an existing `best_checkpoint.pth` without reopening training, one completed authoritative pretrained baseline run on GPU/Colab, a fixed `P1.7` crop/ROI gate, a fixed immediate crop-comparison policy, an implemented D-031 train-only ROI crop path in code, one completed authoritative crop comparison run on GPU/Colab, a fixed D-033 defer-by-default hybrid gate, a fixed D-034 hybrid evidence contract, and now a fixed D-035 Foundation X framing boundary. The next blocker is returning to trusted reporting cleanup, starting with `P1.2` output-schema unification.
+- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, trainer-side authoritative run artifact emission, a validated evaluation-side artifact path under the same authoritative run directory, a dedicated authoritative pretrained-run config, a Colab-friendly single entrypoint that chains `train -> select -> test` under one authoritative run directory, a safe `select_test` runner stage for continuing from an existing `best_checkpoint.pth` without reopening training, one completed authoritative pretrained baseline run on GPU/Colab, a fixed `P1.7` crop/ROI gate, a fixed immediate crop-comparison policy, an implemented D-031 train-only ROI crop path in code, one completed authoritative crop comparison run on GPU/Colab, a fixed D-033 defer-by-default hybrid gate, a fixed D-034 hybrid evidence contract, a fixed D-035 Foundation X framing boundary, and now a fixed D-036 canonical CSV contract for authoritative `history.csv` and `test_metrics.csv`. The next blocker remains inside `P1.2`: finish the remaining output-schema cleanup, starting with explicit evaluation image-ID/subset-tag handling.
 
 Highest-priority open tasks:
 1. Unify trainer/evaluator output schema under `P1.2` so authoritative reports are easier to audit.
@@ -113,6 +113,10 @@ What is already trusted:
   - `<run_dir>/reports/test_summary.yaml`
   - `<run_dir>/qualitative/validation_samples/`
   - `<run_dir>/qualitative/test_samples/`
+- D-036 now fixes the first exact authoritative CSV schema contract:
+  - `metrics/history.csv` must emit `epoch`, `train_loss`, `val_loss`, `val_dice_mean`, `val_dice_pos_mean`, and `val_iou_mean` in that order
+  - `reports/test_metrics.csv` must emit the ordered required prefix `image_id`, `split`, `model_type`, `checkpoint_path`, `eval_mask_variant`, `selection_metric`, `selected_threshold`, `selected_postprocess`, `positive`, `dice`, `iou`, `hausdorff`, `precision`, `recall`, `f1`
+- The trainer now upgrades legacy in-memory resume keys (`val_dice`, `val_dice_pos`, `val_iou`) into the canonical `_mean` history schema before writing new authoritative `history.csv` files.
 - Validation and test qualitative packages now write a deterministic manifest plus per-sample image, target-mask, prediction-mask, and overlay PNG files for up to four positives and four negatives per split in split order.
 - Evaluation now syncs `metadata/run_metadata.yaml` with the selected threshold and selected post-processing state once `selection_state.yaml` is written or reused.
 - `tests/test_evaluation_run_outputs.py` is now the canonical evaluator-side regression harness for authoritative run-directory output emission, and it passes alongside `tests.test_threshold_selection`, `tests.test_run_artifacts`, and `tests.test_evaluate_metrics_backend` under `C:\Users\beko5\AppData\Local\Programs\Python\Python310\python.exe`.
@@ -147,6 +151,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then keep the hybrid deferred unless it clears the recorded D-033 gate with the full D-034 evidence package and stays inside the D-035 claim boundary.
 
 Next 3 actions:
-1. Execute `P1.2` so authoritative training/evaluation outputs become easier to audit and compare.
+1. Finish `P1.2` by tightening explicit evaluation image-ID/subset-tag and metadata completeness handling on top of D-036.
 2. Execute `P1.3` so no unsafe Hausdorff claim leaks into later reporting.
 3. Keep `P1.12` focused on formal methodology/reporting rules within the already-fixed D-035 boundary.

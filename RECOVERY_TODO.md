@@ -182,12 +182,13 @@ Current strategic direction:
   - Metric correctness checklist.
 
 ### P1.2 Unify trainer/evaluator output schema
-- Status: [ ]
+- Status: [~]
 - Dependencies: P0.8, P0.9, P0.2
 - Affected files/modules: `src/training/trainer.py`, `src/evaluation/evaluate.py`, authoritative run output layout
 - Why it matters: current outputs are inconsistent and easy to misinterpret.
 - Subtasks:
-  - [ ] Define mandatory columns and naming for history CSVs and evaluation CSVs.
+  - [x] Define mandatory columns and naming for history CSVs and evaluation CSVs.
+    - Validation note (2026-04-15): D-036 now fixes the canonical ordered schema for authoritative `metrics/history.csv` and `reports/test_metrics.csv`. The trainer now upgrades legacy resume-history aliases (`val_dice`, `val_dice_pos`, `val_iou`) into canonical `_mean` column names before emitting `history.csv`, the evaluator now writes `test_metrics.csv` through a shared canonical writer, and `py -3 -m unittest tests.test_run_artifacts -v`, `tests.test_evaluation_run_outputs -v`, and `tests.test_trainer_config_surface -v` all passed.
   - [ ] Ensure evaluation outputs carry real image IDs and subset tags.
   - [ ] Ensure saved thresholds and mask variants are included in output metadata.
 - Success criteria:

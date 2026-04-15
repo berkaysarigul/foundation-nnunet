@@ -11,6 +11,7 @@ import torch
 import yaml
 
 from src.evaluation.evaluate import evaluate, save_selection_state, select_threshold_and_save
+from src.training.run_artifacts import EVALUATION_CSV_COLUMNS
 
 
 class DummyDataset:
@@ -160,6 +161,10 @@ class TestEvaluationRunOutputs(unittest.TestCase):
             self.assertTrue(summary_path.exists())
             self.assertTrue(manifest_path.exists())
 
+            self.assertEqual(
+                list(df.columns[: len(EVALUATION_CSV_COLUMNS)]),
+                list(EVALUATION_CSV_COLUMNS),
+            )
             self.assertEqual(df["split"].tolist(), ["test", "test"])
             self.assertEqual(df["eval_mask_variant"].tolist(), ["original_masks", "original_masks"])
             self.assertEqual(df["selected_postprocess"].tolist(), ["none", "none"])

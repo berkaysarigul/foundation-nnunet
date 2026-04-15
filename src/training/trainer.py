@@ -25,6 +25,7 @@ from src.training.metrics import dice_score, iou_score
 from src.training.run_artifacts import (
     build_best_checkpoint_metadata,
     build_run_metadata,
+    canonicalize_history,
     prepare_run_artifacts,
     write_config_snapshot,
     write_history_csv,
@@ -400,7 +401,14 @@ def train(
     # ------------------------------------------------------------------
     best_dice = float("-inf")
     patience_counter = 0
-    history = {"train_loss": [], "val_loss": [], "val_dice": [], "val_dice_pos": [], "val_iou": []}
+    history = {
+        "epoch": [],
+        "train_loss": [],
+        "val_loss": [],
+        "val_dice_mean": [],
+        "val_dice_pos_mean": [],
+        "val_iou_mean": [],
+    }
     start_epoch = 1
 
     resume_path = run_artifacts.last_checkpoint_path
@@ -430,7 +438,7 @@ def train(
         start_epoch      = resume["epoch"] + 1
         best_dice        = resume["best_dice"]
         patience_counter = resume["patience_counter"]
-        history          = resume["history"]
+        history          = canonicalize_history(resume["history"])
         logger.info(
             "Resumed at epoch %d | Best Dice so far: %.4f", start_epoch - 1, best_dice
         )
@@ -486,11 +494,12 @@ def train(
         step_scheduler(scheduler, val_dice_pos_mean)
 
         # === LOG ===
+        history["epoch"].append(epoch)
         history["train_loss"].append(train_loss)
         history["val_loss"].append(val_loss)
-        history["val_dice"].append(val_dice_mean)
-        history["val_dice_pos"].append(val_dice_pos_mean)
-        history["val_iou"].append(val_iou_mean)
+        history["val_dice_mean"].append(val_dice_mean)
+        history["val_dice_pos_mean"].append(val_dice_pos_mean)
+        history["val_iou_mean"].append(val_iou_mean)
 
         logger.info(
             "Epoch %d/%d | Train Loss: %.4f | Val Loss: %.4f | Val Dice: %.4f | Val Dice (pos): %.4f | Val IoU: %.4f",

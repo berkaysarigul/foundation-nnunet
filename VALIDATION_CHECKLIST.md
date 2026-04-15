@@ -276,12 +276,38 @@ How to check it:
   - `selection_metric`
   - `selected_threshold`
   - `selected_postprocess`
+- Confirm D-036 canonical CSV schema compliance:
+  - run `py -3 -m unittest tests.test_run_artifacts -v` and verify authoritative `history.csv` emits the ordered columns:
+    - `epoch`
+    - `train_loss`
+    - `val_loss`
+    - `val_dice_mean`
+    - `val_dice_pos_mean`
+    - `val_iou_mean`
+  - confirm legacy in-memory trainer aliases (`val_dice`, `val_dice_pos`, `val_iou`) are upgrade-only and do not appear in newly emitted authoritative `history.csv`
+  - run `py -3 -m unittest tests.test_evaluation_run_outputs -v` and verify authoritative `reports/test_metrics.csv` emits the ordered required prefix:
+    - `image_id`
+    - `split`
+    - `model_type`
+    - `checkpoint_path`
+    - `eval_mask_variant`
+    - `selection_metric`
+    - `selected_threshold`
+    - `selected_postprocess`
+    - `positive`
+    - `dice`
+    - `iou`
+    - `hausdorff`
+    - `precision`
+    - `recall`
+    - `f1`
 
 Failure symptoms:
 - Missing config snapshot, unclear dataset version, unknown threshold, or ambiguous checkpoint origin.
 - Missing code fingerprint fallback in a non-Git environment.
 - Missing distinction between training and evaluation mask variants.
 - Missing required training outputs even when metadata exists.
+- Newly emitted authoritative CSVs still use ambiguous legacy history names or drift away from the D-036 ordered required columns.
 
 What to do if it fails:
 - Do not promote the run into result summaries.

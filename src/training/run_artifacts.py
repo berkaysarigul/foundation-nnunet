@@ -20,6 +20,39 @@ DEFAULT_CODE_FINGERPRINT_PATTERNS = (
     "requirements.txt",
 )
 
+HISTORY_CSV_COLUMNS = (
+    "epoch",
+    "train_loss",
+    "val_loss",
+    "val_dice_mean",
+    "val_dice_pos_mean",
+    "val_iou_mean",
+)
+
+LEGACY_HISTORY_COLUMN_ALIASES = {
+    "val_dice": "val_dice_mean",
+    "val_dice_pos": "val_dice_pos_mean",
+    "val_iou": "val_iou_mean",
+}
+
+EVALUATION_CSV_COLUMNS = (
+    "image_id",
+    "split",
+    "model_type",
+    "checkpoint_path",
+    "eval_mask_variant",
+    "selection_metric",
+    "selected_threshold",
+    "selected_postprocess",
+    "positive",
+    "dice",
+    "iou",
+    "hausdorff",
+    "precision",
+    "recall",
+    "f1",
+)
+
 
 @dataclass(frozen=True)
 class RunArtifacts:
@@ -219,9 +252,85 @@ def write_config_snapshot(path: Path, cfg: dict[str, Any]) -> None:
     write_yaml(path, cfg)
 
 
+def canonicalize_history(history: dict[str, list[float]]) -> dict[str, list[float]]:
+    canonical_history: dict[str, list[float]] = {}
+    extra_history: dict[str, list[float]] = {}
+
+    for raw_key, raw_values in history.items():
+        values = list(raw_values)
+        canonical_key = LEGACY_HISTORY_COLUMN_ALIASES.get(raw_key, raw_key)
+        if canonical_key in HISTORY_CSV_COLUMNS:
+            if canonical_key in canonical_history:
+                raise ValueError(
+                    f"History contains duplicate data for canonical column {canonical_key!r}."
+                )
+            canonical_history[canonical_key] = values
+        else:
+            extra_history[raw_key] = values
+
+    missing_columns = [
+        column for column in HISTORY_CSV_COLUMNS if column != "epoch" and column not in canonical_history
+    ]
+    if missing_columns:
+        raise ValueError(
+            "History is missing required canonical columns: "
+            f"{missing_columns}"
+        )
+
+    all_series = list(canonical_history.values()) + list(extra_history.values())
+    series_lengths = {len(values) for values in all_series}
+    if len(series_lengths) > 1:
+        raise ValueError("History columns must all have the same length.")
+
+    row_count = series_lengths.pop() if series_lengths else 0
+    expected_epoch = list(range(1, row_count + 1))
+    epoch_values = canonical_history.get("epoch")
+    if epoch_values is None:
+        canonical_history["epoch"] = expected_epoch
+    elif list(epoch_values) != expected_epoch:
+        raise ValueError(
+            "History epoch column must be contiguous and 1-indexed to match authoritative history.csv."
+        )
+
+    ordered_history = {
+        column: list(canonical_history[column])
+        for column in HISTORY_CSV_COLUMNS
+    }
+    for column in sorted(extra_history):
+        ordered_history[column] = list(extra_history[column])
+    return ordered_history
+
+
 def write_history_csv(path: Path, history: dict[str, list[float]]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame(history).to_csv(path, index=False)
+    pd.DataFrame(canonicalize_history(history)).to_csv(path, index=False)
+
+
+def build_evaluation_dataframe(records: list[dict[str, Any]]) -> pd.DataFrame:
+    if not records:
+        return pd.DataFrame(columns=EVALUATION_CSV_COLUMNS)
+
+    df = pd.DataFrame(records)
+    missing_columns = [
+        column for column in EVALUATION_CSV_COLUMNS if column not in df.columns
+    ]
+    if missing_columns:
+        raise ValueError(
+            "Evaluation records are missing required canonical columns: "
+            f"{missing_columns}"
+        )
+
+    extra_columns = sorted(
+        column for column in df.columns if column not in EVALUATION_CSV_COLUMNS
+    )
+    return df.loc[:, list(EVALUATION_CSV_COLUMNS) + extra_columns]
+
+
+def write_evaluation_csv(path: Path, records: list[dict[str, Any]]) -> pd.DataFrame:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df = build_evaluation_dataframe(records)
+    df.to_csv(path, index=False)
+    return df
 
 
 def build_run_metadata(

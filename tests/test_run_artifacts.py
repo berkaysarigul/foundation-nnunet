@@ -8,9 +8,12 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
+import pandas as pd
 import yaml
 
 from src.training.run_artifacts import (
+    EVALUATION_CSV_COLUMNS,
+    HISTORY_CSV_COLUMNS,
     build_best_checkpoint_metadata,
     build_run_metadata,
     compute_code_fingerprint,
@@ -19,6 +22,7 @@ from src.training.run_artifacts import (
     prepare_run_artifacts,
     resolve_initial_checkpoint_reference,
     write_config_snapshot,
+    write_evaluation_csv,
     write_history_csv,
     write_yaml,
 )
@@ -138,11 +142,60 @@ class TestRunArtifacts(unittest.TestCase):
 
             write_yaml(yaml_path, {"run_id": "run_001"})
             write_config_snapshot(snapshot_path, {"model": {"type": "baseline"}})
-            write_history_csv(history_path, {"train_loss": [1.0], "val_loss": [0.5]})
+            write_history_csv(
+                history_path,
+                {
+                    "train_loss": [1.0],
+                    "val_loss": [0.5],
+                    "val_dice": [0.25],
+                    "val_dice_pos": [0.4],
+                    "val_iou": [0.2],
+                },
+            )
 
             self.assertEqual(yaml.safe_load(yaml_path.read_text(encoding="utf-8"))["run_id"], "run_001")
             self.assertIn("baseline", snapshot_path.read_text(encoding="utf-8"))
-            self.assertIn("train_loss", history_path.read_text(encoding="utf-8"))
+            history_df = pd.read_csv(history_path)
+            self.assertEqual(list(history_df.columns), list(HISTORY_CSV_COLUMNS))
+            self.assertEqual(history_df["epoch"].tolist(), [1])
+            self.assertEqual(history_df["val_dice_mean"].tolist(), [0.25])
+            self.assertEqual(history_df["val_dice_pos_mean"].tolist(), [0.4])
+            self.assertEqual(history_df["val_iou_mean"].tolist(), [0.2])
+
+    def test_write_evaluation_csv_orders_required_columns_first(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            report_path = root / "reports" / "test_metrics.csv"
+
+            df = write_evaluation_csv(
+                report_path,
+                [
+                    {
+                        "image_id": "img_001",
+                        "split": "test",
+                        "model_type": "baseline",
+                        "checkpoint_path": "checkpoints/best_checkpoint.pth",
+                        "eval_mask_variant": "original_masks",
+                        "selection_metric": "val_dice_pos_mean",
+                        "selected_threshold": 0.5,
+                        "selected_postprocess": "none",
+                        "positive": True,
+                        "dice": 0.8,
+                        "iou": 0.7,
+                        "hausdorff": 1.0,
+                        "precision": 0.75,
+                        "recall": 0.85,
+                        "f1": 0.8,
+                        "extra_debug_field": "kept",
+                    }
+                ],
+            )
+
+            self.assertEqual(
+                list(df.columns[: len(EVALUATION_CSV_COLUMNS)]),
+                list(EVALUATION_CSV_COLUMNS),
+            )
+            self.assertEqual(df["extra_debug_field"].tolist(), ["kept"])
 
     def test_best_checkpoint_metadata_records_training_context(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
