@@ -4,12 +4,12 @@ Current phase:
 - Post-hybrid-gate reporting and methodology cleanup
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, trainer-side authoritative run artifact emission, a validated evaluation-side artifact path under the same authoritative run directory, a dedicated authoritative pretrained-run config, a Colab-friendly single entrypoint that chains `train -> select -> test` under one authoritative run directory, a safe `select_test` runner stage for continuing from an existing `best_checkpoint.pth` without reopening training, one completed authoritative pretrained baseline run on GPU/Colab, a fixed `P1.7` crop/ROI gate, a fixed immediate crop-comparison policy, an implemented D-031 train-only ROI crop path in code, one completed authoritative crop comparison run on GPU/Colab, a fixed D-033 defer-by-default hybrid gate, a fixed D-034 hybrid evidence contract, a fixed D-035 Foundation X framing boundary, a fixed D-036 canonical CSV contract for authoritative `history.csv` and `test_metrics.csv`, a fixed D-037 image-ID/subset-tag contract for per-image evaluation outputs, and now a fixed D-038 metadata-completeness contract for saved thresholds and mask variants. `P1.2` is complete; the next blocker is `P1.3`, namely repairing or removing the unsafe Hausdorff path from paper-path reporting.
+- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, trainer-side authoritative run artifact emission, a validated evaluation-side artifact path under the same authoritative run directory, a dedicated authoritative pretrained-run config, a Colab-friendly single entrypoint that chains `train -> select -> test` under one authoritative run directory, a safe `select_test` runner stage for continuing from an existing `best_checkpoint.pth` without reopening training, one completed authoritative pretrained baseline run on GPU/Colab, a fixed `P1.7` crop/ROI gate, a fixed immediate crop-comparison policy, an implemented D-031 train-only ROI crop path in code, one completed authoritative crop comparison run on GPU/Colab, a fixed D-033 defer-by-default hybrid gate, a fixed D-034 hybrid evidence contract, a fixed D-035 Foundation X framing boundary, a fixed D-036 canonical CSV contract for authoritative `history.csv` and `test_metrics.csv`, a fixed D-037 image-ID/subset-tag contract for per-image evaluation outputs, a fixed D-038 metadata-completeness contract for saved thresholds and mask variants, and now a fixed D-039 decision that removes the mislabeled `hausdorff` path from authoritative reporting. `P1.2` and `P1.3` are complete; the next blocker is `P1.12`, namely formalizing the final leak-aware Foundation X methodology within the already-fixed D-035 boundary.
 
 Highest-priority open tasks:
-1. Unify trainer/evaluator output schema under `P1.2` so authoritative reports are easier to audit.
-2. Repair or remove the unsafe Hausdorff path under `P1.3`.
-3. Define the final leak-aware Foundation X methodology under `P1.12` without reopening the D-035 claim boundary.
+1. Define the final leak-aware Foundation X methodology under `P1.12` without reopening the D-035 claim boundary.
+2. Prepare the publication-grade repeated-split / cross-validation upgrade path under `P2.1`.
+3. Clean up notebooks and docs so they match the recovered methodology under `P2.2`.
 4. Keep hybrid work paused unless a future candidate clears D-033 with the full D-034 evidence package on a GPU-capable environment.
 
 What is already trusted:
@@ -115,7 +115,7 @@ What is already trusted:
   - `<run_dir>/qualitative/test_samples/`
 - D-036 now fixes the first exact authoritative CSV schema contract:
   - `metrics/history.csv` must emit `epoch`, `train_loss`, `val_loss`, `val_dice_mean`, `val_dice_pos_mean`, and `val_iou_mean` in that order
-  - `reports/test_metrics.csv` must emit the ordered required prefix `image_id`, `split`, `model_type`, `checkpoint_path`, `eval_mask_variant`, `selection_metric`, `selected_threshold`, `selected_postprocess`, `positive`, `dice`, `iou`, `hausdorff`, `precision`, `recall`, `f1`
+  - `reports/test_metrics.csv` must emit the ordered required prefix `image_id`, `split`, `model_type`, `checkpoint_path`, `eval_mask_variant`, `selection_metric`, `selected_threshold`, `selected_postprocess`, `positive`, `dice`, `iou`, `precision`, `recall`, `f1`
 - The trainer now upgrades legacy in-memory resume keys (`val_dice`, `val_dice_pos`, `val_iou`) into the canonical `_mean` history schema before writing new authoritative `history.csv` files.
 - D-037 now fixes the immediate per-image evaluation traceability surface:
   - authoritative evaluator rows preserve exact dataset `image_id` values and append explicit `subset_tag` values (`positive` / `negative`)
@@ -124,6 +124,9 @@ What is already trusted:
   - `selection_state.yaml` carries `selection_state_path`, `train_mask_variant`, and `eval_mask_variant`
   - per-image evaluation rows, `test_summary.yaml`, and validation/test qualitative manifests now carry the reused `selection_state_path`, both mask-variant roles, and the selected threshold/postprocess context
   - test-time selection-state reuse now validates `train_mask_variant` in addition to the previously required context fields
+- D-039 now removes the current mislabeled `hausdorff` path from authoritative reporting:
+  - authoritative `reports/test_metrics.csv`, `test_summary.yaml`, qualitative manifests, and console summary tables no longer emit `hausdorff`
+  - the current `src/training/metrics.py::hausdorff_distance` helper is non-authoritative debug code only unless a future explicit decision reintroduces a correctly specified distance metric
 - Validation and test qualitative packages now write a deterministic manifest plus per-sample image, target-mask, prediction-mask, and overlay PNG files for up to four positives and four negatives per split in split order.
 - Evaluation now syncs `metadata/run_metadata.yaml` with the selected threshold and selected post-processing state once `selection_state.yaml` is written or reused.
 - `tests/test_evaluation_run_outputs.py` is now the canonical evaluator-side regression harness for authoritative run-directory output emission, and it passes alongside `tests.test_threshold_selection`, `tests.test_run_artifacts`, and `tests.test_evaluate_metrics_backend` under `C:\Users\beko5\AppData\Local\Programs\Python\Python310\python.exe`.
@@ -158,6 +161,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then keep the hybrid deferred unless it clears the recorded D-033 gate with the full D-034 evidence package and stays inside the D-035 claim boundary.
 
 Next 3 actions:
-1. Execute `P1.3` so no unsafe Hausdorff claim leaks into later reporting.
-2. Keep `P1.12` focused on formal methodology/reporting rules within the already-fixed D-035 boundary.
-3. After `P1.3` and `P1.12`, move to the publication-grade evaluation upgrade path under `P2.1`.
+1. Execute `P1.12` so the final Foundation X methodology is explicit without reopening D-035.
+2. Prepare the publication-grade evaluation upgrade path under `P2.1`.
+3. Clean up notebooks/docs under `P2.2` so they stop drifting from the recovered methodology.

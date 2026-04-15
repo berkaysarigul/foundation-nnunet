@@ -47,7 +47,6 @@ EVALUATION_CSV_COLUMNS = (
     "positive",
     "dice",
     "iou",
-    "hausdorff",
     "precision",
     "recall",
     "f1",

@@ -199,13 +199,14 @@ Current strategic direction:
   - Reproducibility and stale artifact checklist items.
 
 ### P1.3 Repair Hausdorff metric or remove it from claims
-- Status: [ ]
+- Status: [x]
 - Dependencies: P0.8
 - Affected files/modules: `src/training/metrics.py`, reporting docs
 - Why it matters: the implementation/docstring mismatch makes the metric unsafe to report.
 - Subtasks:
-  - [ ] Decide whether to implement the intended metric correctly or drop it from the paper path.
-  - [ ] Record the decision and rationale in `DECISIONS.md`.
+  - [x] Decide whether to implement the intended metric correctly or drop it from the paper path.
+  - [x] Record the decision and rationale in `DECISIONS.md`.
+    - Validation note (2026-04-15): D-039 now drops the current `hausdorff` path from authoritative paper-path reporting instead of trying to treat the existing helper as HD95. Authoritative evaluation outputs no longer emit `hausdorff`, and `py -3 -m unittest tests.test_evaluation_run_outputs -v`, `tests.test_run_artifacts -v`, and `tests.test_evaluate_metrics_backend -v` all passed after removing it from the authoritative report schema while leaving the helper non-authoritative.
 - Success criteria:
   - No mislabeled metric remains in reported outputs.
 - Validation needed before close:
@@ -390,8 +391,8 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P1.2 Unify trainer/evaluator output schema
-2. P1.3 Repair Hausdorff metric or remove it from claims
-3. P1.12 Define leak-aware Foundation X methodology
-4. P2.1 Prepare repeated split / cross-validation upgrade path
-5. P2.2 Notebook and documentation cleanup
+1. P1.12 Define leak-aware Foundation X methodology
+2. P2.1 Prepare repeated split / cross-validation upgrade path
+3. P2.2 Notebook and documentation cleanup
+4. P1.9 Remove incorrect `no_grad` usage and verify gradient flow
+5. P1.10 Redesign feature fusion mapping if hybrid is kept

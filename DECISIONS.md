@@ -1029,6 +1029,38 @@ Impact on experiments / methodology:
 - Future report review can trace any held-out metric row or qualitative sample back to the exact reused threshold artifact and both mask-variant roles without opening a second file first.
 - The next critical-path blocker now moves to `P1.3` rather than remaining inside schema cleanup.
 
+## 2026-04-15 / D-039
+
+Decision:
+- The current `hausdorff` path is removed from authoritative paper-path reporting instead of being repaired in-place during this recovery turn.
+- Under the current recovery path, authoritative outputs must not emit or rely on `hausdorff` in:
+  - `reports/test_metrics.csv`
+  - `reports/test_summary.yaml`
+  - validation/test qualitative manifests
+  - console summary tables used for authoritative run review
+- The existing `src/training/metrics.py::hausdorff_distance` helper remains non-authoritative debug code only until a future explicit decision replaces it with a correctly specified and regression-tested metric such as true HD95.
+- D-036's authoritative evaluation CSV prefix is therefore now interpreted without `hausdorff`; the required reported metrics are:
+  - `dice`
+  - `iou`
+  - `precision`
+  - `recall`
+  - `f1`
+
+Reason:
+- The current helper docstring claims `95th-percentile Hausdorff distance`, but the implementation actually takes the maximum directed distance on each side and averages valid batch elements, so the label is scientifically wrong.
+- Recovery priority here is trustworthy reporting, not speculative metric redesign.
+- Keeping a mislabeled distance metric in authoritative outputs would silently undermine the corrected reporting path we just finished under `P1.2`.
+
+Alternatives considered:
+- Re-implement HD95 immediately in the same turn.
+- Keep the current value but rename it in-place to a non-HD95 variant.
+- Leave `hausdorff` in outputs with only a documentation warning.
+
+Impact on experiments / methodology:
+- `P1.3` is decision-complete for the current recovery path: no mislabeled Hausdorff metric remains in authoritative reported outputs.
+- Historical `hausdorff` values in old outputs remain non-authoritative and should not be cited.
+- If a future paper version truly needs a distance metric, it must re-enter through a new explicit decision plus a dedicated correctness test harness rather than by reviving the current helper silently.
+
 ## Open decisions requiring evidence
 
 ### OD-005

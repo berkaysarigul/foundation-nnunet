@@ -126,6 +126,7 @@ What to do if it fails:
 What to check:
 - Dice, IoU, precision, recall, F1, and any optional metrics match the accepted mathematical definitions and edge-case policy.
 - The primary model-selection metric is `val_dice_pos_mean` and is implemented as positive-only per-image mean Dice.
+- The current `hausdorff` helper is not part of authoritative paper-path reporting unless a later explicit decision reintroduces it with a correct tested definition.
 
 How to check it:
 - Use handcrafted prediction/target pairs covering empty-empty, empty-positive, positive-empty, and partial-overlap cases.
@@ -299,7 +300,6 @@ How to check it:
     - `positive`
     - `dice`
     - `iou`
-    - `hausdorff`
     - `precision`
     - `recall`
     - `f1`
@@ -311,6 +311,10 @@ How to check it:
     - `reports/test_summary.yaml` includes the same reused-threshold and mask-variant context
     - validation/test qualitative manifests include the same reused-threshold and mask-variant context
   - run `py -3 -m unittest tests.test_threshold_selection -v` and confirm test-time selection-state reuse rejects mismatched `train_mask_variant` in addition to other context mismatches
+  - confirm authoritative report artifacts do not emit `hausdorff` while D-039 is in force:
+    - `reports/test_metrics.csv` has no `hausdorff` column
+    - `reports/test_summary.yaml` subset summaries have no `hausdorff` field
+    - qualitative manifests do not embed `hausdorff` in per-sample metric payloads
 
 Failure symptoms:
 - Missing config snapshot, unclear dataset version, unknown threshold, or ambiguous checkpoint origin.
@@ -320,6 +324,7 @@ Failure symptoms:
 - Newly emitted authoritative CSVs still use ambiguous legacy history names or drift away from the D-036 ordered required columns.
 - Saved-threshold outputs require cross-reading multiple files to recover threshold provenance or training/evaluation mask-variant roles.
 - Test-time selection-state reuse accepts a mismatched `train_mask_variant` without error.
+- Authoritative outputs still emit `hausdorff` even though the current helper is not an accepted paper-path metric.
 
 What to do if it fails:
 - Do not promote the run into result summaries.

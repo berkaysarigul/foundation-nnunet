@@ -184,6 +184,7 @@ class TestEvaluationRunOutputs(unittest.TestCase):
             self.assertEqual(df["eval_mask_variant"].tolist(), ["original_masks", "original_masks"])
             self.assertEqual(df["selected_postprocess"].tolist(), ["none", "none"])
             self.assertEqual(df["selected_threshold"].tolist(), [0.5, 0.5])
+            self.assertNotIn("hausdorff", df.columns)
 
             summary = yaml.safe_load(summary_path.read_text(encoding="utf-8"))
             self.assertEqual(summary["split"], "test")
@@ -192,6 +193,7 @@ class TestEvaluationRunOutputs(unittest.TestCase):
             self.assertEqual(summary["eval_mask_variant"], "original_masks")
             self.assertAlmostEqual(summary["selected_threshold"], 0.5)
             self.assertEqual(summary["selected_postprocess"], "none")
+            self.assertNotIn("hausdorff", summary["subsets"]["all"])
 
             manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
             self.assertEqual(manifest["split"], "test")
@@ -208,6 +210,7 @@ class TestEvaluationRunOutputs(unittest.TestCase):
                 [sample["subset_tag"] for sample in manifest["samples"]],
                 ["positive", "negative"],
             )
+            self.assertNotIn("hausdorff", manifest["samples"][0]["metrics"])
 
             run_metadata = yaml.safe_load(run_metadata_path.read_text(encoding="utf-8"))
             self.assertAlmostEqual(run_metadata["selected_threshold"], 0.5)

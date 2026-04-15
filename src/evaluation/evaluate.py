@@ -106,7 +106,7 @@ REQUIRED_SELECTION_STATE_KEYS = {
     "eval_mask_variant",
     "input_size",
 }
-METRIC_COLUMNS = ["dice", "iou", "hausdorff", "precision", "recall", "f1"]
+METRIC_COLUMNS = ["dice", "iou", "precision", "recall", "f1"]
 QUALITATIVE_SAMPLE_LIMIT_PER_CLASS = 4
 QUALITATIVE_SELECTION_POLICY = "first_n_per_class_in_dataset_order"
 
@@ -764,7 +764,10 @@ def collect_split_records_and_samples(
             pred = model(image)
             is_positive = bool(mask.sum().item() > 0)
             subset_tag = resolve_subset_tag(positive=is_positive)
-            metrics = compute_per_image_metrics(pred, mask, threshold=threshold)
+            all_metrics = compute_per_image_metrics(pred, mask, threshold=threshold)
+            reported_metrics = {
+                metric_name: all_metrics[metric_name] for metric_name in METRIC_COLUMNS
+            }
             image_id = dataset.image_ids[idx]
 
             records.append(
@@ -781,7 +784,7 @@ def collect_split_records_and_samples(
                     "selected_threshold": threshold,
                     "selected_postprocess": selection_state["selected_postprocess"],
                     "positive": is_positive,
-                    **metrics,
+                    **reported_metrics,
                 }
             )
 
@@ -800,7 +803,7 @@ def collect_split_records_and_samples(
                         image_id=image_id,
                         positive=is_positive,
                         subset_tag=subset_tag,
-                        metrics=metrics,
+                        metrics=reported_metrics,
                         image_uint8=tensor_image_to_uint8(image),
                         target_mask_uint8=tensor_mask_to_uint8(mask),
                         pred_mask_uint8=pred_mask_uint8,
@@ -811,7 +814,7 @@ def collect_split_records_and_samples(
 
 
 def print_summary(df: pd.DataFrame, model_type: str) -> None:
-    metrics = ["dice", "iou", "hausdorff", "precision", "recall", "f1"]
+    metrics = METRIC_COLUMNS
 
     pos_df = df[df["positive"] == True]
     neg_df = df[df["positive"] == False]

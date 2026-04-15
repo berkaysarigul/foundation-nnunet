@@ -182,7 +182,6 @@ class TestRunArtifacts(unittest.TestCase):
                         "positive": True,
                         "dice": 0.8,
                         "iou": 0.7,
-                        "hausdorff": 1.0,
                         "precision": 0.75,
                         "recall": 0.85,
                         "f1": 0.8,
