@@ -283,12 +283,13 @@ Current strategic direction:
 ## Phase 4: Hybrid Redesign Decision
 
 ### P1.8 Decide whether the current hybrid is worth further investment
-- Status: [ ]
+- Status: [~]
 - Dependencies: P1.6
 - Affected files/modules: `src/models/hybrid.py`, `src/models/backbone.py`, methodological framing docs
 - Why it matters: the current hybrid is both technically broken and methodologically sensitive.
 - Subtasks:
-  - [ ] Define a keep/drop gate relative to the strong supervised baseline.
+  - [x] Define a keep/drop gate relative to the strong supervised baseline.
+    - Validation note (2026-04-15): D-033 now fixes the default `P1.8` state as `defer`, not `keep`. Any future hybrid candidate must first clear the already-open engineering-integrity repairs (`P1.9` through `P1.11`) and then beat the trusted full-image pretrained baseline (`0.4951` held-out `test` positive-only Dice) by at least `+0.02` absolute, i.e. reach `>= 0.5151`, before hybrid work can re-enter the active critical path.
   - [ ] Record the evidence required to justify continued hybrid work.
   - [ ] Record the paper framing constraints imposed by Foundation X pretraining on SIIM.
 - Success criteria:

@@ -4,12 +4,12 @@ Current phase:
 - Phase 4 hybrid decision gate
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, trainer-side authoritative run artifact emission, a validated evaluation-side artifact path under the same authoritative run directory, a dedicated authoritative pretrained-run config, a Colab-friendly single entrypoint that chains `train -> select -> test` under one authoritative run directory, a safe `select_test` runner stage for continuing from an existing `best_checkpoint.pth` without reopening training, one completed authoritative pretrained baseline run on GPU/Colab, a fixed `P1.7` crop/ROI gate, a fixed immediate crop-comparison policy, an implemented D-031 train-only ROI crop path in code, and now one completed authoritative crop comparison run on GPU/Colab. The next blocker is deciding whether the hybrid is still worth further investment now that the immediate crop arm failed to beat the trusted full-image baseline.
+- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, trainer-side authoritative run artifact emission, a validated evaluation-side artifact path under the same authoritative run directory, a dedicated authoritative pretrained-run config, a Colab-friendly single entrypoint that chains `train -> select -> test` under one authoritative run directory, a safe `select_test` runner stage for continuing from an existing `best_checkpoint.pth` without reopening training, one completed authoritative pretrained baseline run on GPU/Colab, a fixed `P1.7` crop/ROI gate, a fixed immediate crop-comparison policy, an implemented D-031 train-only ROI crop path in code, one completed authoritative crop comparison run on GPU/Colab, and now a fixed D-033 defer-by-default hybrid gate. The next blocker is recording the exact evidence checklist and paper-framing constraints required before any future hybrid reopening.
 
 Highest-priority open tasks:
-1. Define the `P1.8` keep/drop gate for the current hybrid relative to the now-trusted full-image pretrained baseline rather than the failed immediate crop arm.
-2. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
-3. Keep hybrid work paused until the keep/drop rule and evidence threshold are explicit in repo memory.
+1. Record the exact evidence required to justify continued hybrid work now that D-033 defines the keep/drop bar.
+2. Record the paper framing constraints imposed by Foundation X pretraining on SIIM before any future hybrid reopening.
+3. Keep all future model comparisons tied to the trusted dataset and corrected metric path.
 4. Keep any future reruns on GPU-capable environments, because this local desktop runtime still reports `torch 2.11.0+cpu` with `cuda_available=False`.
 
 What is already trusted:
@@ -144,9 +144,9 @@ What is still untrusted:
 - The scientific value of the current hybrid design.
 
 Current strategic direction:
-- Fix trust issues first, then build a strong pretrained CNN baseline, then decide whether the hybrid is worth redesigning.
+- Fix trust issues first, then build a strong pretrained CNN baseline, then keep the hybrid deferred unless it clears the recorded D-033 gate.
 
 Next 3 actions:
-1. Define the `P1.8` hybrid keep/drop gate relative to the trusted full-image pretrained baseline and the failed immediate crop comparison.
-2. Keep hybrid work paused until that keep/drop gate and evidence threshold are explicit in `DECISIONS.md`.
-3. After the hybrid gate is fixed, return to output-schema and claim-safety cleanup tasks (`P1.2`, `P1.3`, `P1.12`) in the same trusted evaluation regime.
+1. Record the exact evidence checklist required before any future hybrid candidate can claim to clear D-033.
+2. Record the Foundation X paper-framing constraints that still apply even if a future hybrid candidate clears the performance bar.
+3. Keep hybrid work paused while continuing claim-safety cleanup tasks (`P1.2`, `P1.3`, `P1.12`) in the same trusted evaluation regime.

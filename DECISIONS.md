@@ -820,8 +820,34 @@ Impact on experiments / methodology:
 - The next critical-path decision moves to `P1.8`, namely whether the current hybrid is worth further investment relative to that trusted full-image baseline.
 - Any future ROI/crop work is now off the default critical path unless a later explicit decision reopens it with a new justification and comparison scope.
 
+## 2026-04-15 / D-033
+
+Decision:
+- The default `P1.8` decision state for the current hybrid is now `defer`, not `keep`.
+- The hybrid may return to the active critical path only if a future authoritative hybrid run clears both sides of a keep/drop gate relative to the trusted full-image pretrained baseline:
+  - engineering-integrity side: the active hybrid path must first clear the already-open hybrid repair tasks needed to make its behavior interpretable (`P1.9` gradient-flow semantics, `P1.10` fusion-scale alignment, and `P1.11` branch-normalization policy), or an explicitly recorded equivalent proof set
+  - performance side: under the same trusted dataset root, corrected metric path, validation-only threshold-selection discipline, and authoritative run-artifact package used by the current baseline, the hybrid must beat the trusted full-image pretrained baseline on held-out `test` positive-only Dice mean by at least `+0.02` absolute
+- Given the current trusted full-image baseline result `0.4951`, the immediate keep threshold for a future hybrid candidate is therefore `>= 0.5151` held-out `test` positive-only Dice mean.
+- If a future hybrid candidate fails either side of this gate, the hybrid remains deferred from the main paper path and should not outrank the remaining cleanup tasks (`P1.2`, `P1.3`, `P1.12`).
+
+Reason:
+- The repository now has a trusted supervised anchor and an already-tested crop branch, so hybrid work no longer needs to proceed on hope alone.
+- The current hybrid is not merely another architecture variant; it carries extra methodological risk because Foundation X pretraining is SIIM-exposed and the code path still has unresolved technical issues called out in `P1.9` through `P1.11`.
+- On the current single-split evidence base, a tie or tiny gain over the baseline is not enough to justify reopening the highest-risk branch of the project; the hybrid needs a clear win, not parity.
+- Anchoring the gate to the trusted full-image baseline prevents the weaker immediate crop arm from becoming the comparison target by accident.
+
+Alternatives considered:
+- Keep the hybrid on the critical path even before a concrete outperformance bar exists.
+- Require only a strict `> 0.4951` improvement with no margin.
+- Drop the hybrid permanently right now before a formal gate is recorded.
+
+Impact on experiments / methodology:
+- The first `P1.8` subtask is now decision-complete: the hybrid is deferred-by-default until it clears a recorded engineering and performance gate.
+- `P1.9`, `P1.10`, and `P1.11` remain conditional follow-up tasks rather than automatic next steps.
+- The remaining `P1.8` work is now narrower: record the exact evidence checklist and the Foundation X paper-framing constraints needed before any future hybrid reopening.
+
 ## Open decisions requiring evidence
 
 ### OD-005
 - Topic: Whether the hybrid is retained, redesigned, or deferred from the main paper.
-- Needed evidence: trusted baseline, leak-aware framing, gradient-flow verification, and aligned fusion design.
+- Needed evidence: a future hybrid candidate that clears D-033, plus leak-aware framing, gradient-flow verification, and aligned fusion design.
