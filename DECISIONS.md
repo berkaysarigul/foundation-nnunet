@@ -1304,6 +1304,32 @@ Impact on experiments / methodology:
 - Readers are redirected away from stale operational guidance before it can affect new experiments or documentation.
 - Remaining `P2.2` work now narrows further to the legacy training notebooks and any other active-looking stale docs.
 
+## 2026-04-16 / D-048
+
+Decision:
+- `notebooks/train_colab.ipynb` is now explicitly classified as legacy / non-authoritative operational context, not as an authoritative Colab runbook for the recovered project state.
+- If this notebook conflicts with the recovered methodology, the same precedence order applies:
+  - `RECOVERY_TODO.md`
+  - `AGENT_CONTEXT.md`
+  - `DECISIONS.md`
+  - `VALIDATION_CHECKLIST.md`
+  - current code and tests
+  - only then the legacy notebook as historical context
+
+Reason:
+- The notebook still contains stale workflow cells that copy outputs into legacy `results/`, preserve hybrid-first operational paths, and reflect older checkpoint/reporting assumptions.
+- Keeping the notebook is fine for historical context, but it must not silently present itself as the active Colab workflow after the recovery decisions.
+
+Alternatives considered:
+- Rewrite the full notebook into the new authoritative workflow in one pass.
+- Delete the notebook entirely.
+- Leave it untouched and rely only on the notebooks README.
+
+Impact on experiments / methodology:
+- The next `P2.2` cleanup step now has a clear rule: `train_colab.ipynb` is preserved, but explicitly downgraded to legacy-only context.
+- Readers now hit a warning before seeing stale `results/` and hybrid-first cells.
+- Remaining `P2.2` work narrows to the other legacy training notebook and any still-active stale notebook content.
+
 ## Open decisions requiring evidence
 
 ### OD-005
