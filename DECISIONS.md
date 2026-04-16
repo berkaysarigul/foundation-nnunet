@@ -1179,6 +1179,38 @@ Impact on experiments / methodology:
   - how to define paired comparison rules and final evidence packaging
 - Any future proposal to use 5-fold CV as the main paper path now requires a separate explicit methodology decision that also resolves how validation-only threshold selection will be preserved.
 
+## 2026-04-16 / D-044
+
+Decision:
+- Publication-grade confidence intervals and model-vs-model comparisons will treat the repeated split as the statistical unit, not the individual image.
+- Under the repeated stratified split plan, the reporting strategy is:
+  - for a single model: report the arithmetic mean of the held-out `test` metric across repeated splits plus a two-sided 95% percentile bootstrap confidence interval over split-level values
+  - for a model comparison: report the arithmetic mean of the paired split-level deltas plus a two-sided 95% percentile bootstrap confidence interval over those paired deltas
+- The mandatory pairing rule is:
+  - two models are paired only when they are trained/evaluated on the exact same repeated split instances under the same trusted evaluation regime
+  - each paired comparison unit therefore consists of one split index / seed instance shared by both models
+- The primary inferential target remains the held-out `test` positive-only Dice mean, so the default paired comparison statistic is:
+  - `candidate_test_dice_pos_mean - reference_test_dice_pos_mean`
+- Image-level bootstrap is not the primary publication path because it would understate the uncertainty introduced by split choice after the project has already acknowledged single-split fragility.
+- Unpaired comparisons across different split instances are methodologically weaker and should not be the default headline comparison once repeated splits exist.
+
+Reason:
+- `P2.1` exists because uncertainty from split choice is now a known methodological concern; the CI strategy therefore needs to reflect split-level variability rather than pretending the split is fixed.
+- The repo already treats the evaluation run as a split-specific authoritative artifact package, so the clean statistical unit is the repeated split result, not an image pooled across heterogeneous split realizations.
+- Pairing by identical split instances preserves the strongest possible architecture comparison while controlling for the split-level variance that would otherwise dominate noisy medical-segmentation comparisons.
+
+Alternatives considered:
+- Use image-level bootstrap as the default CI path.
+- Use unpaired model comparisons across different split realizations.
+- Defer all CI/pairing decisions until after the repeated-split runner exists.
+
+Impact on experiments / methodology:
+- The second `P2.1` subtask is now decision-complete: publication-grade uncertainty will be split-bootstrap based and model comparisons will be paired by identical split instances.
+- Future `P2.1` work now narrows to the remaining operational items:
+  - how many repeated split instances to run
+  - what minimum artifact/evidence package each split instance must contribute to the final report bundle
+- Any future report that cites repeated-split confidence intervals or model deltas without split-level pairing or without split-bootstrap semantics is methodologically incomplete.
+
 ## Open decisions requiring evidence
 
 ### OD-005

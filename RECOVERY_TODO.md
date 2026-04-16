@@ -373,7 +373,8 @@ Current strategic direction:
 - Subtasks:
   - [x] Decide between repeated stratified splits and 5-fold CV.
     - Validation note (2026-04-16): D-043 now fixes repeated stratified train/val/test splits as the publication-grade evaluation direction. The current trusted pipeline depends on validation-only threshold selection plus held-out test reporting, so plain 5-fold CV was rejected as the primary path because it would require an unsolved nested-validation redesign or would blur validation/test roles. `rg -n "D-043|repeated stratified|5-fold CV|validation-only threshold selection|P2\\.1" RECOVERY_TODO.md AGENT_CONTEXT.md DECISIONS.md VALIDATION_CHECKLIST.md` and `git diff` were reviewed for consistency.
-  - [ ] Define bootstrap confidence intervals and paired comparison strategy.
+  - [x] Define bootstrap confidence intervals and paired comparison strategy.
+    - Validation note (2026-04-16): D-044 now fixes split-bootstrap / paired-delta reporting for the repeated-split path. Confidence intervals are computed over split-level values, not individual images, and model comparisons must pair identical split instances before bootstrapping the mean delta. The default paired comparison target remains held-out `test` positive-only Dice mean. `rg -n "D-044|paired deltas|split-level|bootstrap confidence|P2\\.1" RECOVERY_TODO.md AGENT_CONTEXT.md DECISIONS.md VALIDATION_CHECKLIST.md` and `git diff` were reviewed for consistency.
   - [ ] Define minimum evidence package for final reporting.
 - Success criteria:
   - Publication-grade evaluation plan is specified and ready to execute.

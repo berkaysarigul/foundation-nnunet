@@ -582,3 +582,32 @@ What to do if it fails:
 - Re-anchor the plan to D-043.
 - Restore the explicit train/val/test roles.
 - Reopen methodology review before implementing orchestration changes.
+
+## 18. Split-bootstrap and paired comparison discipline
+
+What to check:
+- Publication-grade uncertainty estimates follow D-044 and use the repeated split as the statistical unit.
+- Model-vs-model comparisons on the repeated-split path are paired by identical split instances rather than treated as unpaired runs.
+
+How to check it:
+- Review the relevant reporting plan, notebook narrative, or orchestration proposal against D-044.
+- Confirm single-model uncertainty is described as:
+  - mean held-out `test` metric across repeated splits
+  - two-sided 95% percentile bootstrap CI over split-level values
+- Confirm model-comparison uncertainty is described as:
+  - mean paired split-level delta
+  - two-sided 95% percentile bootstrap CI over paired deltas
+- Confirm the default paired comparison target remains held-out `test` positive-only Dice mean.
+- Confirm the pairing rule requires both models to use the exact same repeated split instances.
+- Confirm image-level bootstrap is not presented as the default publication CI path.
+
+Failure symptoms:
+- Confidence intervals are described as image-level bootstrap by default.
+- Model comparisons are treated as unpaired even though repeated split pairing is available.
+- The repeated-split plan omits the paired delta and instead compares only separate model means.
+- The primary paired comparison target drifts away from held-out `test` positive-only Dice without a new decision.
+
+What to do if it fails:
+- Re-anchor the reporting plan to D-044.
+- Restore split-level bootstrap and paired-delta language.
+- Reopen methodology review before implementing result aggregation.
