@@ -349,12 +349,13 @@ Current strategic direction:
 ## Phase 5: Paper-Grade Methodology
 
 ### P1.12 Define leak-aware Foundation X methodology
-- Status: [ ]
+- Status: [~]
 - Dependencies: P1.8
 - Affected files/modules: experiment design docs, final reporting plan
 - Why it matters: SIIM exposure in Foundation X pretraining constrains what can be claimed scientifically.
 - Subtasks:
-  - [ ] Decide whether Foundation X is framed as in-domain transfer, ablation-only, or deferred from the paper.
+  - [x] Decide whether Foundation X is framed as in-domain transfer, ablation-only, or deferred from the paper.
+    - Validation note (2026-04-16): D-040 now fixes the final current-state paper role: Foundation X is deferred from the main paper path unless a future hybrid candidate clears D-033 and D-034. Under the current recovered state it may appear only as a future-work / limitations note or a clearly labeled appendix-side leakage-aware ablation, not in the abstract, headline tables, or default storyline. `rg -n "D-040|P1\\.12|Foundation X|deferred from the main paper path" RECOVERY_TODO.md AGENT_CONTEXT.md DECISIONS.md VALIDATION_CHECKLIST.md` and `git diff` were reviewed for consistency.
   - [ ] Define forbidden claims under the current setup.
   - [ ] Record comparison rules versus the strong supervised baseline.
 - Success criteria:

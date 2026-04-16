@@ -1061,6 +1061,34 @@ Impact on experiments / methodology:
 - Historical `hausdorff` values in old outputs remain non-authoritative and should not be cited.
 - If a future paper version truly needs a distance metric, it must re-enter through a new explicit decision plus a dedicated correctness test harness rather than by reviving the current helper silently.
 
+## 2026-04-16 / D-040
+
+Decision:
+- Under the current recovered project state, Foundation X is deferred from the main paper path rather than promoted as an active result family.
+- Until a future hybrid candidate clears both D-033 and D-034, Foundation X may appear only in one of two scoped roles:
+  - a short future-work / limitations note, or
+  - a clearly labeled appendix-side leakage-aware ablation section that does not change the headline paper narrative
+- Under the current state, Foundation X must not appear as:
+  - an abstract-level contribution
+  - a main results-table anchor
+  - the default experimental storyline for the paper body
+- The trusted full-image `pretrained_resnet34_unet` baseline remains the main paper-path supervised anchor unless a later explicit decision changes that role after new evidence.
+
+Reason:
+- The current repository has no authoritative hybrid evidence package that clears D-033 and D-034, while the hybrid engineering blockers in `P1.9` through `P1.11` remain open.
+- D-035 already fixed the leakage-aware claim boundary; this decision narrows the remaining `P1.12` methodology question from "what can be claimed" to "where Foundation X is allowed to appear in the paper at all."
+- Keeping Foundation X out of the headline narrative avoids paper-level dependence on an unresolved, SIIM-exposed, currently deferred branch.
+
+Alternatives considered:
+- Make Foundation X a required main-paper in-domain transfer section even before a qualifying hybrid evidence package exists.
+- Treat Foundation X as a mandatory ablation section in the main body despite the open engineering blockers.
+- Remove Foundation X from all paper discussion immediately, including appendix or future-work framing.
+
+Impact on experiments / methodology:
+- The first `P1.12` subtask is now decision-complete: Foundation X is deferred from the main paper path under the current recovered state.
+- The remaining `P1.12` work is now narrower: operationalize the forbidden-claim list and the comparison rules back to the trusted full-image baseline.
+- Any notebook, draft, or summary that places Foundation X in the abstract, headline tables, or main storyline before D-033 and D-034 are cleared is methodologically non-authoritative.
+
 ## Open decisions requiring evidence
 
 ### OD-005

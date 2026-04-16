@@ -510,13 +510,18 @@ What to do if it fails:
 What to check:
 - Any Foundation X or hybrid result reported under the current checkpoint provenance stays inside the D-035 claim boundary.
 - No document, notebook, table, or summary presents Foundation X as clean external pretraining or target-unseen generalization on SIIM.
+- Under D-040, Foundation X is deferred from the main paper path unless a future hybrid candidate clears D-033 and D-034.
 
 How to check it:
-- Review the relevant result summary, manuscript text, notebook narrative, or decision note against D-006 and D-035.
+- Review the relevant result summary, manuscript text, notebook narrative, or decision note against D-006, D-035, and D-040.
 - Confirm the allowed framing remains one of:
   - leakage-aware in-domain transfer
   - secondary ablation against the trusted full-image pretrained baseline
   - engineering analysis under explicit SIIM-exposure caveats
+- Confirm current-state paper placement also respects D-040:
+  - Foundation X is absent from the abstract
+  - Foundation X is absent from headline results tables and the default main-paper storyline
+  - if Foundation X is mentioned before D-033/D-034 are cleared, it appears only as future-work / limitations context or a clearly labeled appendix-side leakage-aware ablation
 - Confirm the following claim classes are absent:
   - clean external-pretraining generalization on SIIM
   - target-unseen transfer into SIIM
@@ -527,9 +532,11 @@ How to check it:
 Failure symptoms:
 - Foundation X is described as generic external transfer or clean pretraining on SIIM.
 - A hybrid result is promoted to the main paper claim without explicit SIIM-exposure caveats.
+- Foundation X appears in the abstract, headline tables, or default narrative even though no hybrid candidate has cleared D-033 and D-034.
 - The trusted full-image pretrained baseline is displaced as the headline anchor without a separate methodology decision that changes the D-035 boundary.
 
 What to do if it fails:
 - Downgrade the wording to the D-035 leakage-aware framing.
+- Remove Foundation X from the headline paper path and demote it back to D-040-compatible placement.
 - Remove the unsupported claim from paper/reporting artifacts.
 - Reopen methodology review before citing the result as evidence.
