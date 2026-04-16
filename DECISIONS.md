@@ -1278,6 +1278,32 @@ Impact on experiments / methodology:
 - Future docs cleanup can proceed file-by-file without letting this guide silently reintroduce stale assumptions.
 - Remaining `P2.2` work is now narrower: clean the still-active docs/notebooks that continue to present stale operational guidance.
 
+## 2026-04-16 / D-047
+
+Decision:
+- `CLAUDE.md` is now explicitly classified as legacy operational context, not as an authoritative runbook for the recovered project state.
+- If `CLAUDE.md` conflicts with the recovered methodology, the precedence order is the same as D-046:
+  - `RECOVERY_TODO.md`
+  - `AGENT_CONTEXT.md`
+  - `DECISIONS.md`
+  - `VALIDATION_CHECKLIST.md`
+  - current code and tests
+  - only then `CLAUDE.md` as historical context
+
+Reason:
+- `CLAUDE.md` still presents a hybrid-first project description, legacy `results/` usage, older SIIM `stage_2` assumptions, and stale checkpoint/evaluation commands as if they were the active workflow.
+- Leaving it unmarked would let an actively named top-level guide silently compete with the recovered repo memory.
+
+Alternatives considered:
+- Rewrite the entire file in one pass.
+- Delete `CLAUDE.md` completely.
+- Leave it untouched and rely on the recovery files alone.
+
+Impact on experiments / methodology:
+- The second `P2.2` atomic cleanup now has a clear precedence rule for `CLAUDE.md`.
+- Readers are redirected away from stale operational guidance before it can affect new experiments or documentation.
+- Remaining `P2.2` work now narrows further to the legacy training notebooks and any other active-looking stale docs.
+
 ## Open decisions requiring evidence
 
 ### OD-005

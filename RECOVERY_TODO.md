@@ -390,6 +390,7 @@ Current strategic direction:
 - Subtasks:
   - [ ] Update docs to stop instructing unsafe assumptions about RLE, results, and hybrid behavior.
     - Progress note (2026-04-16): `docs/foundation_nnunet_dev_guide.md` now carries an explicit legacy/non-authoritative warning and redirects readers to the recovery-memory files plus current code/tests. D-046 records that this guide is preserved only as historical design context. Remaining stale operational guidance still needs cleanup in active docs such as `CLAUDE.md`.
+    - Progress note (2026-04-16): `CLAUDE.md` now also carries an explicit legacy/non-authoritative warning and redirects readers to the recovery-memory files plus current code/tests. D-047 records that the file is preserved only as historical operational context and must not outrank the recovered methodology. Remaining stale operational guidance is now concentrated in the legacy training notebooks.
   - [ ] Mark notebook limitations and authoritative usage rules.
 - Success criteria:
   - Documentation no longer conflicts with recovery decisions.

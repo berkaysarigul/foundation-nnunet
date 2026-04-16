@@ -1,5 +1,31 @@
 # Foundation-nnU-Net
 
+> Legacy / non-authoritative operational guide.
+>
+> This file is preserved as historical project context only. It is **not** the
+> current source of truth for experiment workflow, dataset contracts, hybrid
+> posture, output locations, or paper methodology.
+>
+> Before relying on anything below, defer to:
+> - `RECOVERY_TODO.md`
+> - `AGENT_CONTEXT.md`
+> - `DECISIONS.md`
+> - `VALIDATION_CHECKLIST.md`
+> - current code and tests
+>
+> Known stale assumptions in this file include, but are not limited to:
+> - treating the hybrid / Foundation X path as the default active model path
+> - using legacy `results/` outputs as if they were authoritative
+> - referencing old SIIM `stage_2_*` assumptions instead of the recovered local data contract
+> - older checkpoint / evaluation commands that do not reflect the authoritative run-artifact workflow
+>
+> Current authoritative conventions are:
+> - trusted dataset root: `data/processed/pneumothorax_trusted_v1`
+> - authoritative outputs: `artifacts/runs/`
+> - notebook outputs are non-authoritative unless fully traceable
+> - Foundation X / hybrid is deferred from the current main paper path
+> - the first trusted supervised anchor is the full-image `pretrained_resnet34_unet` baseline
+
 Hybrid deep learning model for pneumothorax segmentation in chest X-rays.
 Injects Foundation X (Swin-B backbone) multi-scale features into a U-Net decoder to improve segmentation performance.
 
