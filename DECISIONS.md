@@ -1148,6 +1148,37 @@ Impact on experiments / methodology:
 - Any future Foundation X discussion that omits the baseline score `0.4951`, the candidate score, the absolute delta, or the D-033 threshold status is methodologically incomplete.
 - The next critical-path blocker now moves to `P2.1`, not additional Foundation X framing work.
 
+## 2026-04-16 / D-043
+
+Decision:
+- The publication-grade evaluation upgrade path will use repeated stratified train/val/test splits rather than single-pass 5-fold cross-validation.
+- The reason this is the primary direction is methodological continuity with the already trusted authoritative pipeline:
+  - train on `train`
+  - select threshold on `val` only
+  - report held-out metrics on `test`
+- Under the current recovered stack, each repeated split will preserve that same three-way discipline instead of collapsing evaluation into a simpler fold-only loop.
+- Plain 5-fold CV is not the chosen primary path because, under the current threshold-selection and artifact contracts, it would either:
+  - force a nested validation design that the repo has not yet specified, or
+  - weaken the clean `val`-only threshold-selection rule by blurring validation and test roles.
+
+Reason:
+- The repo already has one trusted end-to-end evaluation path, and it is explicitly built around a three-way split with saved validation-only threshold selection and held-out test reporting.
+- Repeated stratified splits reuse that trusted protocol with minimal methodological drift, while still reducing single-split fragility.
+- Choosing a direction that matches the existing artifact/evaluator contracts lowers implementation risk and keeps future results easier to compare back to the currently trusted baseline evidence package.
+
+Alternatives considered:
+- Promote standard 5-fold CV immediately as the default publication path.
+- Keep single-split evaluation as the final publication plan.
+- Defer the direction choice until after implementing confidence intervals.
+
+Impact on experiments / methodology:
+- The first `P2.1` subtask is now decision-complete: the repo's publication-grade evaluation direction is repeated stratified splits, not plain 5-fold CV.
+- Future `P2.1` work now narrows to:
+  - how many repeated splits to run
+  - how to compute confidence intervals
+  - how to define paired comparison rules and final evidence packaging
+- Any future proposal to use 5-fold CV as the main paper path now requires a separate explicit methodology decision that also resolves how validation-only threshold selection will be preserved.
+
 ## Open decisions requiring evidence
 
 ### OD-005

@@ -366,12 +366,13 @@ Current strategic direction:
   - Methodology review against `DECISIONS.md`.
 
 ### P2.1 Prepare repeated split / cross-validation upgrade path
-- Status: [ ]
+- Status: [~]
 - Dependencies: P1.6, optionally P1.8 if hybrid is kept
 - Affected files/modules: evaluation pipeline, experiment orchestration, result aggregation
 - Why it matters: single-split results are fragile for publication.
 - Subtasks:
-  - [ ] Decide between repeated stratified splits and 5-fold CV.
+  - [x] Decide between repeated stratified splits and 5-fold CV.
+    - Validation note (2026-04-16): D-043 now fixes repeated stratified train/val/test splits as the publication-grade evaluation direction. The current trusted pipeline depends on validation-only threshold selection plus held-out test reporting, so plain 5-fold CV was rejected as the primary path because it would require an unsolved nested-validation redesign or would blur validation/test roles. `rg -n "D-043|repeated stratified|5-fold CV|validation-only threshold selection|P2\\.1" RECOVERY_TODO.md AGENT_CONTEXT.md DECISIONS.md VALIDATION_CHECKLIST.md` and `git diff` were reviewed for consistency.
   - [ ] Define bootstrap confidence intervals and paired comparison strategy.
   - [ ] Define minimum evidence package for final reporting.
 - Success criteria:

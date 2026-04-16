@@ -554,3 +554,31 @@ What to do if it fails:
 - Remove Foundation X from the headline paper path and demote it back to D-040-compatible placement.
 - Remove the unsupported claim from paper/reporting artifacts.
 - Reopen methodology review before citing the result as evidence.
+
+## 17. Publication-grade evaluation direction
+
+What to check:
+- The publication-grade evaluation plan follows D-043 and uses repeated stratified train/val/test splits rather than treating plain 5-fold CV as the default path.
+- The chosen direction preserves the already trusted evaluation discipline:
+  - train on `train`
+  - threshold selection on `val` only
+  - held-out reporting on `test`
+
+How to check it:
+- Review the relevant decision note, reporting plan, notebook narrative, or orchestration proposal against D-043.
+- Confirm the chosen direction is explicitly described as repeated stratified train/val/test splits.
+- Confirm any repeated-split proposal preserves:
+  - a distinct validation split for threshold selection
+  - a distinct held-out test split for final reporting
+  - the same trusted dataset/evaluator/selection-state discipline already used by the authoritative baseline path
+- Confirm plain 5-fold CV is not presented as the current default publication plan unless a later explicit decision replaces D-043 with a nested-validation design.
+
+Failure symptoms:
+- A proposal calls plain 5-fold CV the default publication path under the current stack.
+- Validation-only threshold selection disappears or is implicitly merged into the final reporting fold.
+- The evaluation plan changes direction without a new explicit decision.
+
+What to do if it fails:
+- Re-anchor the plan to D-043.
+- Restore the explicit train/val/test roles.
+- Reopen methodology review before implementing orchestration changes.
