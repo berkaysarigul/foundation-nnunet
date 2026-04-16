@@ -1211,6 +1211,47 @@ Impact on experiments / methodology:
   - what minimum artifact/evidence package each split instance must contribute to the final report bundle
 - Any future report that cites repeated-split confidence intervals or model deltas without split-level pairing or without split-bootstrap semantics is methodologically incomplete.
 
+## 2026-04-16 / D-045
+
+Decision:
+- The minimum evidence package for final repeated-split reporting is now fixed.
+- A publication-grade final report is methodologically incomplete unless it includes all of the following:
+  - a split manifest for the repeated-split study that records every split instance identifier / seed and the exact train/val/test IDs used for that instance
+  - one authoritative run-artifact package per model per split instance, each preserving the already trusted single-run evidence family (`metadata`, config snapshot, selection state, checkpoints, `test_metrics.csv`, `test_summary.yaml`, qualitative manifests)
+  - one machine-readable split-level aggregation table that records, for each model and each split instance, at minimum:
+    - split instance identifier
+    - dataset/split fingerprint context
+    - selected threshold
+    - held-out `test` positive-only Dice mean
+    - any additional reported held-out `test` metrics kept on the paper path
+  - one machine-readable paired-comparison table that records, for each shared split instance and each named model-vs-model comparison:
+    - reference model
+    - candidate model
+    - split instance identifier
+    - split-level delta on held-out `test` positive-only Dice mean
+  - one final summary artifact that reports:
+    - repeated-split model means
+    - split-bootstrap 95% confidence intervals
+    - paired-delta means
+    - paired-delta 95% confidence intervals
+    - the exact number of completed split instances contributing to each statistic
+- Notebook screenshots, copied console logs, or only a final averaged score are not sufficient as the final repeated-split evidence package.
+
+Reason:
+- D-043 and D-044 already fixed the evaluation direction and the statistical unit, but the repo still needed a minimum artifact contract for what a publication-grade repeated-split result bundle must actually contain.
+- The project has already recovered from stale-artifact ambiguity once, so the repeated-split upgrade cannot rely on ad hoc tables or manually copied averages.
+- Requiring both split-level and paired-delta machine-readable tables ensures that future summary statistics can be audited back to the exact authoritative split instances.
+
+Alternatives considered:
+- Require only final summary means and confidence intervals.
+- Let each repeated-split study define its own artifact shape informally.
+- Defer the evidence-package definition until after the orchestration code exists.
+
+Impact on experiments / methodology:
+- `P2.1` is now decision-complete: the repo has a fixed publication-grade evaluation direction, a fixed uncertainty/comparison rule, and a fixed minimum evidence package for final repeated-split reporting.
+- Any future repeated-split result that lacks split manifests, per-split authoritative run packages, split-level aggregation tables, paired-delta tables, or the final summary artifact is methodologically incomplete.
+- The next critical-path blocker now moves to `P2.2`, not additional repeated-split methodology design.
+
 ## Open decisions requiring evidence
 
 ### OD-005

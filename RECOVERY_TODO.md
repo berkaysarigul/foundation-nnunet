@@ -366,7 +366,7 @@ Current strategic direction:
   - Methodology review against `DECISIONS.md`.
 
 ### P2.1 Prepare repeated split / cross-validation upgrade path
-- Status: [~]
+- Status: [x]
 - Dependencies: P1.6, optionally P1.8 if hybrid is kept
 - Affected files/modules: evaluation pipeline, experiment orchestration, result aggregation
 - Why it matters: single-split results are fragile for publication.
@@ -375,7 +375,8 @@ Current strategic direction:
     - Validation note (2026-04-16): D-043 now fixes repeated stratified train/val/test splits as the publication-grade evaluation direction. The current trusted pipeline depends on validation-only threshold selection plus held-out test reporting, so plain 5-fold CV was rejected as the primary path because it would require an unsolved nested-validation redesign or would blur validation/test roles. `rg -n "D-043|repeated stratified|5-fold CV|validation-only threshold selection|P2\\.1" RECOVERY_TODO.md AGENT_CONTEXT.md DECISIONS.md VALIDATION_CHECKLIST.md` and `git diff` were reviewed for consistency.
   - [x] Define bootstrap confidence intervals and paired comparison strategy.
     - Validation note (2026-04-16): D-044 now fixes split-bootstrap / paired-delta reporting for the repeated-split path. Confidence intervals are computed over split-level values, not individual images, and model comparisons must pair identical split instances before bootstrapping the mean delta. The default paired comparison target remains held-out `test` positive-only Dice mean. `rg -n "D-044|paired deltas|split-level|bootstrap confidence|P2\\.1" RECOVERY_TODO.md AGENT_CONTEXT.md DECISIONS.md VALIDATION_CHECKLIST.md` and `git diff` were reviewed for consistency.
-  - [ ] Define minimum evidence package for final reporting.
+  - [x] Define minimum evidence package for final reporting.
+    - Validation note (2026-04-16): D-045 now fixes the minimum evidence package for final repeated-split reporting: split manifest, per-model-per-split authoritative run packages, split-level aggregation table, paired-delta table, and a final summary artifact with means, 95% split-bootstrap CIs, paired-delta CIs, and contributing split counts. `rg -n "D-045|split manifest|paired-delta table|final summary artifact|P2\\.1" RECOVERY_TODO.md AGENT_CONTEXT.md DECISIONS.md VALIDATION_CHECKLIST.md` and `git diff` were reviewed for consistency.
 - Success criteria:
   - Publication-grade evaluation plan is specified and ready to execute.
 - Validation needed before close:
@@ -396,8 +397,7 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P2.1 Prepare repeated split / cross-validation upgrade path
-2. P2.2 Notebook and documentation cleanup
-3. P1.9 Remove incorrect `no_grad` usage and verify gradient flow
-4. P1.10 Redesign feature fusion mapping if hybrid is kept
-5. P1.11 Define hybrid branch normalization policy
+1. P2.2 Notebook and documentation cleanup
+2. P1.9 Remove incorrect `no_grad` usage and verify gradient flow
+3. P1.10 Redesign feature fusion mapping if hybrid is kept
+4. P1.11 Define hybrid branch normalization policy

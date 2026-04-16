@@ -611,3 +611,28 @@ What to do if it fails:
 - Re-anchor the reporting plan to D-044.
 - Restore split-level bootstrap and paired-delta language.
 - Reopen methodology review before implementing result aggregation.
+
+## 19. Final repeated-split evidence package
+
+What to check:
+- Final publication-grade repeated-split reporting follows D-045 and ships the full minimum evidence package rather than only a final averaged table.
+
+How to check it:
+- Review the relevant reporting plan, orchestration proposal, or final artifact layout against D-045.
+- Confirm the final package includes:
+  - a split manifest covering every repeated split instance and its exact train/val/test IDs
+  - one authoritative run-artifact package per model per split instance
+  - one machine-readable split-level aggregation table
+  - one machine-readable paired-delta table for each named model-vs-model comparison
+  - one final summary artifact with model means, split-bootstrap 95% CIs, paired-delta means, paired-delta 95% CIs, and contributing split counts
+- Confirm the repeated-split package still points back to the same trusted dataset / evaluation regime rather than mixing legacy or notebook-only outputs.
+
+Failure symptoms:
+- Only the final average metrics are retained.
+- Split-level rows cannot be traced back to authoritative per-split run artifacts.
+- Paired comparisons are summarized without a machine-readable paired-delta table.
+- The final summary omits confidence intervals or the number of contributing split instances.
+
+What to do if it fails:
+- Re-anchor the report bundle to D-045.
+- Regenerate the missing machine-readable artifacts before treating the repeated-split result as publication-grade evidence.
