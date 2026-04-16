@@ -1116,6 +1116,38 @@ Impact on experiments / methodology:
 - Validation/review can now fail a document for wording inflation even if no new experiment was run.
 - The remaining `P1.12` task is now only the baseline-comparison rule set for any future leakage-aware Foundation X discussion.
 
+## 2026-04-16 / D-042
+
+Decision:
+- Any future leakage-aware Foundation X or hybrid discussion must use the trusted full-image `pretrained_resnet34_unet` baseline as its mandatory comparison anchor.
+- Under the current setup, a Foundation X result is methodologically non-authoritative unless the comparison record explicitly includes all of the following:
+  - the trusted baseline identity: full-image `pretrained_resnet34_unet`
+  - the trusted baseline held-out reference score: positive-only Dice mean `0.4951`
+  - the candidate Foundation X / hybrid held-out `test` positive-only Dice under the same trusted evaluation regime
+  - the absolute delta versus `0.4951`
+  - whether the candidate did or did not clear the D-033 keep threshold `>= 0.5151`
+- Under the current setup, Foundation X comparisons must not use any of the following as the primary narrative anchor:
+  - the failed immediate crop arm (`0.4625`)
+  - the plain U-Net as a stand-alone headline comparator
+  - legacy `results/` artifacts
+  - notebook-only metrics without the D-034 evidence package
+- Any allowed Foundation X table, appendix note, or future-work mention must present the baseline-relative comparison as secondary context, not as a replacement for the baseline anchor.
+
+Reason:
+- Once D-040 and D-041 fixed paper placement and forbidden wording, the remaining ambiguity was how a future leakage-aware Foundation X result should be compared at all.
+- The project now has exactly one trusted supervised anchor with a complete authoritative evidence package: the full-image `pretrained_resnet34_unet` baseline at `0.4951`.
+- Forcing every future Foundation X mention back to that anchor prevents narrative drift toward weaker or non-authoritative comparators.
+
+Alternatives considered:
+- Allow Foundation X appendix discussion without an explicit baseline-relative delta.
+- Allow the crop arm or plain U-Net to serve as the main comparator in some contexts.
+- Postpone comparison rules until a future hybrid candidate actually exists.
+
+Impact on experiments / methodology:
+- `P1.12` is now decision-complete: the leak-aware Foundation X methodology has an explicit paper role, explicit forbidden claims, and explicit baseline-comparison rules.
+- Any future Foundation X discussion that omits the baseline score `0.4951`, the candidate score, the absolute delta, or the D-033 threshold status is methodologically incomplete.
+- The next critical-path blocker now moves to `P2.1`, not additional Foundation X framing work.
+
 ## Open decisions requiring evidence
 
 ### OD-005

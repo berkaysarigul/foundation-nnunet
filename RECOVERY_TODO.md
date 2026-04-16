@@ -349,7 +349,7 @@ Current strategic direction:
 ## Phase 5: Paper-Grade Methodology
 
 ### P1.12 Define leak-aware Foundation X methodology
-- Status: [~]
+- Status: [x]
 - Dependencies: P1.8
 - Affected files/modules: experiment design docs, final reporting plan
 - Why it matters: SIIM exposure in Foundation X pretraining constrains what can be claimed scientifically.
@@ -358,7 +358,8 @@ Current strategic direction:
     - Validation note (2026-04-16): D-040 now fixes the final current-state paper role: Foundation X is deferred from the main paper path unless a future hybrid candidate clears D-033 and D-034. Under the current recovered state it may appear only as a future-work / limitations note or a clearly labeled appendix-side leakage-aware ablation, not in the abstract, headline tables, or default storyline. `rg -n "D-040|P1\\.12|Foundation X|deferred from the main paper path" RECOVERY_TODO.md AGENT_CONTEXT.md DECISIONS.md VALIDATION_CHECKLIST.md` and `git diff` were reviewed for consistency.
   - [x] Define forbidden claims under the current setup.
     - Validation note (2026-04-16): D-041 now operationalizes the forbidden-claim list for Foundation X. Under the current setup, wording that presents Foundation X as clean external pretraining, target-unseen generalization, generic foundation-model advantage, or the default superior/main paper model is now explicitly non-authoritative. `rg -n "D-041|forbidden-claim|Foundation X|clean pretraining|target-unseen|default superior model" RECOVERY_TODO.md AGENT_CONTEXT.md DECISIONS.md VALIDATION_CHECKLIST.md` and `git diff` were reviewed for consistency.
-  - [ ] Record comparison rules versus the strong supervised baseline.
+  - [x] Record comparison rules versus the strong supervised baseline.
+    - Validation note (2026-04-16): D-042 now fixes the mandatory comparison anchor for any future leakage-aware Foundation X discussion: the trusted full-image `pretrained_resnet34_unet` baseline with held-out test positive-only Dice `0.4951`, explicit candidate score, absolute delta, and explicit D-033 threshold status (`>= 0.5151` or not). Crop (`0.4625`), plain U-Net, legacy `results/`, and notebook-only metrics are now disallowed as primary narrative anchors. `rg -n "D-042|0.4951|0.5151|Foundation X|comparison anchor|0.4625" RECOVERY_TODO.md AGENT_CONTEXT.md DECISIONS.md VALIDATION_CHECKLIST.md` and `git diff` were reviewed for consistency.
 - Success criteria:
   - The paper claim boundary is explicit and defensible.
 - Validation needed before close:
@@ -393,8 +394,8 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P1.12 Define leak-aware Foundation X methodology
-2. P2.1 Prepare repeated split / cross-validation upgrade path
-3. P2.2 Notebook and documentation cleanup
-4. P1.9 Remove incorrect `no_grad` usage and verify gradient flow
-5. P1.10 Redesign feature fusion mapping if hybrid is kept
+1. P2.1 Prepare repeated split / cross-validation upgrade path
+2. P2.2 Notebook and documentation cleanup
+3. P1.9 Remove incorrect `no_grad` usage and verify gradient flow
+4. P1.10 Redesign feature fusion mapping if hybrid is kept
+5. P1.11 Define hybrid branch normalization policy

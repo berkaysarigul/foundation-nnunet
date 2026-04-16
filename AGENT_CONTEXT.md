@@ -4,13 +4,13 @@ Current phase:
 - Post-hybrid-gate reporting and methodology cleanup
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, trainer-side authoritative run artifact emission, a validated evaluation-side artifact path under the same authoritative run directory, a dedicated authoritative pretrained-run config, a Colab-friendly single entrypoint that chains `train -> select -> test` under one authoritative run directory, a safe `select_test` runner stage for continuing from an existing `best_checkpoint.pth` without reopening training, one completed authoritative pretrained baseline run on GPU/Colab, a fixed `P1.7` crop/ROI gate, a fixed immediate crop-comparison policy, an implemented D-031 train-only ROI crop path in code, one completed authoritative crop comparison run on GPU/Colab, a fixed D-033 defer-by-default hybrid gate, a fixed D-034 hybrid evidence contract, a fixed D-035 Foundation X framing boundary, a fixed D-036 canonical CSV contract for authoritative `history.csv` and `test_metrics.csv`, a fixed D-037 image-ID/subset-tag contract for per-image evaluation outputs, a fixed D-038 metadata-completeness contract for saved thresholds and mask variants, a fixed D-039 decision that removes the mislabeled `hausdorff` path from authoritative reporting, a fixed D-040 methodology role decision that defers Foundation X from the main paper path under the current recovered state, and now a fixed D-041 operational forbidden-claim list for Foundation X wording. `P1.2` and `P1.3` are complete; `P1.12` is in progress, and the next blocker inside it is recording the baseline-comparison rules for any future leakage-aware Foundation X discussion.
+- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, trainer-side authoritative run artifact emission, a validated evaluation-side artifact path under the same authoritative run directory, a dedicated authoritative pretrained-run config, a Colab-friendly single entrypoint that chains `train -> select -> test` under one authoritative run directory, a safe `select_test` runner stage for continuing from an existing `best_checkpoint.pth` without reopening training, one completed authoritative pretrained baseline run on GPU/Colab, a fixed `P1.7` crop/ROI gate, a fixed immediate crop-comparison policy, an implemented D-031 train-only ROI crop path in code, one completed authoritative crop comparison run on GPU/Colab, a fixed D-033 defer-by-default hybrid gate, a fixed D-034 hybrid evidence contract, a fixed D-035 Foundation X framing boundary, a fixed D-036 canonical CSV contract for authoritative `history.csv` and `test_metrics.csv`, a fixed D-037 image-ID/subset-tag contract for per-image evaluation outputs, a fixed D-038 metadata-completeness contract for saved thresholds and mask variants, a fixed D-039 decision that removes the mislabeled `hausdorff` path from authoritative reporting, a fixed D-040 methodology role decision that defers Foundation X from the main paper path under the current recovered state, a fixed D-041 operational forbidden-claim list for Foundation X wording, and now a fixed D-042 baseline-comparison contract for any future leakage-aware Foundation X discussion. `P1.12` is complete; the next blocker now moves to `P2.1`, namely the publication-grade repeated-split / cross-validation upgrade path.
 
 Highest-priority open tasks:
-1. Finish `P1.12` by recording the baseline-comparison rules for any future leakage-aware Foundation X discussion under D-035, D-040, and D-041.
-2. Prepare the publication-grade repeated-split / cross-validation upgrade path under `P2.1`.
-3. Clean up notebooks and docs so they match the recovered methodology under `P2.2`.
-4. Keep hybrid work paused unless a future candidate clears D-033 with the full D-034 evidence package on a GPU-capable environment.
+1. Prepare the publication-grade repeated-split / cross-validation upgrade path under `P2.1`.
+2. Clean up notebooks and docs so they match the recovered methodology under `P2.2`.
+3. Keep hybrid work paused unless a future candidate clears D-033 with the full D-034 evidence package on a GPU-capable environment.
+4. Treat `P1.9` through `P1.11` as deferred engineering work unless the hybrid is explicitly reopened later.
 
 What is already trusted:
 - The high-level repo structure and module boundaries.
@@ -134,6 +134,10 @@ What is already trusted:
 - D-041 now fixes the operational forbidden-claim list for Foundation X:
   - wording that presents Foundation X as clean external pretraining, target-unseen transfer, generic foundation-model advantage, or the default superior/main paper model is methodologically non-authoritative under the current setup
   - allowed mentions must stay explicitly leakage-aware and secondary to the trusted full-image baseline anchor
+- D-042 now fixes the comparison contract for any future leakage-aware Foundation X discussion:
+  - the only allowed primary comparison anchor is the trusted full-image `pretrained_resnet34_unet` baseline at held-out positive-only Dice `0.4951`
+  - any future candidate discussion must include the candidate score, the absolute delta versus `0.4951`, and whether D-033's `>= 0.5151` keep threshold was cleared
+  - the crop arm (`0.4625`), plain U-Net, legacy artifacts, and notebook-only metrics are not allowed as the main narrative anchor
 - Validation and test qualitative packages now write a deterministic manifest plus per-sample image, target-mask, prediction-mask, and overlay PNG files for up to four positives and four negatives per split in split order.
 - Evaluation now syncs `metadata/run_metadata.yaml` with the selected threshold and selected post-processing state once `selection_state.yaml` is written or reused.
 - `tests/test_evaluation_run_outputs.py` is now the canonical evaluator-side regression harness for authoritative run-directory output emission, and it passes alongside `tests.test_threshold_selection`, `tests.test_run_artifacts`, and `tests.test_evaluate_metrics_backend` under `C:\Users\beko5\AppData\Local\Programs\Python\Python310\python.exe`.
@@ -168,6 +172,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then keep the hybrid deferred unless it clears the recorded D-033 gate with the full D-034 evidence package and stays inside the D-035 claim boundary.
 
 Next 3 actions:
-1. Finish `P1.12` by recording the baseline-comparison rules for any future leakage-aware Foundation X discussion.
-2. Prepare the publication-grade evaluation upgrade path under `P2.1`.
-3. Clean up notebooks/docs under `P2.2` so they stop drifting from the recovered methodology.
+1. Execute `P2.1` by defining the publication-grade repeated-split / cross-validation direction.
+2. Clean up notebooks/docs under `P2.2` so they stop drifting from the recovered methodology.
+3. Keep hybrid work paused until a future candidate justifies reopening under D-033, D-034, D-035, D-040, D-041, and D-042.

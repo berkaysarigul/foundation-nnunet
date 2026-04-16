@@ -512,9 +512,10 @@ What to check:
 - No document, notebook, table, or summary presents Foundation X as clean external pretraining or target-unseen generalization on SIIM.
 - Under D-040, Foundation X is deferred from the main paper path unless a future hybrid candidate clears D-033 and D-034.
 - Under D-041, wording that upgrades Foundation X into generic foundation-model superiority or clean-transfer evidence is explicitly forbidden.
+- Under D-042, any allowed Foundation X discussion must compare back to the trusted full-image `pretrained_resnet34_unet` baseline rather than to weaker or legacy anchors.
 
 How to check it:
-- Review the relevant result summary, manuscript text, notebook narrative, or decision note against D-006, D-035, D-040, and D-041.
+- Review the relevant result summary, manuscript text, notebook narrative, or decision note against D-006, D-035, D-040, D-041, and D-042.
 - Confirm the allowed framing remains one of:
   - leakage-aware in-domain transfer
   - secondary ablation against the trusted full-image pretrained baseline
@@ -532,6 +533,11 @@ How to check it:
   - Foundation X is not described as the `better model`, `stronger model`, or `superior model` by default under the current recovered state
   - any mention of benefit does not hide the SIIM-exposure caveat or the leakage-aware secondary framing
   - any mention of pretraining advantage does not describe the setup as clean external transfer
+- Confirm baseline-comparison discipline also holds:
+  - the trusted full-image `pretrained_resnet34_unet` baseline is named as the comparison anchor
+  - the baseline reference score `0.4951`, the candidate score, and the absolute delta are all stated together
+  - the write-up states whether the candidate did or did not clear the D-033 keep threshold `>= 0.5151`
+  - the crop run (`0.4625`), plain U-Net, legacy `results/`, and notebook-only metrics are not used as the primary narrative anchor
 - If a future hybrid candidate is discussed after clearing D-033 and D-034, confirm the write-up still labels it as leakage-aware secondary evidence unless a later explicit decision introduces a verified non-SIIM-exposed checkpoint.
 
 Failure symptoms:
@@ -539,6 +545,8 @@ Failure symptoms:
 - A hybrid result is promoted to the main paper claim without explicit SIIM-exposure caveats.
 - Foundation X appears in the abstract, headline tables, or default narrative even though no hybrid candidate has cleared D-033 and D-034.
 - Foundation X is described as the default superior model or its claimed benefit is written without explicit leakage-aware caveats.
+- Foundation X is compared primarily against the crop arm, plain U-Net, legacy artifacts, or notebook-only metrics instead of the trusted full-image baseline.
+- A Foundation X discussion omits the baseline score `0.4951`, the candidate score, the absolute delta, or the D-033 threshold status.
 - The trusted full-image pretrained baseline is displaced as the headline anchor without a separate methodology decision that changes the D-035 boundary.
 
 What to do if it fails:
