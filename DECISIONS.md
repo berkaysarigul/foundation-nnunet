@@ -1252,6 +1252,32 @@ Impact on experiments / methodology:
 - Any future repeated-split result that lacks split manifests, per-split authoritative run packages, split-level aggregation tables, paired-delta tables, or the final summary artifact is methodologically incomplete.
 - The next critical-path blocker now moves to `P2.2`, not additional repeated-split methodology design.
 
+## 2026-04-16 / D-046
+
+Decision:
+- `docs/foundation_nnunet_dev_guide.md` is now explicitly classified as legacy design context, not as a source-of-truth implementation or methodology guide.
+- If that file conflicts with the recovered repository state, the authoritative precedence order is:
+  - `RECOVERY_TODO.md`
+  - `AGENT_CONTEXT.md`
+  - `DECISIONS.md`
+  - `VALIDATION_CHECKLIST.md`
+  - current code and tests
+  - only then the legacy dev guide as historical context
+
+Reason:
+- The guide still contains stale assumptions about raw annotation files, processed dataset layout, `results/` usage, and Foundation X / hybrid posture.
+- Keeping the historical guide is acceptable for context, but it must not silently outrank the recovery memory that now governs the project.
+
+Alternatives considered:
+- Rewrite the entire guide in one step.
+- Delete the guide completely.
+- Leave the guide untouched and rely on readers to discover the contradiction themselves.
+
+Impact on experiments / methodology:
+- The first `P2.2` atomic cleanup now has a clear rule: the old dev guide is preserved, but explicitly downgraded to legacy-only context.
+- Future docs cleanup can proceed file-by-file without letting this guide silently reintroduce stale assumptions.
+- Remaining `P2.2` work is now narrower: clean the still-active docs/notebooks that continue to present stale operational guidance.
+
 ## Open decisions requiring evidence
 
 ### OD-005

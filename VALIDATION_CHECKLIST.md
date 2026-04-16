@@ -175,16 +175,19 @@ What to check:
 - No legacy artifact is being used as authoritative evidence.
 - The repository-level location used for authoritative experiment runs is not `results/`.
 - Notebook-generated outputs are not being used as evidence unless they are traceable to exact config, checkpoint, and dataset version or fingerprint.
+- Legacy documentation that conflicts with recovered methodology is explicitly marked as non-authoritative instead of being left to silently compete with repo memory.
 
 How to check it:
 - Confirm every cited metric table, plot, or prediction sample is traceable to a run with config, dataset version, checkpoint, and threshold metadata.
 - Confirm authoritative runs are located under `artifacts/runs/`, not under `results/`.
 - Confirm any notebook-derived figure, table, metric, or sample cited as evidence has explicit traceability to config, checkpoint, and dataset version/fingerprint.
+- Confirm stale guides such as `docs/foundation_nnunet_dev_guide.md` carry an explicit legacy/non-authoritative warning and redirect readers to the recovery-memory files.
 
 Failure symptoms:
 - An artifact cannot be linked to a run manifest, uses fake IDs, or contradicts current output schema.
 - New authoritative outputs are still being placed under `results/`.
 - Notebook outputs are cited in decisions or reports without the required provenance trail.
+- Legacy docs still read like active source-of-truth and preserve unsafe assumptions about raw annotations, `results/`, or hybrid posture without a warning banner.
 
 What to do if it fails:
 - Mark it legacy immediately and remove it from comparison workflows.

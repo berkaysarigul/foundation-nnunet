@@ -1,5 +1,30 @@
 # Foundation-nnU-Net: Claude Code Development Guide
 
+> Legacy / non-authoritative guide.
+>
+> This file is preserved as historical design context only. It is **not** the
+> current source of truth for methodology, data contracts, experiment outputs,
+> or paper framing.
+>
+> Before using anything below, defer to these repository memory files:
+> - `RECOVERY_TODO.md`
+> - `AGENT_CONTEXT.md`
+> - `DECISIONS.md`
+> - `VALIDATION_CHECKLIST.md`
+>
+> Known stale assumptions in this guide include, but are not limited to:
+> - old raw annotation references such as `stage_2_train.csv` and `mask_functions.py`
+> - the legacy processed dataset layout under `data/processed/pneumothorax`
+> - use of `results/` as if it were an authoritative output location
+> - hybrid/Foundation X wording that no longer matches the recovered methodology
+>
+> Current authoritative conventions are:
+> - trusted dataset root: `data/processed/pneumothorax_trusted_v1`
+> - authoritative run outputs: `artifacts/runs/`
+> - notebook outputs are non-authoritative unless fully traceable
+> - Foundation X is not on the current main paper path
+
+
 ## PROJECT SUMMARY
 
 **Project:** Foundation-nnU-Net — Hybrid deep learning architecture for multi-disease segmentation in chest X-rays.

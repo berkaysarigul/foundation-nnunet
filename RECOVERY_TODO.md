@@ -383,12 +383,13 @@ Current strategic direction:
   - Reproducibility checklist and methodology review.
 
 ### P2.2 Notebook and documentation cleanup
-- Status: [ ]
+- Status: [~]
 - Dependencies: P0.1, P0.2
 - Affected files/modules: `notebooks/`, `docs/`, `CLAUDE.md`
 - Why it matters: current docs contain assumptions now known to be unsafe or stale.
 - Subtasks:
   - [ ] Update docs to stop instructing unsafe assumptions about RLE, results, and hybrid behavior.
+    - Progress note (2026-04-16): `docs/foundation_nnunet_dev_guide.md` now carries an explicit legacy/non-authoritative warning and redirects readers to the recovery-memory files plus current code/tests. D-046 records that this guide is preserved only as historical design context. Remaining stale operational guidance still needs cleanup in active docs such as `CLAUDE.md`.
   - [ ] Mark notebook limitations and authoritative usage rules.
 - Success criteria:
   - Documentation no longer conflicts with recovery decisions.
