@@ -356,7 +356,8 @@ Current strategic direction:
 - Subtasks:
   - [x] Decide whether Foundation X is framed as in-domain transfer, ablation-only, or deferred from the paper.
     - Validation note (2026-04-16): D-040 now fixes the final current-state paper role: Foundation X is deferred from the main paper path unless a future hybrid candidate clears D-033 and D-034. Under the current recovered state it may appear only as a future-work / limitations note or a clearly labeled appendix-side leakage-aware ablation, not in the abstract, headline tables, or default storyline. `rg -n "D-040|P1\\.12|Foundation X|deferred from the main paper path" RECOVERY_TODO.md AGENT_CONTEXT.md DECISIONS.md VALIDATION_CHECKLIST.md` and `git diff` were reviewed for consistency.
-  - [ ] Define forbidden claims under the current setup.
+  - [x] Define forbidden claims under the current setup.
+    - Validation note (2026-04-16): D-041 now operationalizes the forbidden-claim list for Foundation X. Under the current setup, wording that presents Foundation X as clean external pretraining, target-unseen generalization, generic foundation-model advantage, or the default superior/main paper model is now explicitly non-authoritative. `rg -n "D-041|forbidden-claim|Foundation X|clean pretraining|target-unseen|default superior model" RECOVERY_TODO.md AGENT_CONTEXT.md DECISIONS.md VALIDATION_CHECKLIST.md` and `git diff` were reviewed for consistency.
   - [ ] Record comparison rules versus the strong supervised baseline.
 - Success criteria:
   - The paper claim boundary is explicit and defensible.

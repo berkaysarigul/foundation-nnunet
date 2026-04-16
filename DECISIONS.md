@@ -1089,6 +1089,33 @@ Impact on experiments / methodology:
 - The remaining `P1.12` work is now narrower: operationalize the forbidden-claim list and the comparison rules back to the trusted full-image baseline.
 - Any notebook, draft, or summary that places Foundation X in the abstract, headline tables, or main storyline before D-033 and D-034 are cleared is methodologically non-authoritative.
 
+## 2026-04-16 / D-041
+
+Decision:
+- The current Foundation X forbidden-claim list is now operational rather than only conceptual.
+- Under the current setup, any manuscript text, notebook summary, table caption, slide, or repo note is methodologically non-authoritative if it does any of the following for Foundation X or the hybrid:
+  - describes it as `external pretraining`, `clean pretraining`, `out-of-domain pretraining`, or equivalent wording that hides SIIM exposure
+  - describes it as `generalization`, `target-unseen transfer`, `cross-dataset transfer into SIIM`, or equivalent wording that implies SIIM was unseen during pretraining
+  - attributes any gain primarily to generic foundation-model knowledge without simultaneously acknowledging SIIM exposure and the leakage-aware framing
+  - presents a Foundation X result as the default superior model, the main project contribution, or the headline comparison arm under the current recovered state
+  - states or implies that a Foundation X result invalidates the trusted full-image `pretrained_resnet34_unet` baseline as the paper anchor without a later explicit decision that changes D-040
+- Under the current setup, any allowed Foundation X mention must remain qualified as leakage-aware secondary evidence, future work, limitations context, or appendix-side ablation rather than clean-transfer evidence.
+
+Reason:
+- D-035 already fixed the scientific claim boundary, but the repo still needed an operational review rule for catching inflated wording in docs, notebooks, captions, and summaries.
+- The main remaining methodology risk is not hidden in code anymore; it is wording drift that quietly upgrades a leakage-aware side path into a stronger scientific claim than the evidence supports.
+- Making the forbidden list operational reduces ambiguity during future reporting cleanup under `P2.2` and later manuscript work.
+
+Alternatives considered:
+- Keep D-035 as a high-level framing rule and leave wording review informal.
+- Ban all Foundation X mentions entirely instead of allowing leakage-aware secondary mentions.
+- Wait until manuscript drafting to define the exact forbidden-claim surface.
+
+Impact on experiments / methodology:
+- The second `P1.12` subtask is now decision-complete: the current setup has an explicit forbidden-claim list for Foundation X.
+- Validation/review can now fail a document for wording inflation even if no new experiment was run.
+- The remaining `P1.12` task is now only the baseline-comparison rule set for any future leakage-aware Foundation X discussion.
+
 ## Open decisions requiring evidence
 
 ### OD-005

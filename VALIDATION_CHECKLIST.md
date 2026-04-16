@@ -511,9 +511,10 @@ What to check:
 - Any Foundation X or hybrid result reported under the current checkpoint provenance stays inside the D-035 claim boundary.
 - No document, notebook, table, or summary presents Foundation X as clean external pretraining or target-unseen generalization on SIIM.
 - Under D-040, Foundation X is deferred from the main paper path unless a future hybrid candidate clears D-033 and D-034.
+- Under D-041, wording that upgrades Foundation X into generic foundation-model superiority or clean-transfer evidence is explicitly forbidden.
 
 How to check it:
-- Review the relevant result summary, manuscript text, notebook narrative, or decision note against D-006, D-035, and D-040.
+- Review the relevant result summary, manuscript text, notebook narrative, or decision note against D-006, D-035, D-040, and D-041.
 - Confirm the allowed framing remains one of:
   - leakage-aware in-domain transfer
   - secondary ablation against the trusted full-image pretrained baseline
@@ -527,12 +528,17 @@ How to check it:
   - target-unseen transfer into SIIM
   - broader foundation-model knowledge isolated from SIIM exposure
   - Foundation X replacing the trusted full-image pretrained baseline as the default headline anchor solely because it scored higher on the current split
+- Confirm wording-level inflation is also absent:
+  - Foundation X is not described as the `better model`, `stronger model`, or `superior model` by default under the current recovered state
+  - any mention of benefit does not hide the SIIM-exposure caveat or the leakage-aware secondary framing
+  - any mention of pretraining advantage does not describe the setup as clean external transfer
 - If a future hybrid candidate is discussed after clearing D-033 and D-034, confirm the write-up still labels it as leakage-aware secondary evidence unless a later explicit decision introduces a verified non-SIIM-exposed checkpoint.
 
 Failure symptoms:
 - Foundation X is described as generic external transfer or clean pretraining on SIIM.
 - A hybrid result is promoted to the main paper claim without explicit SIIM-exposure caveats.
 - Foundation X appears in the abstract, headline tables, or default narrative even though no hybrid candidate has cleared D-033 and D-034.
+- Foundation X is described as the default superior model or its claimed benefit is written without explicit leakage-aware caveats.
 - The trusted full-image pretrained baseline is displaced as the headline anchor without a separate methodology decision that changes the D-035 boundary.
 
 What to do if it fails:
