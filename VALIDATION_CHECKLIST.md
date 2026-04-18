@@ -183,7 +183,7 @@ How to check it:
 - Confirm any notebook-derived figure, table, metric, or sample cited as evidence has explicit traceability to config, checkpoint, and dataset version/fingerprint.
 - Confirm stale guides such as `docs/foundation_nnunet_dev_guide.md` carry an explicit legacy/non-authoritative warning and redirect readers to the recovery-memory files.
 - Confirm stale top-level guides such as `CLAUDE.md` carry the same explicit legacy/non-authoritative warning and do not present stale workflow commands as current source-of-truth.
-- Confirm stale operational notebooks such as `notebooks/train_colab.ipynb` carry an explicit legacy/non-authoritative warning before any stale workflow cells.
+- Confirm stale operational notebooks such as `notebooks/train_colab.ipynb` and `notebooks/train_local.ipynb` carry an explicit legacy/non-authoritative warning before any stale workflow cells.
 
 Failure symptoms:
 - An artifact cannot be linked to a run manifest, uses fake IDs, or contradicts current output schema.
@@ -192,6 +192,7 @@ Failure symptoms:
 - Legacy docs still read like active source-of-truth and preserve unsafe assumptions about raw annotations, `results/`, or hybrid posture without a warning banner.
 - `CLAUDE.md` still reads like the active runbook and preserves stale hybrid-first or `results/`-first operational guidance without a warning banner.
 - `notebooks/train_colab.ipynb` still opens as if it were the active authoritative Colab workflow and exposes stale `results/` or hybrid-first cells without a warning banner.
+- `notebooks/train_local.ipynb` still opens as if it were the active authoritative local training workflow and exposes stale `results/`, old processed-dataset assumptions, or hybrid-first cells without a warning banner.
 
 What to do if it fails:
 - Mark it legacy immediately and remove it from comparison workflows.

@@ -1330,6 +1330,32 @@ Impact on experiments / methodology:
 - Readers now hit a warning before seeing stale `results/` and hybrid-first cells.
 - Remaining `P2.2` work narrows to the other legacy training notebook and any still-active stale notebook content.
 
+## 2026-04-19 / D-049
+
+Decision:
+- `notebooks/train_local.ipynb` is now explicitly classified as legacy / non-authoritative operational context, not as an authoritative local training runbook for the recovered project state.
+- If this notebook conflicts with the recovered methodology, the same precedence order applies:
+  - `RECOVERY_TODO.md`
+  - `AGENT_CONTEXT.md`
+  - `DECISIONS.md`
+  - `VALIDATION_CHECKLIST.md`
+  - current code and tests
+  - only then the legacy notebook as historical context
+
+Reason:
+- The notebook still contains stale workflow cells that point to the old processed dataset root, preserve legacy `results/` outputs, and expose hybrid-first checkpoint and evaluation assumptions.
+- Keeping the notebook is acceptable for historical context, but it must not present itself as the active local training workflow after the recovery decisions.
+
+Alternatives considered:
+- Rewrite the full notebook into the recovered authoritative workflow in one pass.
+- Delete the notebook entirely.
+- Leave it untouched and rely only on repo-memory files plus the notebooks README.
+
+Impact on experiments / methodology:
+- `P2.2` can now close because the remaining legacy local training notebook is explicitly downgraded to legacy-only context.
+- Readers now hit a warning before seeing stale `results/`, old processed-dataset assumptions, and hybrid-first cells.
+- The next critical-path blocker moves back to `P1.9`, not more documentation cleanup.
+
 ## Open decisions requiring evidence
 
 ### OD-005

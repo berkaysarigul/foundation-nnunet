@@ -383,16 +383,17 @@ Current strategic direction:
   - Reproducibility checklist and methodology review.
 
 ### P2.2 Notebook and documentation cleanup
-- Status: [~]
+- Status: [x]
 - Dependencies: P0.1, P0.2
 - Affected files/modules: `notebooks/`, `docs/`, `CLAUDE.md`
 - Why it matters: current docs contain assumptions now known to be unsafe or stale.
 - Subtasks:
-  - [ ] Update docs to stop instructing unsafe assumptions about RLE, results, and hybrid behavior.
+  - [x] Update docs to stop instructing unsafe assumptions about RLE, results, and hybrid behavior.
     - Progress note (2026-04-16): `docs/foundation_nnunet_dev_guide.md` now carries an explicit legacy/non-authoritative warning and redirects readers to the recovery-memory files plus current code/tests. D-046 records that this guide is preserved only as historical design context. Remaining stale operational guidance still needs cleanup in active docs such as `CLAUDE.md`.
     - Progress note (2026-04-16): `CLAUDE.md` now also carries an explicit legacy/non-authoritative warning and redirects readers to the recovery-memory files plus current code/tests. D-047 records that the file is preserved only as historical operational context and must not outrank the recovered methodology. Remaining stale operational guidance is now concentrated in the legacy training notebooks.
-  - [ ] Mark notebook limitations and authoritative usage rules.
+  - [x] Mark notebook limitations and authoritative usage rules.
     - Progress note (2026-04-16): `notebooks/train_colab.ipynb` now opens with an explicit legacy/non-authoritative warning and redirects readers to the recovery-memory files plus current code/tests. D-048 records that this notebook is preserved only as historical Colab context and must not outrank the recovered methodology. Remaining notebook cleanup is now centered on `notebooks/train_local.ipynb`.
+    - Progress note (2026-04-19): `notebooks/train_local.ipynb` now also opens with an explicit legacy/non-authoritative warning and redirects readers to the recovery-memory files plus current code/tests. D-049 records that this notebook is preserved only as historical local training context and must not outrank the recovered methodology. This closes the remaining notebook-side stale workflow cleanup inside `P2.2`.
 - Success criteria:
   - Documentation no longer conflicts with recovery decisions.
 - Validation needed before close:
@@ -400,7 +401,6 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P2.2 Notebook and documentation cleanup
-2. P1.9 Remove incorrect `no_grad` usage and verify gradient flow
-3. P1.10 Redesign feature fusion mapping if hybrid is kept
-4. P1.11 Define hybrid branch normalization policy
+1. P1.9 Remove incorrect `no_grad` usage and verify gradient flow
+2. P1.10 Redesign feature fusion mapping if hybrid is kept
+3. P1.11 Define hybrid branch normalization policy
