@@ -350,10 +350,14 @@ How to check it:
   - `build_optimizer()` filters only `param.requires_grad=True` parameters
   - the trainer does not unconditionally force `model.foundation_x.backbone.eval()` in unfrozen mode
   - no unconditional `torch.no_grad()` remains around the Foundation X path when testing unfrozen behavior
+- Run `py -3 -m unittest tests.test_hybrid_backbone_mode_policy -v` and confirm:
+  - frozen mode keeps the backbone in `eval()`
+  - unfrozen mode is not silently forced back to `eval()` by the trainer helper
 
 Failure symptoms:
 - Backbone gradients stay zero when unfrozen, or update when meant to be frozen.
 - Backbone parameters appear in optimizer groups but still cannot receive gradients because trainer/mode policy or hidden `no_grad()` overrides unfrozen behavior.
+- Trainer-side mode-policy regressions silently re-freeze unfrozen backbones before gradient checks even run.
 
 What to do if it fails:
 - Reopen the `no_grad` and parameter-freezing logic before any hybrid training.

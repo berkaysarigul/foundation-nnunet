@@ -130,6 +130,25 @@ def build_optimizer(
     raise ValueError(f"Unsupported resolved optimizer: {optimizer_name!r}")
 
 
+def apply_foundation_x_backbone_train_mode_policy(model: torch.nn.Module) -> None:
+    """Apply the trainer-side Foundation X backbone mode policy.
+
+    Frozen backbones stay in eval mode during training. Unfrozen backbones must
+    not be silently forced back to eval mode here.
+    """
+    foundation_x = getattr(model, "foundation_x", None)
+    if foundation_x is None or not hasattr(foundation_x, "backbone"):
+        return
+
+    frozen_backbone = getattr(
+        model,
+        "frozen_backbone",
+        getattr(foundation_x, "frozen", False),
+    )
+    if frozen_backbone:
+        foundation_x.backbone.eval()
+
+
 def build_scheduler(
     optimizer: torch.optim.Optimizer,
     training_components: dict[str, str],
@@ -449,9 +468,7 @@ def train(
     for epoch in range(start_epoch, epochs + 1):
         # === TRAIN ===
         model.train()
-        # Keep Foundation X backbone in eval() at all times
-        if hasattr(model, "foundation_x"):
-            model.foundation_x.backbone.eval()
+        apply_foundation_x_backbone_train_mode_policy(model)
 
         train_loss = 0.0
         for images, masks in tqdm(train_loader, desc=f"Epoch {epoch}/{epochs} [train]", leave=False):

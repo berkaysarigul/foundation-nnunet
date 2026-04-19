@@ -1410,6 +1410,28 @@ Impact on experiments / methodology:
 - The next `P1.9` blocker narrows to code alignment: remove the trainer-side unconditional backbone `eval()` override and then remove the unconditional `torch.no_grad()` wrappers so gradient-flow validation becomes meaningful.
 - Future reviews should not describe optimizer parameter groups as the main hybrid blocker unless D-051 is explicitly contradicted by later code changes.
 
+## 2026-04-20 / D-052
+
+Decision:
+- `src/training/trainer.py` must not force the Foundation X backbone into `eval()` during training unless the active hybrid instance is explicitly frozen.
+- Trainer-side backbone mode policy is now:
+  - if the model has no Foundation X branch, do nothing
+  - if the model has a Foundation X branch and the backbone is frozen, keep the backbone in `eval()`
+  - if the model has a Foundation X branch and the backbone is unfrozen, do not override its training mode here
+
+Reason:
+- D-051 showed that optimizer parameter filtering was already structurally aligned, but `trainer.py` still overrode unfrozen behavior by calling `model.foundation_x.backbone.eval()` on every epoch.
+- That unconditional override made it impossible for future unfrozen-mode gradient checks to mean what the config surface claimed.
+
+Alternatives considered:
+- Leave the unconditional trainer override in place and rely only on later gradient tests to reveal the contradiction.
+- Remove all trainer-side backbone mode handling entirely.
+
+Impact on experiments / methodology:
+- The trainer no longer silently re-freezes unfrozen hybrid backbones at the mode-policy level.
+- `tests/test_hybrid_backbone_mode_policy.py` is now the targeted regression harness for this trainer-side contract.
+- The next remaining `P1.9` blocker narrows to the unconditional `torch.no_grad()` wrappers, after which explicit gradient-flow validation can become meaningful.
+
 ## Open decisions requiring evidence
 
 ### OD-005
