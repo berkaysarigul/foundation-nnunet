@@ -374,6 +374,11 @@ What to check:
 
 How to check it:
 - Print or assert feature shapes for 256 and 512 inputs, then compare them to the documented fusion design.
+- Confirm the current-state inventory matches D-054 before proposing a redesign:
+  - Foundation X emits `H/4,H/8,H/16,H/32`
+  - the current hybrid maps those stages to U-Net `H,H/2,H/4,H/8`
+  - every current fusion therefore requires a `4x` upsample into a shallower stage
+  - the deepest Foundation X feature is not consumed at a natural `H/32` context slot
 
 Failure symptoms:
 - Large corrective upsampling into shallow encoder stages, missing bottleneck use of deep features, or undocumented stage remapping.

@@ -1453,6 +1453,31 @@ Impact on experiments / methodology:
 - `tests/test_hybrid_gradient_flow.py` now provides targeted regression coverage that frozen mode suppresses Foundation X gradients and unfrozen mode allows them.
 - `P1.9` can now close, and the next critical-path blocker moves to `P1.10` fusion alignment.
 
+## 2026-04-20 / D-054
+
+Decision:
+- The current hybrid fusion-map inventory is now fixed in repo memory before any redesign work.
+- Current active mapping in `src/models/hybrid.py` is:
+  - `fx[0]` (`128` ch, `H/4 × W/4`) -> `e1` (`64` ch, `H × W`) via `fusion1`
+  - `fx[1]` (`256` ch, `H/8 × W/8`) -> `e2` (`128` ch, `H/2 × W/2`) via `fusion2`
+  - `fx[2]` (`512` ch, `H/16 × W/16`) -> `e3` (`256` ch, `H/4 × W/4`) via `fusion3`
+  - `fx[3]` (`1024` ch, `H/32 × W/32`) -> `e4` (`512` ch, `H/8 × W/8`) via `fusion4`
+- Because `FusionBlock.forward()` upsamples Foundation X features to the U-Net feature size when they differ, every current fusion stage performs a `4x` spatial upsample into a shallower U-Net stage.
+- The deepest Foundation X feature (`fx[3]`, `H/32`) is not consumed at a natural `H/32` context stage; it is first upsampled to `H/8` for `fused4`, then pooled back down to `H/16` before the bottleneck.
+
+Reason:
+- `P1.10` needed an exact current-state inventory before choosing a corrected target mapping.
+- The code already made the mismatch visible, but it was not yet written down as a single authoritative reference for later redesign decisions.
+
+Alternatives considered:
+- Jump directly into a new target mapping without first freezing the current broken mapping in repo memory.
+- Treat the existing comments in `src/models/hybrid.py`, `src/models/backbone.py`, and `src/models/unet.py` as sufficient documentation.
+
+Impact on experiments / methodology:
+- `P1.10` now has a fixed baseline inventory: the current hybrid does not align Foundation X stages to semantically matched U-Net stages.
+- The next `P1.10` blocker narrows to choosing the corrected target mapping and deciding whether an explicit `H/32` context path is required for the deepest Foundation X feature.
+- Future discussions should refer to D-054 when describing why the current hybrid fusion is considered structurally misaligned.
+
 ## Open decisions requiring evidence
 
 ### OD-005

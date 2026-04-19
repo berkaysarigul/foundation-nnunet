@@ -322,12 +322,13 @@ Current strategic direction:
   - Gradient flow checklist.
 
 ### P1.10 Redesign feature fusion mapping if hybrid is kept
-- Status: [ ]
+- Status: [~]
 - Dependencies: P1.8, P1.9
 - Affected files/modules: `src/models/hybrid.py`, potentially `src/models/unet.py`, design notes
 - Why it matters: current fusion is semantically misaligned across scales.
 - Subtasks:
   - [ ] Define target stage mapping for 256 and 512 inputs.
+    - Validation note (2026-04-20): D-054 now fixes the exact current-state inventory before redesign. The active code maps Foundation X `H/4,H/8,H/16,H/32` stages to U-Net `H,H/2,H/4,H/8` encoder stages (`fx[0]->e1`, `fx[1]->e2`, `fx[2]->e3`, `fx[3]->e4`), so every fusion currently requires a `4x` upsample into a shallower stage. The deepest Foundation X feature is not used at a natural `H/32` context slot; it is upsampled to `H/8` and only then pooled back to `H/16` before the bottleneck.
   - [ ] Decide whether the model needs a deeper encoder/bottleneck/context head.
   - [ ] Decide how the deepest Foundation X feature is used.
   - [ ] Add explicit shape assertions for all fused stages.
