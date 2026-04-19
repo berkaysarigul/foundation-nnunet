@@ -304,12 +304,13 @@ Current strategic direction:
   - Hybrid decision gate review in `DECISIONS.md`.
 
 ### P1.9 Remove incorrect `no_grad` usage and verify gradient flow
-- Status: [ ]
+- Status: [~]
 - Dependencies: P1.8 if hybrid is kept for active work
 - Affected files/modules: `src/models/backbone.py`, `src/models/hybrid.py`, training setup
 - Why it matters: `frozen=false` currently cannot behave correctly.
 - Subtasks:
-  - [ ] Define intended frozen vs unfrozen semantics.
+  - [x] Define intended frozen vs unfrozen semantics.
+    - Validation note (2026-04-19): D-050 now fixes the intended contract for `foundation_x.frozen`. Frozen mode must mean `requires_grad=False`, eval-only backbone behavior, and no gradient tracking through the Foundation X path; unfrozen mode must mean `requires_grad=True`, gradient-tracked backbone forward, and no unconditional `torch.no_grad()` wrapper in either `src/models/hybrid.py` or `src/models/backbone.py`. Current code was explicitly inventoried before this decision: both forward paths still hardcode frozen semantics today, so later `P1.9` work remains necessary.
   - [ ] Verify optimizer parameter filtering and backbone mode policy.
   - [ ] Add explicit gradient-flow validation for both modes.
 - Success criteria:

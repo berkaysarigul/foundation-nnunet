@@ -473,6 +473,7 @@ What to do if it fails:
 What to check:
 - No future hybrid candidate is treated as keep-worthy unless it clears both the D-033 performance bar and the D-034 evidence contract.
 - Hybrid reopening evidence must be auditable from artifacts, not reconstructed from notebook screenshots or copied console logs.
+- Any frozen/unfrozen hybrid claim follows the D-050 semantics contract instead of relying on hidden unconditional `torch.no_grad()` behavior.
 
 How to check it:
 - Confirm the future hybrid run uses the same trusted evaluation regime required by D-033:
@@ -500,6 +501,9 @@ How to check it:
   - frozen/unfrozen backbone gradient behavior is validated
   - fusion-stage shapes are asserted/documented at the active input size
   - branch-normalization policy is explicit in config and run metadata
+- Confirm D-050 semantics are respected before accepting any frozen/unfrozen claim:
+  - frozen mode means no gradient path through Foundation X and explicit frozen parameters
+  - unfrozen mode means no unconditional `torch.no_grad()` remains in `src/models/hybrid.py` or `src/models/backbone.py`
 - Reject notebook screenshots, copied logs, or a single manually reported scalar as sufficient evidence on their own.
 
 Failure symptoms:
@@ -507,6 +511,7 @@ Failure symptoms:
 - The comparison is made against the wrong reference arm, such as the failed crop run instead of the trusted full-image baseline.
 - Gradient-flow, fusion-alignment, or normalization evidence is missing, implicit, or only described informally in chat/notebooks.
 - A future hybrid candidate numerically exceeds `0.5151` but cannot be audited from artifacts alone.
+- A future hybrid note claims unfrozen behavior while `src/models/hybrid.py` or `src/models/backbone.py` still hardcode unconditional `torch.no_grad()` around the Foundation X path.
 
 What to do if it fails:
 - Keep the hybrid deferred.

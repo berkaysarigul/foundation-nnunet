@@ -1356,6 +1356,36 @@ Impact on experiments / methodology:
 - Readers now hit a warning before seeing stale `results/`, old processed-dataset assumptions, and hybrid-first cells.
 - The next critical-path blocker moves back to `P1.9`, not more documentation cleanup.
 
+## 2026-04-19 / D-050
+
+Decision:
+- `foundation_x.frozen` is now the intended single source of truth for hybrid backbone gradient semantics.
+- Intended frozen-mode semantics:
+  - Foundation X backbone parameters must have `requires_grad=False`.
+  - Backbone forward must run without gradient tracking.
+  - Backbone must stay in eval-only mode during both training and evaluation.
+- Intended unfrozen-mode semantics:
+  - Foundation X backbone parameters must have `requires_grad=True`.
+  - Backbone forward must run with gradient tracking enabled.
+  - No unconditional `torch.no_grad()` wrapper may remain in either `HybridFoundationUNet.forward()` or `FoundationXBackbone.forward()`.
+  - Backbone module mode policy must be explicit and testable instead of silently forcing frozen semantics through hidden `eval()` or `no_grad()` behavior.
+
+Reason:
+- The current code reads `foundation_x.frozen` from config but still hardcodes frozen behavior in two forward paths:
+  - `src/models/hybrid.py::HybridFoundationUNet.forward()` wraps Foundation X extraction in unconditional `torch.no_grad()`
+  - `src/models/backbone.py::FoundationXBackbone.forward()` wraps backbone execution in unconditional `torch.no_grad()`
+- That means `frozen=false` cannot currently produce the gradients that the config surface implies.
+
+Alternatives considered:
+- Keep hybrid permanently frozen and deprecate `foundation_x.frozen=false`.
+- Allow partial unfreezing without a single explicit semantics contract.
+- Treat the current hidden frozen behavior as acceptable because hybrid is deferred.
+
+Impact on experiments / methodology:
+- `P1.9` now has an explicit first-step contract: future implementation must make frozen and unfrozen behavior observable, not implicit.
+- The next `P1.9` blocker narrows to optimizer-parameter filtering and backbone mode policy under this contract.
+- Any future hybrid reopening evidence under D-034 must satisfy D-050 before gradient-flow claims are accepted.
+
 ## Open decisions requiring evidence
 
 ### OD-005
