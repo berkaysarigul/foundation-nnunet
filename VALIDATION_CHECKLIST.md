@@ -353,11 +353,16 @@ How to check it:
 - Run `py -3 -m unittest tests.test_hybrid_backbone_mode_policy -v` and confirm:
   - frozen mode keeps the backbone in `eval()`
   - unfrozen mode is not silently forced back to `eval()` by the trainer helper
+- Run `py -3 -m unittest tests.test_hybrid_gradient_flow -v` and confirm:
+  - `FoundationXBackbone.forward()` suppresses gradients only in frozen mode
+  - the hybrid path yields no Foundation X gradients when frozen
+  - the hybrid path yields nonzero Foundation X gradients when unfrozen
 
 Failure symptoms:
 - Backbone gradients stay zero when unfrozen, or update when meant to be frozen.
 - Backbone parameters appear in optimizer groups but still cannot receive gradients because trainer/mode policy or hidden `no_grad()` overrides unfrozen behavior.
 - Trainer-side mode-policy regressions silently re-freeze unfrozen backbones before gradient checks even run.
+- Frozen and unfrozen hybrid runs become indistinguishable at the Foundation X gradient level because a hidden `no_grad()` wrapper still survives somewhere in the path.
 
 What to do if it fails:
 - Reopen the `no_grad` and parameter-freezing logic before any hybrid training.

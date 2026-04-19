@@ -2,8 +2,8 @@
 hybrid.py — Hybrid Foundation-nnU-Net.
 
 Injects Foundation X Swin-B multi-scale features into a U-Net decoder via
-FusionBlocks at each encoder level. Foundation X backbone is frozen; only
-the U-Net encoder, fusion blocks, and decoder are trained.
+FusionBlocks at each encoder level. Foundation X defaults to a frozen branch,
+but gradient behavior follows the active `frozen_backbone` configuration.
 """
 
 import torch
@@ -92,8 +92,7 @@ class HybridFoundationUNet(nn.Module):
         self.final = nn.Conv2d(f, num_classes, kernel_size=1)
 
     def train(self, mode: bool = True):
-        """Keep Foundation X backbone in eval() at all times to prevent
-        BatchNorm stats corruption, even when the rest of the model is training."""
+        """Keep Foundation X backbone in eval() only when that branch is frozen."""
         super().train(mode)
         if self.frozen_backbone:
             self.foundation_x.backbone.eval()
@@ -107,8 +106,7 @@ class HybridFoundationUNet(nn.Module):
             (batch, 1, H, W) sigmoid mask, values in [0, 1]
         """
         # Foundation X feature extraction — frozen, no gradients
-        with torch.no_grad():
-            fx = self.foundation_x(x)   # [f1, f2, f3, f4] all (B, C, H, W)
+        fx = self.foundation_x(x)   # [f1, f2, f3, f4] all (B, C, H, W)
 
         # U-Net encoder (trainable)
         e1 = self.enc1(x)               # (B, 64,  H,   W)

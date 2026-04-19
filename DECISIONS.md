@@ -1432,6 +1432,27 @@ Impact on experiments / methodology:
 - `tests/test_hybrid_backbone_mode_policy.py` is now the targeted regression harness for this trainer-side contract.
 - The next remaining `P1.9` blocker narrows to the unconditional `torch.no_grad()` wrappers, after which explicit gradient-flow validation can become meaningful.
 
+## 2026-04-20 / D-053
+
+Decision:
+- The remaining unconditional `torch.no_grad()` wrappers in the Foundation X path are removed.
+- Gradient policy is now split cleanly:
+  - `src/models/backbone.py::FoundationXBackbone.forward()` uses `torch.set_grad_enabled(not self.frozen)`
+  - `src/models/hybrid.py::HybridFoundationUNet.forward()` delegates gradient behavior to the backbone instead of wrapping Foundation X extraction in its own `no_grad()` block
+
+Reason:
+- After D-052, the last code-level blocker preventing meaningful frozen/unfrozen gradient checks was the pair of unconditional `torch.no_grad()` wrappers in the Foundation X path.
+- Keeping those wrappers would continue to nullify `foundation_x.frozen=false` even after trainer-side mode policy was fixed.
+
+Alternatives considered:
+- Leave the wrappers in place and treat all hybrid work as permanently frozen-only.
+- Remove only one wrapper and rely on the other module to keep behavior consistent.
+
+Impact on experiments / methodology:
+- Frozen vs unfrozen gradient behavior is now controlled by the explicit `foundation_x.frozen` contract rather than hidden wrappers.
+- `tests/test_hybrid_gradient_flow.py` now provides targeted regression coverage that frozen mode suppresses Foundation X gradients and unfrozen mode allows them.
+- `P1.9` can now close, and the next critical-path blocker moves to `P1.10` fusion alignment.
+
 ## Open decisions requiring evidence
 
 ### OD-005

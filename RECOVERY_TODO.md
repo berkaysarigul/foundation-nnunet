@@ -304,7 +304,7 @@ Current strategic direction:
   - Hybrid decision gate review in `DECISIONS.md`.
 
 ### P1.9 Remove incorrect `no_grad` usage and verify gradient flow
-- Status: [~]
+- Status: [x]
 - Dependencies: P1.8 if hybrid is kept for active work
 - Affected files/modules: `src/models/backbone.py`, `src/models/hybrid.py`, training setup
 - Why it matters: `frozen=false` currently cannot behave correctly.
@@ -314,7 +314,8 @@ Current strategic direction:
   - [x] Verify optimizer parameter filtering and backbone mode policy.
     - Validation note (2026-04-20): D-051 now records the exact current-state inventory. `src/training/trainer.py::build_optimizer()` already filters on `param.requires_grad`, so frozen backbone params would be excluded correctly once freezing is real; `src/models/hybrid.py::train()` and `src/models/backbone.py::train()` only force `eval()` when the frozen flag is true. The active conflict is higher-level: `src/training/trainer.py` still unconditionally calls `model.foundation_x.backbone.eval()` every train epoch, and both forward paths still hardcode `torch.no_grad()`. So optimizer filtering is not the main blocker; hidden frozen semantics remain the blocker.
     - Validation note (2026-04-20): D-052 now aligns the trainer-side mode policy with D-050/D-051. `src/training/trainer.py` no longer forces `foundation_x.backbone.eval()` in unfrozen mode, and `tests/test_hybrid_backbone_mode_policy.py` now proves the trainer helper keeps frozen backbones in `eval()` while leaving unfrozen backbones in training mode. The remaining `P1.9` blocker is now the unconditional `torch.no_grad()` wrappers in `src/models/hybrid.py` and `src/models/backbone.py`.
-  - [ ] Add explicit gradient-flow validation for both modes.
+  - [x] Add explicit gradient-flow validation for both modes.
+    - Validation note (2026-04-20): D-053 now removes the remaining unconditional `torch.no_grad()` wrappers from the Foundation X path: `src/models/backbone.py::FoundationXBackbone.forward()` now gates gradient tracking on `not self.frozen`, and `src/models/hybrid.py::HybridFoundationUNet.forward()` no longer wraps Foundation X extraction in its own `no_grad()` block. `py -3 -m unittest tests.test_hybrid_gradient_flow -v` now passes and proves the intended behavior: frozen mode yields no Foundation X gradients, unfrozen mode yields nonzero Foundation X gradients through the hybrid forward/backward path.
 - Success criteria:
   - Frozen mode produces zero backbone gradients; unfrozen mode produces nonzero gradients where expected.
 - Validation needed before close:
@@ -404,6 +405,5 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P1.9 Remove incorrect `no_grad` usage and verify gradient flow
-2. P1.10 Redesign feature fusion mapping if hybrid is kept
-3. P1.11 Define hybrid branch normalization policy
+1. P1.10 Redesign feature fusion mapping if hybrid is kept
+2. P1.11 Define hybrid branch normalization policy

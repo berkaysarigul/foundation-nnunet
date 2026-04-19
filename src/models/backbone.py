@@ -86,7 +86,7 @@ class FoundationXBackbone(nn.Module):
         self.frozen = frozen
 
     def train(self, mode: bool = True):
-        """Keep backbone in eval() at all times to prevent BatchNorm stats corruption."""
+        """Keep backbone in eval() only when the Foundation X branch is frozen."""
         super().train(mode)
         if self.frozen:
             self.backbone.eval()
@@ -107,7 +107,7 @@ class FoundationXBackbone(nn.Module):
         # Grayscale → RGB: Swin-B expects 3-channel input
         x = x.repeat(1, 3, 1, 1)  # (B, 1, H, W) → (B, 3, H, W)
 
-        with torch.no_grad():
+        with torch.set_grad_enabled(not self.frozen):
             # timm Swin outputs (B, H, W, C) — permute to (B, C, H, W) for conv decoders
             features = [f.permute(0, 3, 1, 2).contiguous() for f in self.backbone(x)]
 
