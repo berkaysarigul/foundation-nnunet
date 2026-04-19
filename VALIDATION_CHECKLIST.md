@@ -379,6 +379,12 @@ How to check it:
   - the current hybrid maps those stages to U-Net `H,H/2,H/4,H/8`
   - every current fusion therefore requires a `4x` upsample into a shallower stage
   - the deepest Foundation X feature is not consumed at a natural `H/32` context slot
+- Confirm the proposed corrected mapping matches D-055:
+  - `fx[0]->e3`
+  - `fx[1]->e4`
+  - `fx[2]->H/16 bottleneck/context`
+  - `fx[3]->dedicated H/32 context slot`
+  - no corrected redesign fuses Foundation X directly into `e1` or `e2`
 
 Failure symptoms:
 - Large corrective upsampling into shallow encoder stages, missing bottleneck use of deep features, or undocumented stage remapping.

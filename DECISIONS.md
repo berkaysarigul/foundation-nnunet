@@ -1478,6 +1478,34 @@ Impact on experiments / methodology:
 - The next `P1.10` blocker narrows to choosing the corrected target mapping and deciding whether an explicit `H/32` context path is required for the deepest Foundation X feature.
 - Future discussions should refer to D-054 when describing why the current hybrid fusion is considered structurally misaligned.
 
+## 2026-04-20 / D-055
+
+Decision:
+- The corrected target stage mapping for both `256` and `512` inputs is now fixed at the level of relative spatial scale.
+- Target mapping:
+  - Foundation X `fx[0]` (`H/4`) aligns with U-Net `e3` (`H/4`)
+  - Foundation X `fx[1]` (`H/8`) aligns with U-Net `e4` (`H/8`)
+  - Foundation X `fx[2]` (`H/16`) aligns with the U-Net bottleneck / context stage (`H/16`)
+  - Foundation X `fx[3]` (`H/32`) is reserved for a dedicated deeper context slot, not for direct fusion into any current `e1/e2/e3/e4` encoder stage
+- This mapping is scale-invariant across the accepted input sizes:
+  - for `256`: `64,32,16,8` map to `64,32,16,8`
+  - for `512`: `128,64,32,16` map to `128,64,32,16`
+- Therefore no corrected mapping may fuse Foundation X features into `e1` (`H`) or `e2` (`H/2`) under the current hybrid redesign path.
+
+Reason:
+- D-054 showed the current hybrid fuses every Foundation X stage into a shallower U-Net encoder stage and relies on `4x` upsampling at every fusion site.
+- The U-Net encoder only exposes natural semantic-scale matches beginning at `e3` (`H/4`), not at `e1` or `e2`.
+
+Alternatives considered:
+- Keep the current `fx[0]->e1`, `fx[1]->e2`, `fx[2]->e3`, `fx[3]->e4` ladder and accept large upsampling into shallow stages.
+- Force the deepest Foundation X feature into `e4` or the existing bottleneck despite scale mismatch.
+- Collapse Foundation X to fewer stages and ignore the spatial hierarchy entirely.
+
+Impact on experiments / methodology:
+- `P1.10` now has a corrected target mapping anchor for both supported input sizes without yet committing to the exact architectural implementation.
+- The next `P1.10` blocker narrows to architecture: decide whether the model needs an explicit deeper `H/32` context head and how `fx[3]` should enter that path.
+- Future redesign work should treat `e1/e2` fusion as off-protocol unless a later explicit decision reopens that choice.
+
 ## Open decisions requiring evidence
 
 ### OD-005
