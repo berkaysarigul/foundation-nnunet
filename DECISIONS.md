@@ -1386,6 +1386,30 @@ Impact on experiments / methodology:
 - The next `P1.9` blocker narrows to optimizer-parameter filtering and backbone mode policy under this contract.
 - Any future hybrid reopening evidence under D-034 must satisfy D-050 before gradient-flow claims are accepted.
 
+## 2026-04-20 / D-051
+
+Decision:
+- The current hybrid optimizer/filtering and mode-policy inventory is now fixed in repo memory.
+- Inventory conclusions:
+  - `src/training/trainer.py::build_optimizer()` already filters parameters through `param.requires_grad`, so frozen Foundation X parameters are excluded from optimizer groups when the backbone is truly frozen.
+  - `src/models/backbone.py::__init__()` only sets `requires_grad=False` when `frozen=True`; therefore unfrozen mode would leave backbone parameters trainable by default.
+  - `src/models/hybrid.py::HybridFoundationUNet.train()` and `src/models/backbone.py::FoundationXBackbone.train()` only force backbone `eval()` when the corresponding frozen flag is true; those local train-mode hooks are compatible with D-050.
+  - `src/training/trainer.py` still contains a stronger conflicting policy: every training epoch unconditionally calls `model.foundation_x.backbone.eval()` whenever the model has a Foundation X branch, even if `foundation_x.frozen=false`.
+  - Because both forward paths still wrap Foundation X execution in unconditional `torch.no_grad()`, current optimizer inclusion of unfrozen backbone parameters does not produce usable gradients yet.
+
+Reason:
+- `P1.9` needed an exact code-path inventory before behavior-changing edits.
+- The inventory shows optimizer parameter filtering is not the primary blocker; hidden frozen semantics in forward/mode policy are.
+
+Alternatives considered:
+- Treat optimizer filtering itself as broken and postpone the inventory until after code edits.
+- Collapse parameter filtering and mode-policy analysis into one larger implementation step without first recording the current-state conclusions.
+
+Impact on experiments / methodology:
+- The second `P1.9` subtask can now close: current optimizer filtering and mode-policy behavior have been explicitly mapped against D-050.
+- The next `P1.9` blocker narrows to code alignment: remove the trainer-side unconditional backbone `eval()` override and then remove the unconditional `torch.no_grad()` wrappers so gradient-flow validation becomes meaningful.
+- Future reviews should not describe optimizer parameter groups as the main hybrid blocker unless D-051 is explicitly contradicted by later code changes.
+
 ## Open decisions requiring evidence
 
 ### OD-005

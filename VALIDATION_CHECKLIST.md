@@ -342,12 +342,18 @@ What to do if it fails:
 
 What to check:
 - Frozen mode yields zero backbone gradients; unfrozen mode yields expected nonzero backbone gradients.
+- Optimizer parameter groups and backbone mode policy do not silently contradict the intended frozen/unfrozen semantics.
 
 How to check it:
 - Run a controlled forward/backward pass in both modes and inspect gradient norms and optimizer parameter groups.
+- Before trusting the gradient results, confirm current code-path alignment:
+  - `build_optimizer()` filters only `param.requires_grad=True` parameters
+  - the trainer does not unconditionally force `model.foundation_x.backbone.eval()` in unfrozen mode
+  - no unconditional `torch.no_grad()` remains around the Foundation X path when testing unfrozen behavior
 
 Failure symptoms:
 - Backbone gradients stay zero when unfrozen, or update when meant to be frozen.
+- Backbone parameters appear in optimizer groups but still cannot receive gradients because trainer/mode policy or hidden `no_grad()` overrides unfrozen behavior.
 
 What to do if it fails:
 - Reopen the `no_grad` and parameter-freezing logic before any hybrid training.

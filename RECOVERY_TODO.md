@@ -311,7 +311,8 @@ Current strategic direction:
 - Subtasks:
   - [x] Define intended frozen vs unfrozen semantics.
     - Validation note (2026-04-19): D-050 now fixes the intended contract for `foundation_x.frozen`. Frozen mode must mean `requires_grad=False`, eval-only backbone behavior, and no gradient tracking through the Foundation X path; unfrozen mode must mean `requires_grad=True`, gradient-tracked backbone forward, and no unconditional `torch.no_grad()` wrapper in either `src/models/hybrid.py` or `src/models/backbone.py`. Current code was explicitly inventoried before this decision: both forward paths still hardcode frozen semantics today, so later `P1.9` work remains necessary.
-  - [ ] Verify optimizer parameter filtering and backbone mode policy.
+  - [x] Verify optimizer parameter filtering and backbone mode policy.
+    - Validation note (2026-04-20): D-051 now records the exact current-state inventory. `src/training/trainer.py::build_optimizer()` already filters on `param.requires_grad`, so frozen backbone params would be excluded correctly once freezing is real; `src/models/hybrid.py::train()` and `src/models/backbone.py::train()` only force `eval()` when the frozen flag is true. The active conflict is higher-level: `src/training/trainer.py` still unconditionally calls `model.foundation_x.backbone.eval()` every train epoch, and both forward paths still hardcode `torch.no_grad()`. So optimizer filtering is not the main blocker; hidden frozen semantics remain the blocker.
   - [ ] Add explicit gradient-flow validation for both modes.
 - Success criteria:
   - Frozen mode produces zero backbone gradients; unfrozen mode produces nonzero gradients where expected.
