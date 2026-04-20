@@ -695,6 +695,13 @@ How to check it:
   - each split instance records `split_instance_id`, `split_seed`, exact train/val/test IDs, counts, and a per-instance split fingerprint
   - train/val/test overlap is rejected rather than silently accepted
   - ID ordering is canonicalized for stable manifests and diffs
+- Confirm any concrete manifest-preparation runner follows the D-066 contract:
+  - `scripts/prepare_repeated_split_study.py` (or a future replacement under a new decision) is the first execution entrypoint for study-manifest materialization
+  - trusted image IDs come from `images/` and binary stratification labels are re-derived from `original_masks/`
+  - split instances are produced by replaying the accepted `create_splits(...)` policy once per explicit split seed
+  - duplicate split seeds are rejected
+  - duplicated split fingerprints are rejected so one study cannot silently count the same split twice
+  - canonical split instance IDs are `split_001`, `split_002`, ...
 - Confirm any concrete aggregation helper or table writer follows the D-064 contract:
   - split-level rows are sourced from authoritative per-split run artifacts, not manually typed summaries
   - split-level rows carry dataset/split fingerprint context plus threshold and mask-variant context

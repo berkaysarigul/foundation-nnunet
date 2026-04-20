@@ -397,6 +397,8 @@ Current strategic direction:
     - Validation note (2026-04-20): D-064 now fixes the machine-readable aggregation surface in code. `src/training/run_artifacts.py` can now build `split_level_metrics.csv` rows directly from the canonical split manifest plus authoritative per-split run packages, and can derive paired-delta rows only over shared split instances. `py -3 -m unittest tests.test_run_artifacts -v`, `rg -n "D-064|split_level_metrics|paired_delta|P2\\.1" ...`, and `git diff` were reviewed for consistency.
   - [x] Add the final repeated-split summary writer that consumes split-level rows and paired-delta tables.
     - Validation note (2026-04-20): D-065 now fixes `summary/final_summary.yaml` generation in code. The final summary payload reports split-level means, split-bootstrap percentile CIs, paired-delta means/CIs, and contributing split counts/IDs directly from canonical split-level rows and paired-delta tables. `py -3 -m unittest tests.test_run_artifacts -v`, `rg -n "D-065|final_summary|bootstrap|P2\\.1" ...`, and `git diff` were reviewed for consistency.
+  - [x] Add the first repeated-split execution runner that materializes a canonical study manifest from the trusted dataset.
+    - Validation note (2026-04-20): D-066 now fixes `scripts/prepare_repeated_split_study.py` as the first practical repeated-split execution entrypoint. It reads trusted processed image IDs plus `original_masks`-derived binary labels, replays `create_splits(...)` once per explicit split seed, rejects duplicate seeds and duplicated split fingerprints, and writes `metadata/split_manifest.yaml` under `artifacts/repeated_splits/<study_id>/`. `py -3 -m unittest tests.test_stratified_splits -v`, `py -3 -m unittest tests.test_prepare_repeated_split_study_script -v`, `rg -n "D-066|prepare_repeated_split_study|repeated_split" ...`, and `git diff` were reviewed for consistency.
 - Success criteria:
   - Publication-grade evaluation plan is specified and ready to execute.
 - Validation needed before close:
@@ -421,5 +423,5 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. Execute a real repeated-split study using the completed D-063 / D-064 / D-065 artifact surfaces
+1. Add authoritative per-split run orchestration that consumes the D-066 study manifest and fills the repeated-split study package with real run artifacts
 2. Future hybrid runs must implement the D-062 branch-specific normalization contract before being treated as authoritative

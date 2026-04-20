@@ -1833,6 +1833,38 @@ Impact on experiments / methodology:
 - The next blocker is no longer methodology design; it is practical orchestration/execution of a repeated-split study that populates the new artifact surfaces with real authoritative runs.
 - Any future repeated-split report that omits `summary/final_summary.yaml` or computes it outside this contract should be treated as non-authoritative for publication-grade evidence.
 
+## 2026-04-20 / D-066
+
+Decision:
+- The first concrete repeated-split execution entrypoint is now fixed as `scripts/prepare_repeated_split_study.py`.
+- This runner is responsible only for the study-manifest stage, not training or aggregation.
+- The canonical behavior is now:
+  - read trusted processed image IDs from `images/`
+  - derive binary image-level labels from `original_masks/`
+  - replay the already trusted `create_splits(...)` policy once per explicit split seed
+  - build canonical split instances with IDs `split_001`, `split_002`, ...
+  - reject duplicate split seeds
+  - reject repeated split fingerprints so a study cannot silently count the same split twice
+  - write `metadata/split_manifest.yaml` under `artifacts/repeated_splits/<study_id>/`
+- The supporting reusable helpers are now:
+  - `src/data/repeated_splits.py::load_processed_dataset_binary_labels(...)`
+  - `src/data/repeated_splits.py::build_repeated_split_instances(...)`
+
+Reason:
+- D-063, D-064, and D-065 made repeated-split reporting execution-ready on paper, but the repo still had no runner that materialized the first real study artifact from the trusted dataset.
+- The study manifest is the lowest-risk execution step because it does not start GPU training yet, but it does lock the exact split instances that every later authoritative run, paired comparison, and summary must reference.
+- Re-deriving labels from `original_masks/` keeps repeated-split execution aligned with the already accepted image-level stratification target instead of introducing another label source.
+
+Alternatives considered:
+- Jump directly to a train-all-splits runner before a canonical study manifest exists.
+- Encode repeated-split studies as only a list of seeds and infer the actual IDs later.
+- Allow duplicated split seeds or duplicated split fingerprints inside one study.
+
+Impact on experiments / methodology:
+- The repo now has the first practical runner for repeated-split execution, not just reporting helpers.
+- The next practical blocker narrows to authoritative per-split run orchestration that consumes the fixed study manifest and fills the per-split run packages.
+- Any future repeated-split study that skips this manifest-preparation stage or counts duplicated split instances should be treated as pre-contract / non-authoritative.
+
 ## Open decisions requiring evidence
 
 ### OD-005
