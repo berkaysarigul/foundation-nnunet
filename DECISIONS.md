@@ -1738,6 +1738,48 @@ Impact on experiments / methodology:
 - The next `P2.1` blocker narrows to writing the machine-readable split-level aggregation and paired-delta tables that consume this manifest and point back to authoritative per-split run artifacts.
 - Any future repeated-split study that lacks a canonical split manifest with exact IDs should be treated as pre-contract / non-authoritative for publication-grade reporting.
 
+## 2026-04-20 / D-064
+
+Decision:
+- The canonical repeated-split aggregation surface is now fixed in code.
+- `src/training/run_artifacts.py` now owns two machine-readable writer families above the split manifest:
+  - split-level aggregation:
+    - `build_split_level_records_from_authoritative_runs(...)`
+    - `build_split_level_dataframe(...)`
+    - `write_split_level_csv(...)`
+  - paired comparison:
+    - `build_paired_delta_records(...)`
+    - `build_paired_delta_dataframe(...)`
+    - `write_paired_delta_csv(...)`
+- The split-level aggregation contract is now explicit:
+  - it consumes the canonical split manifest plus one authoritative run reference per `(split_instance_id, model_name)`
+  - each row must record, at minimum:
+    - study/split instance identity
+    - model identity and run identity
+    - dataset / base split / study split / run split fingerprint context
+    - selection threshold / postprocess / selection metric
+    - checkpoint path and mask-variant context
+    - held-out `test` Dice and IoU means for `all` and `positive` subsets
+- The paired-delta contract is now explicit:
+  - it is built only from shared split instances
+  - the default statistic remains `candidate_test_dice_pos_mean - reference_test_dice_pos_mean`
+  - exactly one split-level row per model per shared split instance is required
+
+Reason:
+- D-063 introduced the canonical split manifest, but publication-grade repeated-split reporting still had no code path for turning authoritative per-split run artifacts into machine-readable aggregation tables.
+- D-045 requires both a split-level table and paired-delta tables as part of the minimum evidence package; leaving those surfaces informal would recreate the stale-artifact ambiguity the recovery process has already removed once.
+- Enforcing study-manifest membership, dataset-root consistency, and selection-metric consistency at aggregation time closes another silent drift path before summary statistics are generated.
+
+Alternatives considered:
+- Aggregate repeated-split results manually in notebooks or ad hoc scripts.
+- Write only the final summary artifact and derive split-level or paired-delta rows later if needed.
+- Allow unpaired model deltas across different split instances.
+
+Impact on experiments / methodology:
+- `P2.1` now has executable code for the two machine-readable tables that D-045 already required.
+- The next `P2.1` blocker narrows to the remaining final-summary surface: writing the publication-grade summary artifact that consumes split-level rows and paired-delta tables.
+- Any future repeated-split report that skips these helpers and ships only hand-built tables should be treated as non-authoritative for publication-grade evidence.
+
 ## Open decisions requiring evidence
 
 ### OD-005

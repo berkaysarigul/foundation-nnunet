@@ -54,6 +54,50 @@ EVALUATION_CSV_COLUMNS = (
     "f1",
 )
 
+SPLIT_LEVEL_CSV_COLUMNS = (
+    "study_id",
+    "split_instance_id",
+    "split_seed",
+    "model_name",
+    "model_type",
+    "run_id",
+    "run_dir",
+    "dataset_fingerprint",
+    "base_split_fingerprint",
+    "study_split_fingerprint",
+    "run_split_fingerprint",
+    "selection_metric",
+    "selected_threshold",
+    "selected_postprocess",
+    "selection_state_path",
+    "checkpoint_path",
+    "train_mask_variant",
+    "eval_mask_variant",
+    "test_dice_mean",
+    "test_dice_pos_mean",
+    "test_iou_mean",
+    "test_iou_pos_mean",
+)
+
+PAIRED_DELTA_CSV_COLUMNS = (
+    "comparison_name",
+    "metric_name",
+    "reference_model",
+    "candidate_model",
+    "split_instance_id",
+    "split_seed",
+    "dataset_fingerprint",
+    "base_split_fingerprint",
+    "study_split_fingerprint",
+    "reference_run_id",
+    "candidate_run_id",
+    "reference_run_dir",
+    "candidate_run_dir",
+    "reference_value",
+    "candidate_value",
+    "delta",
+)
+
 
 @dataclass(frozen=True)
 class RunArtifacts:
@@ -237,6 +281,30 @@ def build_repeated_split_manifest(
         "split_count": len(normalized_instances),
         "split_instances": normalized_instances,
     }
+
+
+def _load_yaml_payload(path: Path) -> dict[str, Any]:
+    with path.open(encoding="utf-8") as handle:
+        payload = yaml.safe_load(handle)
+    if not isinstance(payload, dict):
+        raise ValueError(f"Expected mapping payload in {path}, got {type(payload).__name__}.")
+    return payload
+
+
+def _split_instance_lookup(split_manifest: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    instances = split_manifest.get("split_instances")
+    if not isinstance(instances, list) or not instances:
+        raise ValueError("split_manifest must contain a non-empty split_instances list.")
+
+    lookup: dict[str, dict[str, Any]] = {}
+    for instance in instances:
+        if not isinstance(instance, dict):
+            raise ValueError("split_manifest split_instances entries must be mappings.")
+        split_instance_id = str(instance["split_instance_id"])
+        if split_instance_id in lookup:
+            raise ValueError(f"split_manifest contains duplicate split_instance_id {split_instance_id!r}.")
+        lookup[split_instance_id] = instance
+    return lookup
 
 
 def utc_timestamp() -> str:
@@ -476,6 +544,201 @@ def build_evaluation_dataframe(records: list[dict[str, Any]]) -> pd.DataFrame:
 def write_evaluation_csv(path: Path, records: list[dict[str, Any]]) -> pd.DataFrame:
     path.parent.mkdir(parents=True, exist_ok=True)
     df = build_evaluation_dataframe(records)
+    df.to_csv(path, index=False)
+    return df
+
+
+def build_split_level_records_from_authoritative_runs(
+    *,
+    split_manifest: dict[str, Any],
+    model_runs: list[dict[str, Any]],
+    repo_root: Path,
+) -> list[dict[str, Any]]:
+    if not model_runs:
+        raise ValueError("model_runs must contain at least one authoritative run reference.")
+
+    instance_lookup = _split_instance_lookup(split_manifest)
+    study_id = str(split_manifest["study_id"])
+    dataset_fingerprint = str(split_manifest["dataset_fingerprint"])
+    base_split_fingerprint = str(split_manifest["base_split_fingerprint"])
+    study_dataset_root = canonicalize_workspace_path(str(split_manifest["dataset_root"]), repo_root)
+    required_selection_metric = str(split_manifest["selection_metric"])
+
+    records: list[dict[str, Any]] = []
+    seen_keys: set[tuple[str, str]] = set()
+
+    for model_run in model_runs:
+        split_instance_id = str(model_run["split_instance_id"])
+        model_name = str(model_run["model_name"])
+        if split_instance_id not in instance_lookup:
+            raise ValueError(
+                f"model_runs references unknown split_instance_id {split_instance_id!r}."
+            )
+        dedupe_key = (split_instance_id, model_name)
+        if dedupe_key in seen_keys:
+            raise ValueError(
+                "Each model may contribute at most one authoritative run per split instance; "
+                f"duplicate key={dedupe_key!r}."
+            )
+        seen_keys.add(dedupe_key)
+
+        run_dir = Path(model_run["run_dir"])
+        if not run_dir.is_absolute():
+            run_dir = (repo_root / run_dir).resolve()
+        metadata = _load_yaml_payload(run_dir / "metadata" / "run_metadata.yaml")
+        summary = _load_yaml_payload(run_dir / "reports" / "test_summary.yaml")
+
+        if summary.get("split") != "test":
+            raise ValueError(f"{run_dir} test_summary.yaml must describe split='test'.")
+        if canonicalize_workspace_path(str(summary["dataset_root"]), repo_root) != study_dataset_root:
+            raise ValueError(
+                f"{run_dir} dataset_root does not match split study dataset_root."
+            )
+        if str(summary["selection_metric"]) != required_selection_metric:
+            raise ValueError(
+                f"{run_dir} selection_metric={summary['selection_metric']!r} does not match "
+                f"study selection_metric={required_selection_metric!r}."
+            )
+
+        split_instance = instance_lookup[split_instance_id]
+        records.append(
+            {
+                "study_id": study_id,
+                "split_instance_id": split_instance_id,
+                "split_seed": int(split_instance["split_seed"]),
+                "model_name": model_name,
+                "model_type": str(summary["model_type"]),
+                "run_id": str(metadata["run_id"]),
+                "run_dir": str(run_dir),
+                "dataset_fingerprint": dataset_fingerprint,
+                "base_split_fingerprint": base_split_fingerprint,
+                "study_split_fingerprint": str(split_instance["split_fingerprint"]),
+                "run_split_fingerprint": str(metadata["split_fingerprint"]),
+                "selection_metric": str(summary["selection_metric"]),
+                "selected_threshold": float(summary["selected_threshold"]),
+                "selected_postprocess": str(summary["selected_postprocess"]),
+                "selection_state_path": str(summary["selection_state_path"]),
+                "checkpoint_path": str(summary["checkpoint_path"]),
+                "train_mask_variant": str(summary["train_mask_variant"]),
+                "eval_mask_variant": str(summary["eval_mask_variant"]),
+                "test_dice_mean": float(summary["subsets"]["all"]["dice"]["mean"]),
+                "test_dice_pos_mean": float(summary["subsets"]["positive"]["dice"]["mean"]),
+                "test_iou_mean": float(summary["subsets"]["all"]["iou"]["mean"]),
+                "test_iou_pos_mean": float(summary["subsets"]["positive"]["iou"]["mean"]),
+            }
+        )
+
+    return sorted(records, key=lambda row: (row["split_instance_id"], row["model_name"]))
+
+
+def build_split_level_dataframe(records: list[dict[str, Any]]) -> pd.DataFrame:
+    if not records:
+        return pd.DataFrame(columns=SPLIT_LEVEL_CSV_COLUMNS)
+
+    df = pd.DataFrame(records)
+    missing_columns = [
+        column for column in SPLIT_LEVEL_CSV_COLUMNS if column not in df.columns
+    ]
+    if missing_columns:
+        raise ValueError(
+            "Split-level records are missing required canonical columns: "
+            f"{missing_columns}"
+        )
+
+    extra_columns = sorted(
+        column for column in df.columns if column not in SPLIT_LEVEL_CSV_COLUMNS
+    )
+    return df.loc[:, list(SPLIT_LEVEL_CSV_COLUMNS) + extra_columns]
+
+
+def write_split_level_csv(path: Path, records: list[dict[str, Any]]) -> pd.DataFrame:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df = build_split_level_dataframe(records)
+    df.to_csv(path, index=False)
+    return df
+
+
+def build_paired_delta_records(
+    *,
+    split_level_records: list[dict[str, Any]],
+    comparison_name: str,
+    reference_model: str,
+    candidate_model: str,
+    metric_name: str = "test_dice_pos_mean",
+) -> list[dict[str, Any]]:
+    if not comparison_name.strip():
+        raise ValueError("comparison_name must not be empty.")
+    if not split_level_records:
+        raise ValueError("split_level_records must not be empty.")
+
+    split_level_df = build_split_level_dataframe(split_level_records)
+    if metric_name not in split_level_df.columns:
+        raise ValueError(f"Unknown metric_name {metric_name!r} for paired delta records.")
+
+    ref_df = split_level_df[split_level_df["model_name"] == reference_model]
+    cand_df = split_level_df[split_level_df["model_name"] == candidate_model]
+    shared_ids = sorted(set(ref_df["split_instance_id"]) & set(cand_df["split_instance_id"]))
+    if not shared_ids:
+        raise ValueError("Paired delta construction requires at least one shared split instance.")
+
+    records: list[dict[str, Any]] = []
+    for split_instance_id in shared_ids:
+        ref_rows = ref_df[ref_df["split_instance_id"] == split_instance_id]
+        cand_rows = cand_df[cand_df["split_instance_id"] == split_instance_id]
+        if len(ref_rows) != 1 or len(cand_rows) != 1:
+            raise ValueError(
+                "Paired delta construction requires exactly one row per model per shared split instance."
+            )
+
+        ref_row = ref_rows.iloc[0]
+        cand_row = cand_rows.iloc[0]
+        records.append(
+            {
+                "comparison_name": comparison_name,
+                "metric_name": metric_name,
+                "reference_model": reference_model,
+                "candidate_model": candidate_model,
+                "split_instance_id": split_instance_id,
+                "split_seed": int(ref_row["split_seed"]),
+                "dataset_fingerprint": ref_row["dataset_fingerprint"],
+                "base_split_fingerprint": ref_row["base_split_fingerprint"],
+                "study_split_fingerprint": ref_row["study_split_fingerprint"],
+                "reference_run_id": ref_row["run_id"],
+                "candidate_run_id": cand_row["run_id"],
+                "reference_run_dir": ref_row["run_dir"],
+                "candidate_run_dir": cand_row["run_dir"],
+                "reference_value": float(ref_row[metric_name]),
+                "candidate_value": float(cand_row[metric_name]),
+                "delta": float(cand_row[metric_name]) - float(ref_row[metric_name]),
+            }
+        )
+
+    return records
+
+
+def build_paired_delta_dataframe(records: list[dict[str, Any]]) -> pd.DataFrame:
+    if not records:
+        return pd.DataFrame(columns=PAIRED_DELTA_CSV_COLUMNS)
+
+    df = pd.DataFrame(records)
+    missing_columns = [
+        column for column in PAIRED_DELTA_CSV_COLUMNS if column not in df.columns
+    ]
+    if missing_columns:
+        raise ValueError(
+            "Paired-delta records are missing required canonical columns: "
+            f"{missing_columns}"
+        )
+
+    extra_columns = sorted(
+        column for column in df.columns if column not in PAIRED_DELTA_CSV_COLUMNS
+    )
+    return df.loc[:, list(PAIRED_DELTA_CSV_COLUMNS) + extra_columns]
+
+
+def write_paired_delta_csv(path: Path, records: list[dict[str, Any]]) -> pd.DataFrame:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df = build_paired_delta_dataframe(records)
     df.to_csv(path, index=False)
     return df
 

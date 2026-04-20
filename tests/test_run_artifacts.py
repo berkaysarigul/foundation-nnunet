@@ -14,7 +14,11 @@ import yaml
 from src.training.run_artifacts import (
     EVALUATION_CSV_COLUMNS,
     HISTORY_CSV_COLUMNS,
+    PAIRED_DELTA_CSV_COLUMNS,
+    SPLIT_LEVEL_CSV_COLUMNS,
     build_best_checkpoint_metadata,
+    build_paired_delta_records,
+    build_split_level_records_from_authoritative_runs,
     build_repeated_split_manifest,
     build_run_metadata,
     compute_code_fingerprint,
@@ -26,11 +30,75 @@ from src.training.run_artifacts import (
     write_config_snapshot,
     write_evaluation_csv,
     write_history_csv,
+    write_paired_delta_csv,
+    write_split_level_csv,
     write_yaml,
 )
 
 
 class TestRunArtifacts(unittest.TestCase):
+    def write_authoritative_run_package(
+        self,
+        *,
+        run_dir: Path,
+        run_id: str,
+        model_type: str,
+        split_fingerprint: str,
+        dataset_root: Path,
+        selection_metric: str = "val_dice_pos_mean",
+        selected_threshold: float = 0.5,
+        selected_postprocess: str = "none",
+        train_mask_variant: str = "dilated_masks",
+        eval_mask_variant: str = "original_masks",
+        test_dice_mean: float = 0.4,
+        test_dice_pos_mean: float = 0.5,
+        test_iou_mean: float = 0.3,
+        test_iou_pos_mean: float = 0.35,
+    ) -> None:
+        metadata_dir = run_dir / "metadata"
+        reports_dir = run_dir / "reports"
+        selection_dir = run_dir / "selection"
+        metadata_dir.mkdir(parents=True, exist_ok=True)
+        reports_dir.mkdir(parents=True, exist_ok=True)
+        selection_dir.mkdir(parents=True, exist_ok=True)
+
+        run_metadata = {
+            "run_id": run_id,
+            "split_fingerprint": split_fingerprint,
+        }
+        with (metadata_dir / "run_metadata.yaml").open("w", encoding="utf-8") as handle:
+            yaml.safe_dump(run_metadata, handle, sort_keys=False)
+
+        selection_state_path = selection_dir / "selection_state.yaml"
+        selection_state_path.write_text("selection_state: placeholder\n", encoding="utf-8")
+
+        summary = {
+            "split": "test",
+            "model_type": model_type,
+            "checkpoint_path": str((run_dir / "checkpoints" / "best_checkpoint.pth").resolve()),
+            "dataset_root": str(dataset_root.resolve()),
+            "selection_state_path": str(selection_state_path.resolve()),
+            "train_mask_variant": train_mask_variant,
+            "eval_mask_variant": eval_mask_variant,
+            "selection_metric": selection_metric,
+            "selected_threshold": selected_threshold,
+            "selected_postprocess": selected_postprocess,
+            "subsets": {
+                "all": {
+                    "count": 10,
+                    "dice": {"mean": test_dice_mean},
+                    "iou": {"mean": test_iou_mean},
+                },
+                "positive": {
+                    "count": 4,
+                    "dice": {"mean": test_dice_pos_mean},
+                    "iou": {"mean": test_iou_pos_mean},
+                },
+            },
+        }
+        with (reports_dir / "test_summary.yaml").open("w", encoding="utf-8") as handle:
+            yaml.safe_dump(summary, handle, sort_keys=False)
+
     def test_make_run_id_is_deterministic_for_fixed_time(self) -> None:
         now = datetime(2026, 4, 11, 9, 30, 0, tzinfo=timezone.utc)
         self.assertEqual(
@@ -247,6 +315,170 @@ class TestRunArtifacts(unittest.TestCase):
                         }
                     ],
                 )
+
+    def test_build_split_level_records_from_authoritative_runs_consumes_manifest_and_run_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            dataset_root = root / "data" / "processed" / "trusted_v1"
+            dataset_root.mkdir(parents=True)
+            (dataset_root / "dataset_manifest.json").write_text(
+                json.dumps(
+                    {
+                        "dataset_fingerprint": "dataset-fp",
+                        "fingerprints": {"splits": "trusted-single-split-fp"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            split_manifest = build_repeated_split_manifest(
+                study_id="study_alpha",
+                dataset_root=dataset_root,
+                repo_root=root,
+                split_instances=[
+                    {
+                        "split_instance_id": "split_a",
+                        "split_seed": 100,
+                        "train_ids": ["img_2", "img_0"],
+                        "val_ids": ["img_7"],
+                        "test_ids": ["img_8"],
+                    }
+                ],
+            )
+
+            baseline_run_dir = root / "artifacts" / "runs" / "baseline_split_a"
+            hybrid_run_dir = root / "artifacts" / "runs" / "hybrid_split_a"
+            self.write_authoritative_run_package(
+                run_dir=baseline_run_dir,
+                run_id="baseline_split_a",
+                model_type="pretrained_resnet34_unet",
+                split_fingerprint="run-split-fp-a",
+                dataset_root=dataset_root,
+                test_dice_mean=0.41,
+                test_dice_pos_mean=0.50,
+                test_iou_mean=0.31,
+                test_iou_pos_mean=0.37,
+            )
+            self.write_authoritative_run_package(
+                run_dir=hybrid_run_dir,
+                run_id="hybrid_split_a",
+                model_type="hybrid",
+                split_fingerprint="run-split-fp-a",
+                dataset_root=dataset_root,
+                test_dice_mean=0.43,
+                test_dice_pos_mean=0.53,
+                test_iou_mean=0.33,
+                test_iou_pos_mean=0.39,
+            )
+
+            records = build_split_level_records_from_authoritative_runs(
+                split_manifest=split_manifest,
+                model_runs=[
+                    {
+                        "split_instance_id": "split_a",
+                        "model_name": "baseline",
+                        "run_dir": baseline_run_dir,
+                    },
+                    {
+                        "split_instance_id": "split_a",
+                        "model_name": "hybrid",
+                        "run_dir": hybrid_run_dir,
+                    },
+                ],
+                repo_root=root,
+            )
+
+            self.assertEqual(len(records), 2)
+            self.assertEqual(records[0]["split_instance_id"], "split_a")
+            self.assertEqual(records[0]["dataset_fingerprint"], "dataset-fp")
+            self.assertEqual(records[0]["base_split_fingerprint"], "trusted-single-split-fp")
+            self.assertEqual(records[0]["study_split_fingerprint"], split_manifest["split_instances"][0]["split_fingerprint"])
+            self.assertEqual(records[0]["selection_metric"], "val_dice_pos_mean")
+            self.assertAlmostEqual(records[0]["selected_threshold"], 0.5)
+            self.assertAlmostEqual(records[0]["test_dice_pos_mean"], 0.5)
+
+            with tempfile.TemporaryDirectory() as csv_tmp_dir:
+                csv_path = Path(csv_tmp_dir) / "split_level_metrics.csv"
+                df = write_split_level_csv(csv_path, records)
+                self.assertEqual(
+                    list(df.columns[: len(SPLIT_LEVEL_CSV_COLUMNS)]),
+                    list(SPLIT_LEVEL_CSV_COLUMNS),
+                )
+                self.assertEqual(df["model_name"].tolist(), ["baseline", "hybrid"])
+
+    def test_build_paired_delta_records_uses_shared_split_instances_and_metric_delta(self) -> None:
+        split_level_records = [
+            {
+                "study_id": "study_alpha",
+                "split_instance_id": "split_a",
+                "split_seed": 100,
+                "model_name": "baseline",
+                "model_type": "pretrained_resnet34_unet",
+                "run_id": "baseline_split_a",
+                "run_dir": "/tmp/baseline_split_a",
+                "dataset_fingerprint": "dataset-fp",
+                "base_split_fingerprint": "trusted-single-split-fp",
+                "study_split_fingerprint": "study-fp-a",
+                "run_split_fingerprint": "run-fp-a",
+                "selection_metric": "val_dice_pos_mean",
+                "selected_threshold": 0.5,
+                "selected_postprocess": "none",
+                "selection_state_path": "/tmp/baseline_split_a/selection/selection_state.yaml",
+                "checkpoint_path": "/tmp/baseline_split_a/checkpoints/best_checkpoint.pth",
+                "train_mask_variant": "dilated_masks",
+                "eval_mask_variant": "original_masks",
+                "test_dice_mean": 0.40,
+                "test_dice_pos_mean": 0.50,
+                "test_iou_mean": 0.30,
+                "test_iou_pos_mean": 0.35,
+            },
+            {
+                "study_id": "study_alpha",
+                "split_instance_id": "split_a",
+                "split_seed": 100,
+                "model_name": "hybrid",
+                "model_type": "hybrid",
+                "run_id": "hybrid_split_a",
+                "run_dir": "/tmp/hybrid_split_a",
+                "dataset_fingerprint": "dataset-fp",
+                "base_split_fingerprint": "trusted-single-split-fp",
+                "study_split_fingerprint": "study-fp-a",
+                "run_split_fingerprint": "run-fp-a",
+                "selection_metric": "val_dice_pos_mean",
+                "selected_threshold": 0.55,
+                "selected_postprocess": "none",
+                "selection_state_path": "/tmp/hybrid_split_a/selection/selection_state.yaml",
+                "checkpoint_path": "/tmp/hybrid_split_a/checkpoints/best_checkpoint.pth",
+                "train_mask_variant": "dilated_masks",
+                "eval_mask_variant": "original_masks",
+                "test_dice_mean": 0.43,
+                "test_dice_pos_mean": 0.53,
+                "test_iou_mean": 0.33,
+                "test_iou_pos_mean": 0.39,
+            },
+        ]
+
+        records = build_paired_delta_records(
+            split_level_records=split_level_records,
+            comparison_name="baseline_vs_hybrid",
+            reference_model="baseline",
+            candidate_model="hybrid",
+        )
+
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["split_instance_id"], "split_a")
+        self.assertAlmostEqual(records[0]["reference_value"], 0.50)
+        self.assertAlmostEqual(records[0]["candidate_value"], 0.53)
+        self.assertAlmostEqual(records[0]["delta"], 0.03)
+
+        with tempfile.TemporaryDirectory() as csv_tmp_dir:
+            csv_path = Path(csv_tmp_dir) / "baseline_vs_hybrid_paired_deltas.csv"
+            df = write_paired_delta_csv(csv_path, records)
+            self.assertEqual(
+                list(df.columns[: len(PAIRED_DELTA_CSV_COLUMNS)]),
+                list(PAIRED_DELTA_CSV_COLUMNS),
+            )
+            self.assertEqual(df["comparison_name"].tolist(), ["baseline_vs_hybrid"])
 
     def test_write_helpers_persist_yaml_and_history(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

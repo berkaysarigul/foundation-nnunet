@@ -695,6 +695,11 @@ How to check it:
   - each split instance records `split_instance_id`, `split_seed`, exact train/val/test IDs, counts, and a per-instance split fingerprint
   - train/val/test overlap is rejected rather than silently accepted
   - ID ordering is canonicalized for stable manifests and diffs
+- Confirm any concrete aggregation helper or table writer follows the D-064 contract:
+  - split-level rows are sourced from authoritative per-split run artifacts, not manually typed summaries
+  - split-level rows carry dataset/split fingerprint context plus threshold and mask-variant context
+  - paired-delta rows are built only over shared split instances
+  - the default paired metric remains candidate minus reference on held-out `test` positive-only Dice mean
 
 Failure symptoms:
 - Only the final average metrics are retained.
