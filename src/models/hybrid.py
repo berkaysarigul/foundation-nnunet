@@ -1,9 +1,11 @@
 """
 hybrid.py — Hybrid Foundation-nnU-Net.
 
-Injects Foundation X Swin-B multi-scale features into a U-Net decoder via
-FusionBlocks at each encoder level. Foundation X defaults to a frozen branch,
-but gradient behavior follows the active `frozen_backbone` configuration.
+Aligns Foundation X Swin-B features to semantically matched U-Net scales:
+`fx[0]->e3`, `fx[1]->e4`, `fx[2]->H/16 context`, and `fx[3]` through a
+dedicated `H/32` context head that reconnects once at `H/16`.
+Foundation X defaults to a frozen branch, but gradient behavior follows the
+active `frozen_backbone` configuration.
 """
 
 import torch
@@ -136,27 +138,27 @@ class HybridFoundationUNet(nn.Module):
         self.enc4 = ConvBlock(f * 4, f * 8)          # → 512ch
         self.pool = nn.MaxPool2d(2)
 
-        # Fusion blocks — Foundation X channels confirmed: [128, 256, 512, 1024]
-        self.fusion1 = FusionBlock(128,  f,      f)       # 128+64  → 64
-        self.fusion2 = FusionBlock(256,  f * 2,  f * 2)   # 256+128 → 128
-        self.fusion3 = FusionBlock(512,  f * 4,  f * 4)   # 512+256 → 256
-        self.fusion4 = FusionBlock(1024, f * 8,  f * 8)   # 1024+512 → 512
+        # Corrected fusion / context path (D-055/D-056/D-057)
+        self.fusion_e3 = FusionBlock(128, f * 4, f * 4)       # fx[0] + e3 -> 256
+        self.fusion_e4 = FusionBlock(256, f * 8, f * 8)       # fx[1] + e4 -> 512
+        self.h16_unet_context = ConvBlock(f * 8, f * 16)      # pool(e4) -> 1024
+        self.h16_fx_context = FusionBlock(512, f * 16, f * 16)  # fx[2] + h16 -> 1024
+        self.h32_context_head = ConvBlock(1024, f * 16)       # fx[3] native H/32 -> H/32 context
+        self.h32_to_h16 = nn.ConvTranspose2d(f * 16, f * 16, kernel_size=2, stride=2)
+        self.context_merge = ConvBlock(f * 32, f * 16)        # h16 + up(h32) -> 1024
 
-        # Bottleneck
-        self.bottleneck = ConvBlock(f * 8, f * 16)        # 512 → 1024
-
-        # Decoder — skip connections use fused features
+        # Decoder — skip connections use corrected scale-aligned features
         self.up4  = nn.ConvTranspose2d(f * 16, f * 8,  kernel_size=2, stride=2)
-        self.dec4 = ConvBlock(f * 16, f * 8)   # 512(up) + 512(fused4) → 512
+        self.dec4 = ConvBlock(f * 16, f * 8)   # 512(up) + 512(fused_e4) -> 512
 
         self.up3  = nn.ConvTranspose2d(f * 8,  f * 4,  kernel_size=2, stride=2)
-        self.dec3 = ConvBlock(f * 8,  f * 4)   # 256(up) + 256(fused3) → 256
+        self.dec3 = ConvBlock(f * 8,  f * 4)   # 256(up) + 256(fused_e3) -> 256
 
         self.up2  = nn.ConvTranspose2d(f * 4,  f * 2,  kernel_size=2, stride=2)
-        self.dec2 = ConvBlock(f * 4,  f * 2)   # 128(up) + 128(fused2) → 128
+        self.dec2 = ConvBlock(f * 4,  f * 2)   # 128(up) + 128(e2) -> 128
 
         self.up1  = nn.ConvTranspose2d(f * 2,  f,      kernel_size=2, stride=2)
-        self.dec1 = ConvBlock(f * 2,  f)        # 64(up)  + 64(fused1)  → 64
+        self.dec1 = ConvBlock(f * 2,  f)        # 64(up) + 64(e1) -> 64
 
         # Output
         self.final = nn.Conv2d(f, num_classes, kernel_size=1)
@@ -175,8 +177,10 @@ class HybridFoundationUNet(nn.Module):
         Returns:
             (batch, 1, H, W) sigmoid mask, values in [0, 1]
         """
-        # Foundation X feature extraction — frozen, no gradients
-        fx = self.foundation_x(x)   # [f1, f2, f3, f4] all (B, C, H, W)
+        # Foundation X feature extraction — [H/4, H/8, H/16, H/32]
+        fx = self.foundation_x(x)
+        if len(fx) != 4:
+            raise AssertionError(f"Foundation X must emit 4 feature maps, got {len(fx)}")
 
         # U-Net encoder (trainable)
         e1 = self.enc1(x)               # (B, 64,  H,   W)
@@ -184,19 +188,37 @@ class HybridFoundationUNet(nn.Module):
         e3 = self.enc3(self.pool(e2))   # (B, 256, H/4, W/4)
         e4 = self.enc4(self.pool(e3))   # (B, 512, H/8, W/8)
 
-        # Fusion: Foundation X + U-Net encoder features
-        fused1 = self.fusion1(fx[0], e1)   # (B, 64,  H,   W)
-        fused2 = self.fusion2(fx[1], e2)   # (B, 128, H/2, W/2)
-        fused3 = self.fusion3(fx[2], e3)   # (B, 256, H/4, W/4)
-        fused4 = self.fusion4(fx[3], e4)   # (B, 512, H/8, W/8)
+        # Corrected scale-aligned fusion / context path
+        fused_e3 = self.fusion_e3(fx[0], e3)                 # (B, 256, H/4,  W/4)
+        fused_e4 = self.fusion_e4(fx[1], e4)                 # (B, 512, H/8,  W/8)
+        h16_unet = self.h16_unet_context(self.pool(e4))      # (B, 1024, H/16, W/16)
+        h16_context = self.h16_fx_context(fx[2], h16_unet)   # (B, 1024, H/16, W/16)
+        h32_context = self.h32_context_head(fx[3])           # (B, 1024, H/32, W/32)
 
-        # Bottleneck
-        b = self.bottleneck(self.pool(fused4))   # (B, 1024, H/16, W/16)
+        assert_corrected_hybrid_scale_contract(
+            fx0=fx[0],
+            fx1=fx[1],
+            fx2=fx[2],
+            fx3=fx[3],
+            e3=e3,
+            e4=e4,
+            h16_context=h16_context,
+            h32_context=h32_context,
+        )
 
-        # Decoder + fused skip connections
-        d4 = self.dec4(torch.cat([self.up4(b),  fused4], dim=1))  # (B, 512, H/8,  W/8)
-        d3 = self.dec3(torch.cat([self.up3(d4), fused3], dim=1))  # (B, 256, H/4,  W/4)
-        d2 = self.dec2(torch.cat([self.up2(d3), fused2], dim=1))  # (B, 128, H/2,  W/2)
-        d1 = self.dec1(torch.cat([self.up1(d2), fused1], dim=1))  # (B, 64,  H,    W)
+        h32_up = self.h32_to_h16(h32_context)                # (B, 1024, H/16, W/16)
+        if h32_up.shape[2:] != h16_context.shape[2:]:
+            raise AssertionError(
+                "Deepest-context reconnect must land exactly on the H/16 context branch: "
+                f"h32_up shape={tuple(h32_up.shape)}, h16_context shape={tuple(h16_context.shape)}"
+            )
+
+        b = self.context_merge(torch.cat([h16_context, h32_up], dim=1))  # (B, 1024, H/16, W/16)
+
+        # Decoder + corrected skip connections
+        d4 = self.dec4(torch.cat([self.up4(b),  fused_e4], dim=1))  # (B, 512, H/8,  W/8)
+        d3 = self.dec3(torch.cat([self.up3(d4), fused_e3], dim=1))  # (B, 256, H/4,  W/4)
+        d2 = self.dec2(torch.cat([self.up2(d3), e2], dim=1))        # (B, 128, H/2,  W/2)
+        d1 = self.dec1(torch.cat([self.up1(d2), e1], dim=1))        # (B, 64,  H,    W)
 
         return torch.sigmoid(self.final(d1))

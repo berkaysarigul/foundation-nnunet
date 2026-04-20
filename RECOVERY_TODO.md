@@ -322,7 +322,7 @@ Current strategic direction:
   - Gradient flow checklist.
 
 ### P1.10 Redesign feature fusion mapping if hybrid is kept
-- Status: [~]
+- Status: [x]
 - Dependencies: P1.8, P1.9
 - Affected files/modules: `src/models/hybrid.py`, potentially `src/models/unet.py`, design notes
 - Why it matters: current fusion is semantically misaligned across scales.
@@ -336,7 +336,8 @@ Current strategic direction:
     - Validation note (2026-04-20): D-057 now fixes `fx[3]` as a pure deeper-context input. It enters only through a dedicated `H/32` context head, stays at native `H/32` for local processing, then makes exactly one learned `2x` transition to `H/16` and reconnects only through the `fx[2]`-aligned `H/16` context branch. Direct reuse of `fx[3]` in `e4`, decoder skips, or shallow encoder fusion is now off-protocol.
   - [x] Add explicit shape assertions for all fused stages.
     - Validation note (2026-04-20): D-058 now adds `assert_corrected_hybrid_scale_contract()` in `src/models/hybrid.py` plus `tests/test_hybrid_scale_contract.py`. The helper enforces `fx[0]->e3`, `fx[1]->e4`, `fx[2]->H/16`, `fx[3]->H/32`, and exactly one `H/32 -> H/16` reconnect step while rejecting batch or spatial drift.
-  - [ ] Refactor the active hybrid forward path to satisfy the corrected D-055/D-056/D-057 shape contract.
+  - [x] Refactor the active hybrid forward path to satisfy the corrected D-055/D-056/D-057 shape contract.
+    - Validation note (2026-04-20): D-059 now makes the corrected fusion contract the active architecture in `src/models/hybrid.py`. The live forward path uses `fx[0]->e3`, `fx[1]->e4`, `fx[2]->H/16 context`, and `fx[3]->H/32 head -> H/16 reconnect`, then decodes with `fused_e4`, `fused_e3`, `e2`, and `e1`. `tests.test_hybrid_scale_contract`, `tests.test_hybrid_gradient_flow`, and `tests.test_hybrid_backbone_mode_policy` all pass against this refactor.
 - Success criteria:
   - Fusion is scale-aligned by design and validated with shape checks.
 - Validation needed before close:
@@ -411,5 +412,5 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P1.10 Redesign feature fusion mapping if hybrid is kept
-2. P1.11 Define hybrid branch normalization policy
+1. P1.11 Define hybrid branch normalization policy
+2. P2.1 Publication-grade repeated-split evaluation upgrade

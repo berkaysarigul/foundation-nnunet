@@ -19,7 +19,7 @@ class DummyFeaturesOnlyBackbone(torch.nn.Module):
 
 
 class DummyFoundationXBackbone(torch.nn.Module):
-    def __init__(self, checkpoint_path: str, frozen: bool = True, img_size: int = 16):
+    def __init__(self, checkpoint_path: str, frozen: bool = True, img_size: int = 32):
         super().__init__()
         self.frozen = frozen
         self.backbone = torch.nn.Identity()
@@ -43,10 +43,10 @@ class DummyFoundationXBackbone(torch.nn.Module):
         x = x.repeat(1, 3, 1, 1)
         with torch.set_grad_enabled(not self.frozen):
             return [
-                self.proj1(x),
-                self.proj2(F.avg_pool2d(x, 2)),
-                self.proj3(F.avg_pool2d(x, 4)),
-                self.proj4(F.avg_pool2d(x, 8)),
+                self.proj1(F.avg_pool2d(x, 4)),
+                self.proj2(F.avg_pool2d(x, 8)),
+                self.proj3(F.avg_pool2d(x, 16)),
+                self.proj4(F.avg_pool2d(x, 32)),
             ]
 
 
@@ -84,14 +84,14 @@ class HybridGradientFlowTests(unittest.TestCase):
                 num_classes=1,
                 base_filters=4,
                 frozen_backbone=frozen_backbone,
-                img_size=16,
+                img_size=32,
             )
         model.train()
         return model
 
     def test_frozen_hybrid_backbone_receives_no_gradients(self):
         model = self._make_model(frozen_backbone=True)
-        x = torch.randn(2, 1, 16, 16)
+        x = torch.randn(2, 1, 32, 32)
 
         output = model(x)
         output.mean().backward()
@@ -105,7 +105,7 @@ class HybridGradientFlowTests(unittest.TestCase):
 
     def test_unfrozen_hybrid_backbone_receives_gradients(self):
         model = self._make_model(frozen_backbone=False)
-        x = torch.randn(2, 1, 16, 16)
+        x = torch.randn(2, 1, 32, 32)
 
         output = model(x)
         output.mean().backward()

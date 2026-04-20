@@ -1579,6 +1579,37 @@ Impact on experiments / methodology:
 - The next `P1.10` blocker narrows to code implementation: refactor the active hybrid forward path so it actually satisfies the D-055/D-056/D-057 contract under these assertions.
 - Future redesign code should call or mirror this helper rather than re-inventing undocumented shape checks.
 
+## 2026-04-20 / D-059
+
+Decision:
+- The active `HybridFoundationUNet` forward path now implements the corrected `P1.10` contract instead of the old D-054 ladder.
+- Active mapping is now:
+  - `fx[0] -> fusion_e3 -> e3`
+  - `fx[1] -> fusion_e4 -> e4`
+  - `fx[2] -> h16_fx_context -> pooled e4 / H/16 context`
+  - `fx[3] -> h32_context_head -> h32_to_h16 -> context_merge -> H/16 bottleneck/context branch`
+- Decoder skips are now:
+  - `up4(b) + fused_e4`
+  - `up3(d4) + fused_e3`
+  - `up2(d3) + e2`
+  - `up1(d2) + e1`
+- The old direct `fx[0]->e1`, `fx[1]->e2`, `fx[2]->e3`, `fx[3]->e4` fusion path is no longer the active architecture.
+- The active forward path now calls `assert_corrected_hybrid_scale_contract()` before the deepest reconnect and hard-fails if the corrected scale contract drifts.
+
+Reason:
+- D-055 through D-058 had already fixed the corrected mapping, deeper `H/32` head requirement, deepest-feature usage rule, and executable shape assertions.
+- The remaining gap was that `HybridFoundationUNet.forward()` still implemented the old semantically misaligned ladder.
+
+Alternatives considered:
+- Leave the corrected contract only in helper/tests while keeping the old forward path alive.
+- Partially refactor only the deepest branch and leave `fx[0]/fx[1]` attached to `e1/e2`.
+- Delay the active refactor until after `P1.11`.
+
+Impact on experiments / methodology:
+- `P1.10` can now close: the active hybrid architecture is scale-aligned by design and guarded by executable shape checks.
+- The next critical blocker moves to `P1.11`, which decides the branch-normalization policy for the hybrid input path.
+- Future hybrid training attempts should use this refactored path as the only acceptable starting point; the old D-054 ladder is now historical context only.
+
 ## Open decisions requiring evidence
 
 ### OD-005

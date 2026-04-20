@@ -404,6 +404,7 @@ What to do if it fails:
 - Do not optimize the hybrid.
 - Redesign the fusion map and bottleneck/context usage first.
 - Run `py -3 -m unittest tests.test_hybrid_scale_contract -v` to verify the executable D-058 contract helper still accepts valid `256` and `512` layouts while rejecting scale drift.
+- Run `py -3 -m unittest tests.test_hybrid_gradient_flow -v` to verify the active `HybridFoundationUNet` forward path still satisfies the corrected contract during real forward/backward passes.
 
 ## 12. Baseline gate
 
