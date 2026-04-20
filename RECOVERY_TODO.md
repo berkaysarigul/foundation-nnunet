@@ -401,6 +401,8 @@ Current strategic direction:
     - Validation note (2026-04-20): D-066 now fixes `scripts/prepare_repeated_split_study.py` as the first practical repeated-split execution entrypoint. It reads trusted processed image IDs plus `original_masks`-derived binary labels, replays `create_splits(...)` once per explicit split seed, rejects duplicate seeds and duplicated split fingerprints, and writes `metadata/split_manifest.yaml` under `artifacts/repeated_splits/<study_id>/`. `py -3 -m unittest tests.test_stratified_splits -v`, `py -3 -m unittest tests.test_prepare_repeated_split_study_script -v`, `rg -n "D-066|prepare_repeated_split_study|repeated_split" ...`, and `git diff` were reviewed for consistency.
   - [x] Add split-override-aware train/eval surface plus authoritative effective split fingerprint metadata.
     - Validation note (2026-04-20): D-067 now fixes `data.splits_path` as the accepted effective split override surface for `PneumothoraxDataset`, trainer dataloaders, and evaluation dataloaders. `build_run_metadata(...)` now records `splits_path`, `base_split_fingerprint`, and the effective `split_fingerprint` computed from the actual split file used by the run. `py -3 -m unittest tests.test_train_roi_crop_policy tests.test_run_artifacts tests.test_authoritative_pretrained_runner -v`, `rg -n "D-067|splits_path|base_split_fingerprint|split_fingerprint" ...`, and `git diff` were reviewed for consistency.
+  - [x] Add the first per-split authoritative pretrained study runner that consumes a canonical split manifest.
+    - Validation note (2026-04-20): D-068 now fixes `scripts/run_repeated_split_pretrained_study.py` as the first per-split orchestration runner. It materializes per-instance split override JSON files and config override YAML files, injects `data.splits_path`, launches `scripts/run_authoritative_pretrained_baseline.py` once per split instance, and persists `metadata/pretrained_resnet34_run_inventory.yaml`. `py -3 -m unittest tests.test_repeated_split_pretrained_study_runner tests.test_authoritative_pretrained_runner -v`, `rg -n "D-068|run_repeated_split_pretrained_study|run_inventory|split_overrides|config_overrides" ...`, and `git diff` were reviewed for consistency.
 - Success criteria:
   - Publication-grade evaluation plan is specified and ready to execute.
 - Validation needed before close:
@@ -425,5 +427,5 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. Add authoritative per-split run orchestration that consumes the D-066 manifest through D-067 `data.splits_path` overrides and fills the repeated-split study package with real run artifacts
+1. Add study finalization code that consumes the D-068 run inventory and writes `split_level_metrics.csv`, paired-delta tables, and `summary/final_summary.yaml`
 2. Future hybrid runs must implement the D-062 branch-specific normalization contract before being treated as authoritative

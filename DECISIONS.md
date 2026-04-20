@@ -1894,6 +1894,47 @@ Impact on experiments / methodology:
 - The next practical blocker narrows to selection/test/run orchestration that feeds a manifest-derived `data.splits_path` into authoritative per-split runs and then aggregates them.
 - Any future repeated-split run that does not record `splits_path`, `base_split_fingerprint`, and the effective `split_fingerprint` should be treated as pre-contract / non-authoritative.
 
+## 2026-04-20 / D-068
+
+Decision:
+- The first per-split authoritative study runner is now fixed as `scripts/run_repeated_split_pretrained_study.py`.
+- This runner consumes a canonical `metadata/split_manifest.yaml` and, for each split instance:
+  - materializes `metadata/split_overrides/<split_instance_id>.json`
+  - materializes `metadata/config_overrides/<split_instance_id>.yaml`
+  - injects `data.splits_path` into the config override
+  - launches `scripts/run_authoritative_pretrained_baseline.py`
+  - writes the per-split run into the existing authoritative run family under `artifacts/runs/`
+- The canonical per-split run directory naming is now:
+  - `artifacts/runs/<study_id>__<split_instance_id>__pretrained_resnet34_unet`
+- The runner must also persist a machine-readable execution inventory at:
+  - `metadata/pretrained_resnet34_run_inventory.yaml`
+- That inventory must record, at minimum:
+  - `study_id`
+  - `study_manifest_path`
+  - `base_config_path`
+  - forwarded `stage`
+  - one entry per completed split instance with:
+    - `split_instance_id`
+    - `split_seed`
+    - `split_override_path`
+    - `config_override_path`
+    - `run_dir`
+
+Reason:
+- D-066 and D-067 made repeated-split execution possible, but the repo still lacked the first runner that actually chained the existing authoritative pretrained baseline across all split instances.
+- Keeping the single-run authoritative runner as the underlying executor avoids inventing a second training/evaluation protocol for repeated-split studies.
+- Persisting a run inventory closes the traceability gap between study-level split instances and the run directories later consumed by split-level aggregation.
+
+Alternatives considered:
+- Launch per-split runs manually from notebooks or shell commands.
+- Build a new independent repeated-split training loop instead of reusing the authoritative single-run runner.
+- Infer run directories later from naming conventions without saving a run inventory.
+
+Impact on experiments / methodology:
+- The repo now has the first end-to-end per-split orchestration surface for the trusted pretrained baseline path.
+- The next practical blocker narrows to study finalization: consuming the run inventory to write `split_level_metrics.csv`, paired-delta tables, and `summary/final_summary.yaml`.
+- Any future repeated-split study that launches per-split runs without `pretrained_resnet34_run_inventory.yaml` should be treated as incomplete / non-authoritative at the study level.
+
 ## Open decisions requiring evidence
 
 ### OD-005

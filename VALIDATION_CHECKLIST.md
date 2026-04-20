@@ -708,6 +708,13 @@ How to check it:
   - trainer and evaluator both pass the same effective split file into `PneumothoraxDataset`
   - authoritative run metadata records `splits_path`, `base_split_fingerprint`, and the effective `split_fingerprint`
   - the effective `split_fingerprint` is computed from the actual split file used by the run, not copied blindly from `dataset_manifest.json`
+- Confirm any concrete per-split orchestration runner follows the D-068 contract:
+  - `scripts/run_repeated_split_pretrained_study.py` is the first accepted per-split authoritative runner for the pretrained baseline path
+  - each split instance produces both `metadata/split_overrides/<split_instance_id>.json` and `metadata/config_overrides/<split_instance_id>.yaml`
+  - the config override injects `data.splits_path` rather than mutating the trusted dataset root
+  - each split instance launches the existing `scripts/run_authoritative_pretrained_baseline.py` runner rather than bypassing the trusted single-run protocol
+  - completed entries are recorded in `metadata/pretrained_resnet34_run_inventory.yaml`
+  - run inventory rows carry at least `split_instance_id`, `split_seed`, `split_override_path`, `config_override_path`, and `run_dir`
 - Confirm any concrete aggregation helper or table writer follows the D-064 contract:
   - split-level rows are sourced from authoritative per-split run artifacts, not manually typed summaries
   - split-level rows carry dataset/split fingerprint context plus threshold and mask-variant context
