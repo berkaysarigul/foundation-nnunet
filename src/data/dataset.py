@@ -152,6 +152,7 @@ class PneumothoraxDataset(Dataset):
         transform=None,
         mask_variant: str | None = None,
         train_crop: dict[str, Any] | None = None,
+        splits_path: str | Path | None = None,
     ):
         """
         Args:
@@ -163,19 +164,21 @@ class PneumothoraxDataset(Dataset):
                            the dataset uses dilated masks for train and
                            original masks for validation/test.
             train_crop:    Optional train-only crop policy config.
+            splits_path:   Optional override path for the split manifest.
         """
         self.data_dir = Path(data_dir)
         self.img_size = img_size
         self.transform = transform
 
-        splits_path = self.data_dir / "splits.json"
-        with splits_path.open(encoding="utf-8") as handle:
+        resolved_splits_path = Path(splits_path) if splits_path is not None else self.data_dir / "splits.json"
+        with resolved_splits_path.open(encoding="utf-8") as handle:
             splits = json.load(handle)
 
         if split not in splits:
             raise ValueError(f"Unknown split '{split}'. Expected one of {list(splits.keys())}.")
 
         self.split = split
+        self.splits_path = resolved_splits_path
         purpose = "train" if split == "train" else "eval"
         self.mask_variant = resolve_mask_variant(mask_variant, purpose=purpose)
         self.mask_dir = resolve_mask_dir(self.data_dir, self.mask_variant)

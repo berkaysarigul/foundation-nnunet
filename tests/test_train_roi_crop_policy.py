@@ -123,6 +123,34 @@ class TestTrainROICropPolicy(unittest.TestCase):
                     train_crop={"mode": "roi_train_only", "crop_size": 384},
                 )
 
+    def test_dataset_can_consume_explicit_split_override_path(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            dataset_root = Path(tmp_dir) / "processed"
+            self.build_processed_dataset(dataset_root)
+            override_splits_path = Path(tmp_dir) / "override_splits.json"
+            override_splits_path.write_text(
+                json.dumps(
+                    {
+                        "train": ["neg_train"],
+                        "val": ["pos_val"],
+                        "test": ["neg_test"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            dataset = PneumothoraxDataset(
+                str(dataset_root),
+                split="train",
+                img_size=512,
+                transform=None,
+                mask_variant="dilated_masks",
+                splits_path=override_splits_path,
+            )
+
+            self.assertEqual(dataset.image_ids, ["neg_train"])
+            self.assertEqual(dataset.splits_path, override_splits_path)
+
 
 if __name__ == "__main__":
     unittest.main()

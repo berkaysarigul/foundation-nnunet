@@ -872,6 +872,7 @@ def build_eval_dataloader(
         img_size=cfg["data"]["input_size"],
         transform=None,
         mask_variant=cfg["data"].get("eval_mask_variant", "original_masks"),
+        splits_path=cfg["data"].get("splits_path"),
     )
     loader = DataLoader(
         dataset,

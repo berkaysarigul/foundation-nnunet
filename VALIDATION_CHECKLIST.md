@@ -702,6 +702,12 @@ How to check it:
   - duplicate split seeds are rejected
   - duplicated split fingerprints are rejected so one study cannot silently count the same split twice
   - canonical split instance IDs are `split_001`, `split_002`, ...
+- Confirm any train/eval code path that claims to consume manifest-derived split instances follows the D-067 contract:
+  - `data.splits_path` is the single accepted split override surface
+  - if `data.splits_path` is omitted, the stack falls back to `<dataset_root>/splits.json`
+  - trainer and evaluator both pass the same effective split file into `PneumothoraxDataset`
+  - authoritative run metadata records `splits_path`, `base_split_fingerprint`, and the effective `split_fingerprint`
+  - the effective `split_fingerprint` is computed from the actual split file used by the run, not copied blindly from `dataset_manifest.json`
 - Confirm any concrete aggregation helper or table writer follows the D-064 contract:
   - split-level rows are sourced from authoritative per-split run artifacts, not manually typed summaries
   - split-level rows carry dataset/split fingerprint context plus threshold and mask-variant context

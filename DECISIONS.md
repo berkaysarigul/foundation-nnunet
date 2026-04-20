@@ -1865,6 +1865,35 @@ Impact on experiments / methodology:
 - The next practical blocker narrows to authoritative per-split run orchestration that consumes the fixed study manifest and fills the per-split run packages.
 - Any future repeated-split study that skips this manifest-preparation stage or counts duplicated split instances should be treated as pre-contract / non-authoritative.
 
+## 2026-04-20 / D-067
+
+Decision:
+- Effective split context is now a first-class authoritative input surface.
+- The accepted surface is `data.splits_path`:
+  - if omitted, the stack uses `<dataset_root>/splits.json`
+  - if provided, the stack uses that explicit split manifest instead
+- `PneumothoraxDataset`, trainer dataloaders, and evaluation dataloaders now all consume that same optional override path.
+- Authoritative run metadata must now record:
+  - `dataset_root`
+  - `splits_path`
+  - `base_split_fingerprint` from the trusted dataset manifest
+  - `split_fingerprint` from the effective split file actually used by the run
+
+Reason:
+- D-066 introduced the first repeated-split study manifest runner, but the actual train/eval stack still implicitly bound itself to `<dataset_root>/splits.json`.
+- Without a split-override surface, repeated-split execution would require dataset copies or split-specific dataset views just to change train/val/test membership.
+- Without recording both base and effective split fingerprints, authoritative per-split runs would be ambiguous once the same trusted dataset root is reused across many split instances.
+
+Alternatives considered:
+- Materialize a full split-specific dataset view directory for every repeated split instance.
+- Keep the train/eval stack fixed on `<dataset_root>/splits.json` and generate one dataset root per split.
+- Record only the effective split fingerprint without preserving the trusted dataset's base split fingerprint.
+
+Impact on experiments / methodology:
+- The repo can now drive the existing train/eval stack from a repeated-split manifest without cloning the trusted dataset.
+- The next practical blocker narrows to selection/test/run orchestration that feeds a manifest-derived `data.splits_path` into authoritative per-split runs and then aggregates them.
+- Any future repeated-split run that does not record `splits_path`, `base_split_fingerprint`, and the effective `split_fingerprint` should be treated as pre-contract / non-authoritative.
+
 ## Open decisions requiring evidence
 
 ### OD-005

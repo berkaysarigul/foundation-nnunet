@@ -449,6 +449,26 @@ def load_dataset_manifest(dataset_root: str | Path, *, repo_root: Path) -> dict[
         return json.load(handle)
 
 
+def resolve_effective_splits_context(
+    cfg: dict[str, Any],
+    *,
+    repo_root: Path,
+) -> dict[str, str]:
+    dataset_root = Path(canonicalize_workspace_path(cfg["data"]["processed_dir"], repo_root))
+    raw_splits_path = cfg["data"].get("splits_path")
+    splits_path = (
+        Path(canonicalize_workspace_path(raw_splits_path, repo_root))
+        if raw_splits_path is not None
+        else dataset_root / "splits.json"
+    )
+    with splits_path.open(encoding="utf-8") as handle:
+        splits = json.load(handle)
+    return {
+        "splits_path": str(splits_path.resolve()),
+        "split_fingerprint": compute_split_fingerprint(splits),
+    }
+
+
 def resolve_initial_checkpoint_reference(cfg: dict[str, Any], *, repo_root: Path) -> str:
     model_type = cfg["model"]["type"]
     if model_type == "pretrained_resnet34_unet":
@@ -928,6 +948,7 @@ def build_run_metadata(
     started_at: str | None = None,
 ) -> dict[str, Any]:
     dataset_manifest = load_dataset_manifest(cfg["data"]["processed_dir"], repo_root=repo_root)
+    effective_splits = resolve_effective_splits_context(cfg, repo_root=repo_root)
     code_provenance = resolve_code_provenance(repo_root)
 
     return {
@@ -941,7 +962,9 @@ def build_run_metadata(
         "code_fingerprint_scope": code_provenance["code_fingerprint_scope"],
         "dataset_root": canonicalize_workspace_path(cfg["data"]["processed_dir"], repo_root),
         "dataset_fingerprint": dataset_manifest["dataset_fingerprint"],
-        "split_fingerprint": dataset_manifest["fingerprints"]["splits"],
+        "base_split_fingerprint": dataset_manifest["fingerprints"]["splits"],
+        "splits_path": effective_splits["splits_path"],
+        "split_fingerprint": effective_splits["split_fingerprint"],
         "train_mask_variant": cfg["data"].get("train_mask_variant", "dilated_masks"),
         "eval_mask_variant": cfg["data"].get("eval_mask_variant", "original_masks"),
         "initial_checkpoint_path": resolve_initial_checkpoint_reference(cfg, repo_root=repo_root),

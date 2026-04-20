@@ -348,6 +348,7 @@ def train(
     data_dir     = cfg["data"]["processed_dir"]
     input_size   = cfg["data"]["input_size"]
     num_workers  = cfg["data"]["num_workers"]
+    splits_path = cfg["data"].get("splits_path")
     train_mask_variant = cfg["data"].get("train_mask_variant", "dilated_masks")
     eval_mask_variant = cfg["data"].get("eval_mask_variant", "original_masks")
     train_crop = cfg["data"].get("train_crop")
@@ -369,10 +370,12 @@ def train(
         transform=get_train_transforms(),
         mask_variant=train_mask_variant,
         train_crop=train_crop,
+        splits_path=splits_path,
     )
     val_ds = PneumothoraxDataset(
         data_dir, split="val", img_size=input_size, transform=None,
         mask_variant=eval_mask_variant,
+        splits_path=splits_path,
     )
 
     sampler = build_sampler(train_ds)

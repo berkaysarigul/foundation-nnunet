@@ -399,6 +399,8 @@ Current strategic direction:
     - Validation note (2026-04-20): D-065 now fixes `summary/final_summary.yaml` generation in code. The final summary payload reports split-level means, split-bootstrap percentile CIs, paired-delta means/CIs, and contributing split counts/IDs directly from canonical split-level rows and paired-delta tables. `py -3 -m unittest tests.test_run_artifacts -v`, `rg -n "D-065|final_summary|bootstrap|P2\\.1" ...`, and `git diff` were reviewed for consistency.
   - [x] Add the first repeated-split execution runner that materializes a canonical study manifest from the trusted dataset.
     - Validation note (2026-04-20): D-066 now fixes `scripts/prepare_repeated_split_study.py` as the first practical repeated-split execution entrypoint. It reads trusted processed image IDs plus `original_masks`-derived binary labels, replays `create_splits(...)` once per explicit split seed, rejects duplicate seeds and duplicated split fingerprints, and writes `metadata/split_manifest.yaml` under `artifacts/repeated_splits/<study_id>/`. `py -3 -m unittest tests.test_stratified_splits -v`, `py -3 -m unittest tests.test_prepare_repeated_split_study_script -v`, `rg -n "D-066|prepare_repeated_split_study|repeated_split" ...`, and `git diff` were reviewed for consistency.
+  - [x] Add split-override-aware train/eval surface plus authoritative effective split fingerprint metadata.
+    - Validation note (2026-04-20): D-067 now fixes `data.splits_path` as the accepted effective split override surface for `PneumothoraxDataset`, trainer dataloaders, and evaluation dataloaders. `build_run_metadata(...)` now records `splits_path`, `base_split_fingerprint`, and the effective `split_fingerprint` computed from the actual split file used by the run. `py -3 -m unittest tests.test_train_roi_crop_policy tests.test_run_artifacts tests.test_authoritative_pretrained_runner -v`, `rg -n "D-067|splits_path|base_split_fingerprint|split_fingerprint" ...`, and `git diff` were reviewed for consistency.
 - Success criteria:
   - Publication-grade evaluation plan is specified and ready to execute.
 - Validation needed before close:
@@ -423,5 +425,5 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. Add authoritative per-split run orchestration that consumes the D-066 study manifest and fills the repeated-split study package with real run artifacts
+1. Add authoritative per-split run orchestration that consumes the D-066 manifest through D-067 `data.splits_path` overrides and fills the repeated-split study package with real run artifacts
 2. Future hybrid runs must implement the D-062 branch-specific normalization contract before being treated as authoritative

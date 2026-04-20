@@ -188,6 +188,16 @@ class TestRunArtifacts(unittest.TestCase):
                 "dataset_fingerprint": "dataset-fp",
                 "fingerprints": {"splits": "split-fp"},
             }
+            (dataset_root / "splits.json").write_text(
+                json.dumps(
+                    {
+                        "train": ["img_001"],
+                        "val": ["img_002"],
+                        "test": ["img_003"],
+                    }
+                ),
+                encoding="utf-8",
+            )
             (dataset_root / "dataset_manifest.json").write_text(
                 json.dumps(manifest),
                 encoding="utf-8",
@@ -229,11 +239,87 @@ class TestRunArtifacts(unittest.TestCase):
 
             self.assertEqual(metadata["run_id"], "run_001")
             self.assertEqual(metadata["dataset_fingerprint"], "dataset-fp")
-            self.assertEqual(metadata["split_fingerprint"], "split-fp")
+            self.assertEqual(metadata["base_split_fingerprint"], "split-fp")
+            self.assertEqual(
+                Path(metadata["splits_path"]),
+                (dataset_root / "splits.json").resolve(),
+            )
+            self.assertNotEqual(metadata["split_fingerprint"], "")
             self.assertEqual(metadata["initial_checkpoint_path"], "torchvision://resnet34_imagenet1k_v1")
             self.assertIsNone(metadata["resume_checkpoint_path"])
             self.assertEqual(metadata["selection_metric"], "val_dice_pos_mean")
             self.assertEqual(metadata["selected_postprocess"], "none")
+
+    def test_build_run_metadata_uses_override_splits_path_for_effective_split_fingerprint(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            dataset_root = root / "data" / "processed" / "trusted_v1"
+            dataset_root.mkdir(parents=True)
+            (dataset_root / "dataset_manifest.json").write_text(
+                json.dumps(
+                    {
+                        "dataset_fingerprint": "dataset-fp",
+                        "fingerprints": {"splits": "trusted-base-split-fp"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (dataset_root / "splits.json").write_text(
+                json.dumps(
+                    {
+                        "train": ["img_001"],
+                        "val": ["img_002"],
+                        "test": ["img_003"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            override_splits_path = root / "artifacts" / "repeated_splits" / "study_alpha" / "split_001.json"
+            override_splits_path.parent.mkdir(parents=True, exist_ok=True)
+            override_splits_path.write_text(
+                json.dumps(
+                    {
+                        "train": ["img_010"],
+                        "val": ["img_011"],
+                        "test": ["img_012"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (root / "configs").mkdir()
+            (root / "configs" / "config.yaml").write_text("model:\n  type: baseline\n", encoding="utf-8")
+            (root / "src").mkdir()
+            (root / "src" / "placeholder.py").write_text("VALUE = 1\n", encoding="utf-8")
+            (root / "requirements.txt").write_text("torch\n", encoding="utf-8")
+
+            cfg = {
+                "model": {"type": "baseline"},
+                "data": {
+                    "processed_dir": "data/processed/trusted_v1",
+                    "splits_path": str(override_splits_path),
+                    "input_size": 512,
+                    "train_mask_variant": "dilated_masks",
+                    "eval_mask_variant": "original_masks",
+                },
+                "selection": {
+                    "metric": "val_dice_pos_mean",
+                    "postprocess": "none",
+                },
+                "seed": 42,
+            }
+
+            metadata = build_run_metadata(
+                cfg=cfg,
+                config_path="configs/config.yaml",
+                repo_root=root,
+                run_id="run_001",
+                resume_checkpoint_path=None,
+                started_at="2026-04-20T10:00:00Z",
+            )
+
+            self.assertEqual(metadata["base_split_fingerprint"], "trusted-base-split-fp")
+            self.assertEqual(metadata["splits_path"], str(override_splits_path.resolve()))
+            self.assertNotEqual(metadata["split_fingerprint"], "trusted-base-split-fp")
 
     def test_build_repeated_split_manifest_records_dataset_context_and_sorted_ids(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
