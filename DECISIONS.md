@@ -1935,6 +1935,34 @@ Impact on experiments / methodology:
 - The next practical blocker narrows to study finalization: consuming the run inventory to write `split_level_metrics.csv`, paired-delta tables, and `summary/final_summary.yaml`.
 - Any future repeated-split study that launches per-split runs without `pretrained_resnet34_run_inventory.yaml` should be treated as incomplete / non-authoritative at the study level.
 
+## 2026-04-21 / D-069
+
+Decision:
+- The first accepted study finalization runner is now `scripts/finalize_repeated_split_pretrained_study.py`.
+- This runner consumes one or more `*_run_inventory.yaml` files that all point to the same `metadata/split_manifest.yaml`.
+- The canonical finalization behavior is now:
+  - derive split-level rows from authoritative per-split run packages via the D-064 helpers
+  - write `aggregations/split_level_metrics.csv`
+  - optionally write named paired-delta tables under `comparisons/` when explicit comparison specs are provided
+  - always write `summary/final_summary.yaml` via the D-065 summary helper
+- The accepted comparison-spec surface is:
+  - `comparison_name:reference_model:candidate_model`
+
+Reason:
+- D-068 closed per-split execution, but a repeated-split study was still incomplete at the study level because the run inventory had no accepted code path that turned it into the machine-readable aggregation package required by D-045.
+- Requiring the finalization runner to consume the persisted run inventory preserves traceability from study-level summary numbers back to exact split instances and exact authoritative run directories.
+- Allowing multiple run inventories lets the same finalization surface support both single-model studies and later paired model comparisons without inventing a second aggregation path.
+
+Alternatives considered:
+- Finalize repeated-split studies manually in notebooks from copied metrics.
+- Infer split-level rows directly from run-directory naming conventions instead of the persisted run inventory.
+- Write only `summary/final_summary.yaml` and leave the split-level / paired-delta tables implicit.
+
+Impact on experiments / methodology:
+- The trusted repeated-split path now has a complete execution-to-reporting chain in code: manifest prep (D-066), split-aware per-split execution (D-067, D-068), and study finalization (D-069).
+- The next practical blocker is no longer orchestration design; it is executing a real repeated-split study on a GPU-capable environment and filling the new study-level artifact package with authoritative runs.
+- Any future repeated-split study that lacks the D-069 finalization outputs should be treated as incomplete / non-authoritative at the study level even if per-split runs exist.
+
 ## Open decisions requiring evidence
 
 ### OD-005

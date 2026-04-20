@@ -403,6 +403,8 @@ Current strategic direction:
     - Validation note (2026-04-20): D-067 now fixes `data.splits_path` as the accepted effective split override surface for `PneumothoraxDataset`, trainer dataloaders, and evaluation dataloaders. `build_run_metadata(...)` now records `splits_path`, `base_split_fingerprint`, and the effective `split_fingerprint` computed from the actual split file used by the run. `py -3 -m unittest tests.test_train_roi_crop_policy tests.test_run_artifacts tests.test_authoritative_pretrained_runner -v`, `rg -n "D-067|splits_path|base_split_fingerprint|split_fingerprint" ...`, and `git diff` were reviewed for consistency.
   - [x] Add the first per-split authoritative pretrained study runner that consumes a canonical split manifest.
     - Validation note (2026-04-20): D-068 now fixes `scripts/run_repeated_split_pretrained_study.py` as the first per-split orchestration runner. It materializes per-instance split override JSON files and config override YAML files, injects `data.splits_path`, launches `scripts/run_authoritative_pretrained_baseline.py` once per split instance, and persists `metadata/pretrained_resnet34_run_inventory.yaml`. `py -3 -m unittest tests.test_repeated_split_pretrained_study_runner tests.test_authoritative_pretrained_runner -v`, `rg -n "D-068|run_repeated_split_pretrained_study|run_inventory|split_overrides|config_overrides" ...`, and `git diff` were reviewed for consistency.
+  - [x] Add the first study finalization runner that consumes run inventory and writes study-level outputs.
+    - Validation note (2026-04-21): D-069 now fixes `scripts/finalize_repeated_split_pretrained_study.py` as the accepted study finalization runner. It consumes one or more `*_run_inventory.yaml` files, writes `aggregations/split_level_metrics.csv`, writes optional `comparisons/<comparison_name>_paired_deltas.csv` files from explicit comparison specs, and always writes `summary/final_summary.yaml` through the D-064/D-065 helpers. `py -3 -m unittest tests.test_finalize_repeated_split_pretrained_study_runner tests.test_run_artifacts -v`, `rg -n "D-069|finalize_repeated_split_pretrained_study|split_level_metrics|paired_deltas|final_summary" ...`, and `git diff` were reviewed for consistency.
 - Success criteria:
   - Publication-grade evaluation plan is specified and ready to execute.
 - Validation needed before close:
@@ -427,5 +429,6 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. Add study finalization code that consumes the D-068 run inventory and writes `split_level_metrics.csv`, paired-delta tables, and `summary/final_summary.yaml`
-2. Future hybrid runs must implement the D-062 branch-specific normalization contract before being treated as authoritative
+1. Execute a real repeated-split pretrained baseline study on a GPU-capable environment using the D-066 manifest runner, D-068 per-split runner, and D-069 study finalization runner
+2. Add candidate-model repeated-split inventories/comparisons only after the pretrained repeated-split study package exists
+3. Future hybrid runs must implement the D-062 branch-specific normalization contract before being treated as authoritative

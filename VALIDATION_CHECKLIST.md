@@ -715,6 +715,12 @@ How to check it:
   - each split instance launches the existing `scripts/run_authoritative_pretrained_baseline.py` runner rather than bypassing the trusted single-run protocol
   - completed entries are recorded in `metadata/pretrained_resnet34_run_inventory.yaml`
   - run inventory rows carry at least `split_instance_id`, `split_seed`, `split_override_path`, `config_override_path`, and `run_dir`
+- Confirm any concrete study finalization runner follows the D-069 contract:
+  - `scripts/finalize_repeated_split_pretrained_study.py` is the first accepted study finalization runner for the pretrained repeated-split path
+  - it consumes one or more `*_run_inventory.yaml` files that all reference the same `metadata/split_manifest.yaml`
+  - it writes `aggregations/split_level_metrics.csv` from authoritative per-split run packages rather than copied notebook metrics
+  - it writes `comparisons/<comparison_name>_paired_deltas.csv` only from explicit comparison specs formatted as `comparison_name:reference_model:candidate_model`
+  - it writes `summary/final_summary.yaml` from the canonical split-level and paired-delta helpers instead of inventing a separate aggregation path
 - Confirm any concrete aggregation helper or table writer follows the D-064 contract:
   - split-level rows are sourced from authoritative per-split run artifacts, not manually typed summaries
   - split-level rows carry dataset/split fingerprint context plus threshold and mask-variant context
