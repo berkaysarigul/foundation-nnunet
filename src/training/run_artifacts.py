@@ -13,6 +13,8 @@ from typing import Any
 import pandas as pd
 import yaml
 
+from src.data.dataset_manifest import compute_split_fingerprint
+
 
 DEFAULT_CODE_FINGERPRINT_PATTERNS = (
     "configs/**/*.yaml",
@@ -111,11 +113,130 @@ class RunArtifacts:
         return self.qualitative_test_dir / "manifest.yaml"
 
 
+@dataclass(frozen=True)
+class RepeatedSplitStudyArtifacts:
+    study_id: str
+    study_dir: Path
+    metadata_dir: Path
+    aggregations_dir: Path
+    comparisons_dir: Path
+    summary_dir: Path
+
+    @property
+    def split_manifest_path(self) -> Path:
+        return self.metadata_dir / "split_manifest.yaml"
+
+    @property
+    def split_level_table_path(self) -> Path:
+        return self.aggregations_dir / "split_level_metrics.csv"
+
+    @property
+    def final_summary_path(self) -> Path:
+        return self.summary_dir / "final_summary.yaml"
+
+    def paired_delta_table_path(self, comparison_name: str) -> Path:
+        safe_name = comparison_name.strip().replace(" ", "_")
+        if not safe_name:
+            raise ValueError("comparison_name must not be empty.")
+        return self.comparisons_dir / f"{safe_name}_paired_deltas.csv"
+
+
 def canonicalize_workspace_path(path_like: str | Path, repo_root: Path) -> str:
     path = Path(path_like)
     if not path.is_absolute():
         path = repo_root / path
     return str(path.resolve())
+
+
+def _canonicalize_split_ids(split_name: str, image_ids: list[str]) -> list[str]:
+    if not image_ids:
+        raise ValueError(f"{split_name} ids must not be empty.")
+
+    normalized_ids = [str(image_id) for image_id in image_ids]
+    if len(set(normalized_ids)) != len(normalized_ids):
+        raise ValueError(f"{split_name} ids must be unique within a split instance.")
+    return sorted(normalized_ids)
+
+
+def build_repeated_split_manifest(
+    *,
+    study_id: str,
+    dataset_root: str | Path,
+    repo_root: Path,
+    split_instances: list[dict[str, Any]],
+    split_policy: str = "repeated_stratified_train_val_test",
+    selection_metric: str = "val_dice_pos_mean",
+    primary_test_metric: str = "test_positive_only_dice_mean",
+) -> dict[str, Any]:
+    if not study_id.strip():
+        raise ValueError("study_id must not be empty.")
+    if not split_instances:
+        raise ValueError("split_instances must contain at least one split instance.")
+
+    dataset_manifest = load_dataset_manifest(dataset_root, repo_root=repo_root)
+    normalized_instances: list[dict[str, Any]] = []
+    seen_instance_ids: set[str] = set()
+
+    for raw_instance in split_instances:
+        split_instance_id = str(raw_instance["split_instance_id"]).strip()
+        if not split_instance_id:
+            raise ValueError("split_instance_id must not be empty.")
+        if split_instance_id in seen_instance_ids:
+            raise ValueError(f"Duplicate split_instance_id: {split_instance_id!r}")
+        seen_instance_ids.add(split_instance_id)
+
+        train_ids = _canonicalize_split_ids("train", list(raw_instance["train_ids"]))
+        val_ids = _canonicalize_split_ids("val", list(raw_instance["val_ids"]))
+        test_ids = _canonicalize_split_ids("test", list(raw_instance["test_ids"]))
+
+        overlaps = {
+            "train/val": sorted(set(train_ids) & set(val_ids)),
+            "train/test": sorted(set(train_ids) & set(test_ids)),
+            "val/test": sorted(set(val_ids) & set(test_ids)),
+        }
+        overlapping_groups = {name: ids for name, ids in overlaps.items() if ids}
+        if overlapping_groups:
+            raise ValueError(
+                "Repeated split instances must keep train/val/test disjoint; "
+                f"{split_instance_id!r} has overlaps: {overlapping_groups}"
+            )
+
+        split_map = {
+            "train": train_ids,
+            "val": val_ids,
+            "test": test_ids,
+        }
+        normalized_instances.append(
+            {
+                "split_instance_id": split_instance_id,
+                "split_seed": int(raw_instance["split_seed"]),
+                "counts": {
+                    "train": len(train_ids),
+                    "val": len(val_ids),
+                    "test": len(test_ids),
+                },
+                "split_fingerprint": compute_split_fingerprint(split_map),
+                "train_ids": train_ids,
+                "val_ids": val_ids,
+                "test_ids": test_ids,
+            }
+        )
+
+    normalized_instances.sort(key=lambda item: item["split_instance_id"])
+    return {
+        "study_id": study_id,
+        "schema_version": 1,
+        "dataset_root": canonicalize_workspace_path(dataset_root, repo_root),
+        "dataset_fingerprint": dataset_manifest["dataset_fingerprint"],
+        "base_split_fingerprint": dataset_manifest["fingerprints"]["splits"],
+        "split_policy": split_policy,
+        "selection_metric": selection_metric,
+        "primary_test_metric": primary_test_metric,
+        "statistical_unit": "split_instance",
+        "paired_comparison_unit": "shared_split_instance",
+        "split_count": len(normalized_instances),
+        "split_instances": normalized_instances,
+    }
 
 
 def utc_timestamp() -> str:
@@ -170,6 +291,33 @@ def prepare_run_artifacts(
         qualitative_dir=qualitative_dir,
         qualitative_validation_dir=qualitative_validation_dir,
         qualitative_test_dir=qualitative_test_dir,
+    )
+
+
+def prepare_repeated_split_study_artifacts(
+    study_id: str,
+    *,
+    study_root: Path,
+) -> RepeatedSplitStudyArtifacts:
+    if not study_id.strip():
+        raise ValueError("study_id must not be empty.")
+
+    resolved_study_dir = study_root / study_id
+    metadata_dir = resolved_study_dir / "metadata"
+    aggregations_dir = resolved_study_dir / "aggregations"
+    comparisons_dir = resolved_study_dir / "comparisons"
+    summary_dir = resolved_study_dir / "summary"
+
+    for directory in (metadata_dir, aggregations_dir, comparisons_dir, summary_dir):
+        directory.mkdir(parents=True, exist_ok=True)
+
+    return RepeatedSplitStudyArtifacts(
+        study_id=study_id,
+        study_dir=resolved_study_dir,
+        metadata_dir=metadata_dir,
+        aggregations_dir=aggregations_dir,
+        comparisons_dir=comparisons_dir,
+        summary_dir=summary_dir,
     )
 
 

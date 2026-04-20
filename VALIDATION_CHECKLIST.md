@@ -690,6 +690,11 @@ How to check it:
   - one machine-readable paired-delta table for each named model-vs-model comparison
   - one final summary artifact with model means, split-bootstrap 95% CIs, paired-delta means, paired-delta 95% CIs, and contributing split counts
 - Confirm the repeated-split package still points back to the same trusted dataset / evaluation regime rather than mixing legacy or notebook-only outputs.
+- Confirm any concrete split-manifest helper or orchestration code follows the D-063 contract:
+  - the study package exposes metadata, aggregation, comparison, and summary surfaces
+  - each split instance records `split_instance_id`, `split_seed`, exact train/val/test IDs, counts, and a per-instance split fingerprint
+  - train/val/test overlap is rejected rather than silently accepted
+  - ID ordering is canonicalized for stable manifests and diffs
 
 Failure symptoms:
 - Only the final average metrics are retained.

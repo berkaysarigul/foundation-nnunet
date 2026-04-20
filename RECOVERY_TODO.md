@@ -380,7 +380,7 @@ Current strategic direction:
   - Methodology review against `DECISIONS.md`.
 
 ### P2.1 Prepare repeated split / cross-validation upgrade path
-- Status: [x]
+- Status: [~]
 - Dependencies: P1.6, optionally P1.8 if hybrid is kept
 - Affected files/modules: evaluation pipeline, experiment orchestration, result aggregation
 - Why it matters: single-split results are fragile for publication.
@@ -391,6 +391,9 @@ Current strategic direction:
     - Validation note (2026-04-16): D-044 now fixes split-bootstrap / paired-delta reporting for the repeated-split path. Confidence intervals are computed over split-level values, not individual images, and model comparisons must pair identical split instances before bootstrapping the mean delta. The default paired comparison target remains held-out `test` positive-only Dice mean. `rg -n "D-044|paired deltas|split-level|bootstrap confidence|P2\\.1" RECOVERY_TODO.md AGENT_CONTEXT.md DECISIONS.md VALIDATION_CHECKLIST.md` and `git diff` were reviewed for consistency.
   - [x] Define minimum evidence package for final reporting.
     - Validation note (2026-04-16): D-045 now fixes the minimum evidence package for final repeated-split reporting: split manifest, per-model-per-split authoritative run packages, split-level aggregation table, paired-delta table, and a final summary artifact with means, 95% split-bootstrap CIs, paired-delta CIs, and contributing split counts. `rg -n "D-045|split manifest|paired-delta table|final summary artifact|P2\\.1" RECOVERY_TODO.md AGENT_CONTEXT.md DECISIONS.md VALIDATION_CHECKLIST.md` and `git diff` were reviewed for consistency.
+  - [x] Canonicalize the study-level split manifest and artifact layout in code.
+    - Validation note (2026-04-20): D-063 now fixes the first executable orchestration contract for repeated-split studies. `src/training/run_artifacts.py` now exposes a canonical study package layout (`metadata/split_manifest.yaml`, `aggregations/split_level_metrics.csv`, `comparisons/<name>_paired_deltas.csv`, `summary/final_summary.yaml`) plus a split-manifest builder that records exact train/val/test IDs, split seeds, dataset/split fingerprints, and per-instance split fingerprints while rejecting subset overlap. `py -3 -m unittest tests.test_run_artifacts -v`, `rg -n "D-063|split_manifest|paired_deltas|P2\\.1" ...`, and `git diff` were reviewed for consistency.
+  - [ ] Add split-level aggregation / paired-delta writers that consume the canonical split manifest and authoritative per-split run artifacts.
 - Success criteria:
   - Publication-grade evaluation plan is specified and ready to execute.
 - Validation needed before close:

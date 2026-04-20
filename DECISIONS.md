@@ -1693,6 +1693,51 @@ Impact on experiments / methodology:
 - Any future hybrid run that does not implement this exact two-view contract in code and metadata should be treated as pre-policy / non-authoritative for normalization claims.
 - The current critical path no longer blocks on hybrid normalization policy design; the next main-path blocker returns to publication-grade repeated-split evaluation work.
 
+## 2026-04-20 / D-063
+
+Decision:
+- The first concrete orchestration surface for publication-grade repeated-split evaluation is now fixed.
+- A repeated-split study package must expose, at minimum, the following machine-readable layout:
+  - `metadata/split_manifest.yaml`
+  - `aggregations/split_level_metrics.csv`
+  - `comparisons/<comparison_name>_paired_deltas.csv`
+  - `summary/final_summary.yaml`
+- The split manifest contract is now explicit:
+  - one study-level `study_id`
+  - dataset context from the trusted processed dataset:
+    - `dataset_root`
+    - `dataset_fingerprint`
+    - `base_split_fingerprint`
+  - repeated-split policy context:
+    - `split_policy`
+    - `selection_metric`
+    - `primary_test_metric`
+    - `statistical_unit=split_instance`
+    - `paired_comparison_unit=shared_split_instance`
+  - one entry per split instance carrying:
+    - `split_instance_id`
+    - `split_seed`
+    - exact `train_ids`, `val_ids`, and `test_ids`
+    - per-subset counts
+    - a per-instance `split_fingerprint`
+- Split-manifest generation must canonicalize each split instance by sorting IDs and rejecting any train/val/test overlap.
+- Per-model authoritative run packages for each split instance still remain in the already trusted single-run artifact family under `artifacts/runs/`; the repeated-split study package is an orchestration/reporting layer above that family, not a replacement for it.
+
+Reason:
+- D-045 already fixed the minimum evidence package, but the repo still had no concrete code-level contract for how a repeated-split study should start materializing that package.
+- The split manifest is the cleanest first operational piece because it anchors every future split-level table, paired-delta table, and final summary back to exact train/val/test IDs.
+- Enforcing disjoint subsets and canonical ID ordering at manifest-build time closes a silent leakage / reproducibility hole before aggregation code exists.
+
+Alternatives considered:
+- Start with bootstrap / paired-delta summary code before a manifest exists.
+- Let each repeated-split study define its own ad hoc manifest schema.
+- Store only split seeds and infer the actual train/val/test IDs later.
+
+Impact on experiments / methodology:
+- `P2.1` is no longer only a methodology note; it now has its first executable orchestration contract in code.
+- The next `P2.1` blocker narrows to writing the machine-readable split-level aggregation and paired-delta tables that consume this manifest and point back to authoritative per-split run artifacts.
+- Any future repeated-split study that lacks a canonical split manifest with exact IDs should be treated as pre-contract / non-authoritative for publication-grade reporting.
+
 ## Open decisions requiring evidence
 
 ### OD-005

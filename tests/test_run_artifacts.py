@@ -15,10 +15,12 @@ from src.training.run_artifacts import (
     EVALUATION_CSV_COLUMNS,
     HISTORY_CSV_COLUMNS,
     build_best_checkpoint_metadata,
+    build_repeated_split_manifest,
     build_run_metadata,
     compute_code_fingerprint,
     compute_config_hash,
     make_run_id,
+    prepare_repeated_split_study_artifacts,
     prepare_run_artifacts,
     resolve_initial_checkpoint_reference,
     write_config_snapshot,
@@ -58,6 +60,36 @@ class TestRunArtifacts(unittest.TestCase):
             self.assertEqual(artifacts.selection_state_path, artifacts.selection_dir / "selection_state.yaml")
             self.assertEqual(artifacts.test_metrics_path, artifacts.reports_dir / "test_metrics.csv")
             self.assertEqual(artifacts.test_summary_path, artifacts.reports_dir / "test_summary.yaml")
+
+    def test_prepare_repeated_split_study_artifacts_creates_expected_directories(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            study_root = Path(tmp_dir) / "artifacts" / "repeated_splits"
+            artifacts = prepare_repeated_split_study_artifacts(
+                "study_alpha",
+                study_root=study_root,
+            )
+
+            self.assertTrue(artifacts.study_dir.exists())
+            self.assertTrue(artifacts.metadata_dir.exists())
+            self.assertTrue(artifacts.aggregations_dir.exists())
+            self.assertTrue(artifacts.comparisons_dir.exists())
+            self.assertTrue(artifacts.summary_dir.exists())
+            self.assertEqual(
+                artifacts.split_manifest_path,
+                artifacts.metadata_dir / "split_manifest.yaml",
+            )
+            self.assertEqual(
+                artifacts.split_level_table_path,
+                artifacts.aggregations_dir / "split_level_metrics.csv",
+            )
+            self.assertEqual(
+                artifacts.final_summary_path,
+                artifacts.summary_dir / "final_summary.yaml",
+            )
+            self.assertEqual(
+                artifacts.paired_delta_table_path("baseline vs hybrid"),
+                artifacts.comparisons_dir / "baseline_vs_hybrid_paired_deltas.csv",
+            )
 
     def test_config_hash_is_deterministic(self) -> None:
         cfg_a = {"model": {"type": "baseline"}, "seed": 42}
@@ -132,6 +164,89 @@ class TestRunArtifacts(unittest.TestCase):
             self.assertIsNone(metadata["resume_checkpoint_path"])
             self.assertEqual(metadata["selection_metric"], "val_dice_pos_mean")
             self.assertEqual(metadata["selected_postprocess"], "none")
+
+    def test_build_repeated_split_manifest_records_dataset_context_and_sorted_ids(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            dataset_root = root / "data" / "processed" / "trusted_v1"
+            dataset_root.mkdir(parents=True)
+            (dataset_root / "dataset_manifest.json").write_text(
+                json.dumps(
+                    {
+                        "dataset_fingerprint": "dataset-fp",
+                        "fingerprints": {"splits": "trusted-single-split-fp"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            payload = build_repeated_split_manifest(
+                study_id="study_alpha",
+                dataset_root=dataset_root,
+                repo_root=root,
+                split_instances=[
+                    {
+                        "split_instance_id": "split_b",
+                        "split_seed": 200,
+                        "train_ids": ["img_3", "img_1"],
+                        "val_ids": ["img_4"],
+                        "test_ids": ["img_6", "img_5"],
+                    },
+                    {
+                        "split_instance_id": "split_a",
+                        "split_seed": 100,
+                        "train_ids": ["img_2", "img_0"],
+                        "val_ids": ["img_7"],
+                        "test_ids": ["img_8"],
+                    },
+                ],
+            )
+
+            self.assertEqual(payload["study_id"], "study_alpha")
+            self.assertEqual(payload["dataset_fingerprint"], "dataset-fp")
+            self.assertEqual(payload["base_split_fingerprint"], "trusted-single-split-fp")
+            self.assertEqual(payload["selection_metric"], "val_dice_pos_mean")
+            self.assertEqual(payload["primary_test_metric"], "test_positive_only_dice_mean")
+            self.assertEqual(payload["split_count"], 2)
+            self.assertEqual(
+                [instance["split_instance_id"] for instance in payload["split_instances"]],
+                ["split_a", "split_b"],
+            )
+            self.assertEqual(payload["split_instances"][1]["train_ids"], ["img_1", "img_3"])
+            self.assertEqual(payload["split_instances"][1]["test_ids"], ["img_5", "img_6"])
+            self.assertEqual(payload["split_instances"][1]["counts"]["train"], 2)
+            self.assertTrue(payload["split_instances"][1]["split_fingerprint"])
+
+    def test_build_repeated_split_manifest_rejects_overlap_between_subsets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            dataset_root = root / "data" / "processed" / "trusted_v1"
+            dataset_root.mkdir(parents=True)
+            (dataset_root / "dataset_manifest.json").write_text(
+                json.dumps(
+                    {
+                        "dataset_fingerprint": "dataset-fp",
+                        "fingerprints": {"splits": "trusted-single-split-fp"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(ValueError, "must keep train/val/test disjoint"):
+                build_repeated_split_manifest(
+                    study_id="study_alpha",
+                    dataset_root=dataset_root,
+                    repo_root=root,
+                    split_instances=[
+                        {
+                            "split_instance_id": "split_a",
+                            "split_seed": 123,
+                            "train_ids": ["img_1", "img_2"],
+                            "val_ids": ["img_2"],
+                            "test_ids": ["img_3"],
+                        }
+                    ],
+                )
 
     def test_write_helpers_persist_yaml_and_history(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
