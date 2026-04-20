@@ -390,6 +390,12 @@ How to check it:
   - there is no natural `H/32` slot in the current architecture
   - a corrected four-stage hybrid redesign therefore adds an explicit `H/32` context head
   - resize-only reuse of `e4` or the current bottleneck for `fx[3]` is off-protocol
+- Confirm the deepest-feature usage rule matches D-057:
+  - `fx[3]` enters only through the dedicated `H/32` context head
+  - `fx[3]` is processed at native `H/32` before any transition
+  - `fx[3]` makes exactly one learned `H/32 -> H/16` transition
+  - reconnect happens only through the `fx[2]`-aligned `H/16` context branch
+  - direct reuse of `fx[3]` in `e4`, decoder skips, or shallow encoder fusion is forbidden
 
 Failure symptoms:
 - Large corrective upsampling into shallow encoder stages, missing bottleneck use of deep features, or undocumented stage remapping.

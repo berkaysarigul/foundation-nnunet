@@ -1529,6 +1529,29 @@ Impact on experiments / methodology:
 - The next `P1.10` blocker narrows to implementation detail: decide exactly how `fx[3]` enters that new `H/32` context head and how that head reconnects to the `H/16` bottleneck path.
 - Future redesign work should treat resize-only reuse of `e4` or the current bottleneck for `fx[3]` as off-protocol unless a later explicit decision reopens that choice.
 
+## 2026-04-20 / D-057
+
+Decision:
+- The deepest Foundation X feature `fx[3]` (`H/32`) now enters the redesign through its own dedicated `H/32` context head and not through any `FusionBlock` with U-Net encoder skips.
+- That `H/32` context head consumes only `fx[3]` at native scale, applies local context processing at `H/32`, and then performs exactly one learned `2x` transition from `H/32` to `H/16`.
+- After that single `H/32 -> H/16` transition, the upsampled deepest-context output reconnects to the main path only at the `fx[2]`-aligned `H/16` bottleneck/context branch fixed by D-055.
+- The reconnection is therefore context-to-context: `fx[3]` may not directly concatenate with `e4`, decoder skips, or shallow encoder features, and it may not bypass the `H/16` context merge path by jumping straight into the final decoder.
+
+Reason:
+- D-055 fixed `fx[3]` to a dedicated `H/32` slot, and D-056 fixed that slot as a real deeper context head rather than a placeholder.
+- The cleanest way to preserve scale semantics is to let `fx[3]` stay alone at native `H/32`, then reconnect only once at the immediately adjacent `H/16` context branch.
+- Any attempt to push `fx[3]` into `e4` or decoder skips would reintroduce the same multi-level scale mismatch that the `P1.10` redesign is trying to remove.
+
+Alternatives considered:
+- Fuse `fx[3]` directly with `e4` after aggressive upsampling.
+- Inject `fx[3]` straight into the existing bottleneck without a dedicated `H/32` processing step.
+- Route `fx[3]` to decoder skips as an auxiliary deep supervision signal.
+
+Impact on experiments / methodology:
+- `P1.10` now has a fixed deepest-feature usage rule: `fx[3]` is a pure deeper-context input, not a skip-fusion feature.
+- The next `P1.10` blocker narrows to enforcement: add explicit shape assertions and implementation checks so the eventual redesign proves `fx[0]->e3`, `fx[1]->e4`, `fx[2]->H/16`, and `fx[3]->H/32->H/16 context merge` exactly.
+- Future redesign work should treat direct `fx[3]` reuse in `e4` or decoder skips as off-protocol unless a later explicit decision reopens that choice.
+
 ## Open decisions requiring evidence
 
 ### OD-005

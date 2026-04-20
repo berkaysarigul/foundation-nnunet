@@ -332,7 +332,8 @@ Current strategic direction:
     - Validation note (2026-04-20): D-055 now fixes the corrected target mapping at the relative-scale level for both accepted input sizes. The intended alignments are `fx[0]->e3`, `fx[1]->e4`, `fx[2]->bottleneck/context(H/16)`, and `fx[3]->dedicated H/32 context slot`, which means no corrected redesign may fuse Foundation X directly into `e1` or `e2`.
   - [x] Decide whether the model needs a deeper encoder/bottleneck/context head.
     - Validation note (2026-04-20): D-056 now fixes this answer as `yes` for the current redesign path. The baseline U-Net bottoms out at `H/16`, while D-055 reserves `fx[3]` for a dedicated `H/32` slot. Therefore any corrected hybrid that keeps the four-stage Foundation X hierarchy must add an explicit deeper `H/32` context head rather than reusing `e4` or the current bottleneck by resize-only adaptation.
-  - [ ] Decide how the deepest Foundation X feature is used.
+  - [x] Decide how the deepest Foundation X feature is used.
+    - Validation note (2026-04-20): D-057 now fixes `fx[3]` as a pure deeper-context input. It enters only through a dedicated `H/32` context head, stays at native `H/32` for local processing, then makes exactly one learned `2x` transition to `H/16` and reconnects only through the `fx[2]`-aligned `H/16` context branch. Direct reuse of `fx[3]` in `e4`, decoder skips, or shallow encoder fusion is now off-protocol.
   - [ ] Add explicit shape assertions for all fused stages.
 - Success criteria:
   - Fusion is scale-aligned by design and validated with shape checks.
