@@ -544,6 +544,9 @@ How to check it:
   - `src/data/dataset.py` emits grayscale `[0,1]`
   - `src/models/backbone.py` only repeats to RGB for Foundation X
   - no explicit per-channel mean/std normalization is currently applied in the hybrid path
+- Confirm directional normalization policy before accepting any future hybrid run:
+  - one shared implicit raw `[0,1]` view is no longer acceptable as the final hybrid contract
+  - Foundation X and CNN branches must move to explicitly recorded branch-specific views
 - Confirm D-050 semantics are respected before accepting any frozen/unfrozen claim:
   - frozen mode means no gradient path through Foundation X and explicit frozen parameters
   - unfrozen mode means no unconditional `torch.no_grad()` remains in `src/models/hybrid.py` or `src/models/backbone.py`

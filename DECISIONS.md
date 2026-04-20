@@ -1637,6 +1637,30 @@ Impact on experiments / methodology:
 - The next `P1.11` blocker narrows to policy: decide whether the hybrid should keep one shared raw view or introduce branch-specific normalized views for Foundation X and the CNN path.
 - Future hybrid evidence reviews must not claim normalization correctness from code unless a later explicit decision and code change make that true.
 
+## 2026-04-20 / D-061
+
+Decision:
+- The hybrid path should **not** keep a single shared raw `[0, 1]` input view as its final normalization policy.
+- If the hybrid path is used going forward, it must move to **branch-specific views**:
+  - the Foundation X branch receives an explicitly normalized view appropriate for the pretrained Swin-B backbone
+  - the CNN branch receives its own explicitly recorded view rather than silently inheriting the Foundation X normalization choice
+- This decision fixes the direction of the policy only. It does **not** yet fix the exact normalization constants or the exact code/config surface where the dual-view policy will be applied.
+
+Reason:
+- D-060 established that the current code only repeats the grayscale `[0, 1]` tensor to RGB for Foundation X and applies no explicit mean/std normalization anywhere in the hybrid path.
+- The two branches do not play the same role: Foundation X is an external pretrained backbone, while the CNN branch is the trainable U-Net-style path inside the hybrid model.
+- A single implicit raw view leaves the pretrained branch’s expectations undocumented and makes later hybrid evidence harder to interpret or reproduce.
+
+Alternatives considered:
+- Keep one shared raw `[0, 1]` input view for both branches.
+- Force both branches to use the same explicit normalized view even if that view is chosen only for Foundation X.
+- Delay the shared-vs-branch-specific decision until after another hybrid training attempt.
+
+Impact on experiments / methodology:
+- `P1.11` now has its directional policy fixed: hybrid normalization must become branch-specific rather than remaining a shared implicit raw view.
+- The next `P1.11` blocker narrows to the exact contract: choose the Foundation X normalization details and the exact implementation surface for both branch views.
+- Future hybrid evidence should treat any run that still uses an undocumented shared raw view as pre-policy / non-authoritative for normalization claims.
+
 ## Open decisions requiring evidence
 
 ### OD-005

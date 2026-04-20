@@ -351,7 +351,8 @@ Current strategic direction:
 - Subtasks:
   - [x] Identify expected Foundation X input normalization.
     - Validation note (2026-04-20): D-060 now fixes the current-state inventory. The local code proves only that the hybrid path uses a shared raw grayscale `[0,1]` tensor from `src/data/dataset.py`, with `src/models/backbone.py` repeating it to RGB for Foundation X and applying no explicit per-channel mean/std normalization. Any stronger Foundation X normalization claim is unverified from code alone.
-  - [ ] Decide whether the baseline and backbone branches should receive different normalized views.
+  - [x] Decide whether the baseline and backbone branches should receive different normalized views.
+    - Validation note (2026-04-20): D-061 now fixes the directional policy: the hybrid may not keep one shared implicit raw `[0,1]` view as its final normalization contract. The Foundation X branch and the CNN branch must move to explicitly recorded branch-specific views, even though the exact normalization constants and application surface remain open.
   - [ ] Record final policy in `DECISIONS.md`.
 - Success criteria:
   - Hybrid input preprocessing is explicit and defensible.
