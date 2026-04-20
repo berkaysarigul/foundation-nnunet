@@ -1661,6 +1661,38 @@ Impact on experiments / methodology:
 - The next `P1.11` blocker narrows to the exact contract: choose the Foundation X normalization details and the exact implementation surface for both branch views.
 - Future hybrid evidence should treat any run that still uses an undocumented shared raw view as pre-policy / non-authoritative for normalization claims.
 
+## 2026-04-20 / D-062
+
+Decision:
+- The authoritative hybrid normalization contract is now fixed as a two-view, model-side policy:
+  - the CNN branch keeps the dataset-emitted grayscale tensor scaled to raw `[0, 1]`
+  - the Foundation X branch starts from that same raw grayscale tensor, repeats it to RGB, and then applies explicit ImageNet channel-wise normalization with:
+    - mean = `[0.485, 0.456, 0.406]`
+    - std = `[0.229, 0.224, 0.225]`
+- The implementation surface is also fixed:
+  - `src/data/dataset.py` remains model-agnostic and emits only the shared grayscale `[0, 1]` tensor
+  - branch-specific view creation belongs to the hybrid model path, not the dataset or trainer
+  - the Foundation X branch-specific transform must live adjacent to the existing grayscale-to-RGB adaptation in `src/models/backbone.py`
+  - the CNN branch keeps consuming the raw grayscale tensor directly through `src/models/hybrid.py`
+- Future authoritative hybrid configs and run metadata must record both views explicitly rather than describing normalization informally.
+
+Reason:
+- D-060 proved that the current dataset path already emits a single grayscale `[0, 1]` tensor and that the hybrid path today only repeats that tensor to RGB for Foundation X.
+- D-061 already ruled out keeping one shared implicit raw view as the final policy.
+- The dataset is shared across non-hybrid paths; pushing Foundation-X-specific normalization into `src/data/dataset.py` would silently alter unrelated models and blur branch responsibilities.
+- The local Foundation X branch is instantiated from a timm Swin-B feature extractor, and no stronger checkpoint-specific normalization contract is encoded in the repo. Under that constraint, explicit ImageNet normalization is the most defensible recorded contract for the pretrained RGB branch.
+- Keeping the CNN branch on raw grayscale `[0, 1]` preserves the current U-Net-side input semantics instead of forcing the segmentation branch to inherit a normalization choice made only for the pretrained Foundation X encoder.
+
+Alternatives considered:
+- Normalize both branches identically with the same ImageNet RGB statistics.
+- Move all branch normalization into `src/data/dataset.py`.
+- Keep the exact constants undocumented and defer the choice until after another hybrid run.
+
+Impact on experiments / methodology:
+- `P1.11` is now fully defined: both the branch split and the exact normalization contract are fixed in repo memory.
+- Any future hybrid run that does not implement this exact two-view contract in code and metadata should be treated as pre-policy / non-authoritative for normalization claims.
+- The current critical path no longer blocks on hybrid normalization policy design; the next main-path blocker returns to publication-grade repeated-split evaluation work.
+
 ## Open decisions requiring evidence
 
 ### OD-005

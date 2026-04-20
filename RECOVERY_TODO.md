@@ -344,7 +344,7 @@ Current strategic direction:
   - Hybrid scale alignment checklist.
 
 ### P1.11 Define hybrid branch normalization policy
-- Status: [ ]
+- Status: [x]
 - Dependencies: P1.8
 - Affected files/modules: `src/data/dataset.py`, `src/models/backbone.py`, hybrid input path
 - Why it matters: repeating grayscale `[0,1]` into RGB may not match Foundation X expectations.
@@ -353,7 +353,8 @@ Current strategic direction:
     - Validation note (2026-04-20): D-060 now fixes the current-state inventory. The local code proves only that the hybrid path uses a shared raw grayscale `[0,1]` tensor from `src/data/dataset.py`, with `src/models/backbone.py` repeating it to RGB for Foundation X and applying no explicit per-channel mean/std normalization. Any stronger Foundation X normalization claim is unverified from code alone.
   - [x] Decide whether the baseline and backbone branches should receive different normalized views.
     - Validation note (2026-04-20): D-061 now fixes the directional policy: the hybrid may not keep one shared implicit raw `[0,1]` view as its final normalization contract. The Foundation X branch and the CNN branch must move to explicitly recorded branch-specific views, even though the exact normalization constants and application surface remain open.
-  - [ ] Record final policy in `DECISIONS.md`.
+  - [x] Record final policy in `DECISIONS.md`.
+    - Validation note (2026-04-20): D-062 now fixes the final authoritative contract. `src/data/dataset.py` remains model-agnostic and emits grayscale `[0,1]`; the CNN branch keeps that raw grayscale view; the Foundation X branch owns the branch-specific RGB repeat plus explicit ImageNet mean/std normalization inside the hybrid model path, with both views required in config/run metadata.
 - Success criteria:
   - Hybrid input preprocessing is explicit and defensible.
 - Validation needed before close:
@@ -414,5 +415,5 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P1.11 Define hybrid branch normalization policy
-2. P2.1 Publication-grade repeated-split evaluation upgrade
+1. P2.1 Publication-grade repeated-split evaluation upgrade
+2. Future hybrid runs must implement the D-062 branch-specific normalization contract before being treated as authoritative

@@ -547,6 +547,11 @@ How to check it:
 - Confirm directional normalization policy before accepting any future hybrid run:
   - one shared implicit raw `[0,1]` view is no longer acceptable as the final hybrid contract
   - Foundation X and CNN branches must move to explicitly recorded branch-specific views
+- Confirm the final D-062 branch-specific normalization contract before accepting any authoritative hybrid claim:
+  - `src/data/dataset.py` still emits the shared grayscale `[0,1]` tensor only
+  - the CNN branch consumes that raw grayscale view directly
+  - the Foundation X branch applies grayscale-to-RGB repetition plus explicit ImageNet mean/std normalization inside the hybrid model path
+  - config and run metadata record both branch views explicitly
 - Confirm D-050 semantics are respected before accepting any frozen/unfrozen claim:
   - frozen mode means no gradient path through Foundation X and explicit frozen parameters
   - unfrozen mode means no unconditional `torch.no_grad()` remains in `src/models/hybrid.py` or `src/models/backbone.py`
