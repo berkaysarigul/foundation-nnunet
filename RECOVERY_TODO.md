@@ -349,7 +349,8 @@ Current strategic direction:
 - Affected files/modules: `src/data/dataset.py`, `src/models/backbone.py`, hybrid input path
 - Why it matters: repeating grayscale `[0,1]` into RGB may not match Foundation X expectations.
 - Subtasks:
-  - [ ] Identify expected Foundation X input normalization.
+  - [x] Identify expected Foundation X input normalization.
+    - Validation note (2026-04-20): D-060 now fixes the current-state inventory. The local code proves only that the hybrid path uses a shared raw grayscale `[0,1]` tensor from `src/data/dataset.py`, with `src/models/backbone.py` repeating it to RGB for Foundation X and applying no explicit per-channel mean/std normalization. Any stronger Foundation X normalization claim is unverified from code alone.
   - [ ] Decide whether the baseline and backbone branches should receive different normalized views.
   - [ ] Record final policy in `DECISIONS.md`.
 - Success criteria:

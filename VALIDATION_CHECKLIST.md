@@ -540,6 +540,10 @@ How to check it:
   - frozen/unfrozen backbone gradient behavior is validated
   - fusion-stage shapes are asserted/documented at the active input size
   - branch-normalization policy is explicit in config and run metadata
+- Confirm current-state normalization inventory before accepting any `P1.11` policy claim:
+  - `src/data/dataset.py` emits grayscale `[0,1]`
+  - `src/models/backbone.py` only repeats to RGB for Foundation X
+  - no explicit per-channel mean/std normalization is currently applied in the hybrid path
 - Confirm D-050 semantics are respected before accepting any frozen/unfrozen claim:
   - frozen mode means no gradient path through Foundation X and explicit frozen parameters
   - unfrozen mode means no unconditional `torch.no_grad()` remains in `src/models/hybrid.py` or `src/models/backbone.py`

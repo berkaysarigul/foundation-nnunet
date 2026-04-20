@@ -1610,6 +1610,33 @@ Impact on experiments / methodology:
 - The next critical blocker moves to `P1.11`, which decides the branch-normalization policy for the hybrid input path.
 - Future hybrid training attempts should use this refactored path as the only acceptable starting point; the old D-054 ladder is now historical context only.
 
+## 2026-04-20 / D-060
+
+Decision:
+- The current codebase does **not** encode a trusted external mean/std normalization contract for Foundation X.
+- The only code-proven current effective hybrid input contract is:
+  - `src/data/dataset.py` emits grayscale tensors scaled to `[0, 1]`
+  - `src/models/backbone.py::FoundationXBackbone.forward()` repeats that grayscale tensor to 3 channels
+  - no per-channel mean/std normalization is applied before the Foundation X Swin-B backbone
+  - the CNN branch in `src/models/hybrid.py` receives the same underlying grayscale `[0, 1]` tensor, not a separately normalized view
+- Therefore any claim that Foundation X is *already* receiving ImageNet-style or checkpoint-specific normalization is unsupported by the local code and must be treated as unverified.
+- Until a later explicit `P1.11` decision changes behavior, the current hybrid path should be described as using a shared raw `[0, 1]` input view with grayscale-to-RGB repetition on the Foundation X branch only.
+
+Reason:
+- `src/data/dataset.py` ends with `image.astype(np.float32) / 255.0` and returns a single-channel tensor.
+- `src/models/backbone.py` only performs `x.repeat(1, 3, 1, 1)` before sending data into the Swin-B backbone.
+- No config field, transform, or model-side helper in the current repo applies explicit channel-wise normalization for either Foundation X or the hybrid CNN branch.
+
+Alternatives considered:
+- Assume Foundation X should already be using ImageNet mean/std and record that as current behavior.
+- Assume the checkpoint implies a hidden normalization contract even though the local code never applies one.
+- Treat the ResNet34 baseline path as proof of the hybrid normalization policy.
+
+Impact on experiments / methodology:
+- `P1.11` now has a fixed current-state inventory: branch normalization is currently implicit and shared at the raw `[0, 1]` level, not explicitly matched to pretrained backbone expectations.
+- The next `P1.11` blocker narrows to policy: decide whether the hybrid should keep one shared raw view or introduce branch-specific normalized views for Foundation X and the CNN path.
+- Future hybrid evidence reviews must not claim normalization correctness from code unless a later explicit decision and code change make that true.
+
 ## Open decisions requiring evidence
 
 ### OD-005
