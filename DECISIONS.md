@@ -1552,6 +1552,33 @@ Impact on experiments / methodology:
 - The next `P1.10` blocker narrows to enforcement: add explicit shape assertions and implementation checks so the eventual redesign proves `fx[0]->e3`, `fx[1]->e4`, `fx[2]->H/16`, and `fx[3]->H/32->H/16 context merge` exactly.
 - Future redesign work should treat direct `fx[3]` reuse in `e4` or decoder skips as off-protocol unless a later explicit decision reopens that choice.
 
+## 2026-04-20 / D-058
+
+Decision:
+- `src/models/hybrid.py::assert_corrected_hybrid_scale_contract()` is now the canonical in-code assertion helper for the corrected `P1.10` fusion contract.
+- The helper enforces:
+  - `fx[0]` spatially matches `e3`
+  - `fx[1]` spatially matches `e4`
+  - `fx[2]` spatially matches the `H/16` bottleneck/context branch
+  - `fx[3]` spatially matches the dedicated `H/32` context head
+  - `H/32` reconnects to `H/16` through exactly one `2x` transition
+  - all participating tensors share the same batch dimension
+- `tests/test_hybrid_scale_contract.py` is now the canonical regression harness for this helper and covers both valid (`256`, `512`) and invalid shape layouts.
+
+Reason:
+- D-055 through D-057 fixed the corrected mapping, deeper-head requirement, and deepest-feature usage rule, but those decisions still needed an executable assertion surface.
+- A dedicated helper lets future redesign work fail fast on scale drift without forcing the still-legacy active forward path to pretend it already satisfies the corrected contract.
+
+Alternatives considered:
+- Wait to add assertions until after the full hybrid redesign lands.
+- Encode the contract only in markdown/recovery files without an executable test harness.
+- Attach the assertions directly to the current forward path even though that path still implements the old D-054 mapping.
+
+Impact on experiments / methodology:
+- `P1.10` now has executable shape guards for the corrected design contract.
+- The next `P1.10` blocker narrows to code implementation: refactor the active hybrid forward path so it actually satisfies the D-055/D-056/D-057 contract under these assertions.
+- Future redesign code should call or mirror this helper rather than re-inventing undocumented shape checks.
+
 ## Open decisions requiring evidence
 
 ### OD-005

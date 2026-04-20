@@ -40,6 +40,76 @@ class FusionBlock(nn.Module):
         return self.conv(torch.cat([fx_feat, unet_feat], dim=1))
 
 
+def _shape4(name: str, tensor_or_shape) -> tuple[int, int, int, int]:
+    """Normalize a tensor or shape-like object to a 4D shape tuple."""
+    shape = tuple(tensor_or_shape.shape if hasattr(tensor_or_shape, "shape") else tensor_or_shape)
+    if len(shape) != 4:
+        raise AssertionError(f"{name} must be 4D, got shape={shape}")
+    return shape  # type: ignore[return-value]
+
+
+def assert_corrected_hybrid_scale_contract(
+    *,
+    fx0,
+    fx1,
+    fx2,
+    fx3,
+    e3,
+    e4,
+    h16_context,
+    h32_context,
+) -> None:
+    """
+    Validate the corrected P1.10 scale contract fixed by D-055/D-056/D-057.
+
+    Expected spatial alignment:
+      - fx[0] <-> e3 at H/4
+      - fx[1] <-> e4 at H/8
+      - fx[2] <-> H/16 bottleneck/context
+      - fx[3] <-> dedicated H/32 context head
+      - H/32 context reconnects to H/16 through exactly one 2x transition
+    """
+
+    shapes = {
+        "fx[0]": _shape4("fx[0]", fx0),
+        "fx[1]": _shape4("fx[1]", fx1),
+        "fx[2]": _shape4("fx[2]", fx2),
+        "fx[3]": _shape4("fx[3]", fx3),
+        "e3": _shape4("e3", e3),
+        "e4": _shape4("e4", e4),
+        "h16_context": _shape4("h16_context", h16_context),
+        "h32_context": _shape4("h32_context", h32_context),
+    }
+
+    batch_size = shapes["fx[0]"][0]
+    for name, shape in shapes.items():
+        if shape[0] != batch_size:
+            raise AssertionError(
+                f"Batch mismatch for {name}: expected batch={batch_size}, got shape={shape}"
+            )
+
+    def require_same_spatial(left_name: str, right_name: str) -> None:
+        left = shapes[left_name]
+        right = shapes[right_name]
+        if left[2:] != right[2:]:
+            raise AssertionError(
+                f"Spatial mismatch: {left_name} shape={left} must match {right_name} shape={right}"
+            )
+
+    require_same_spatial("fx[0]", "e3")
+    require_same_spatial("fx[1]", "e4")
+    require_same_spatial("fx[2]", "h16_context")
+    require_same_spatial("fx[3]", "h32_context")
+
+    h16 = shapes["h16_context"]
+    h32 = shapes["h32_context"]
+    if h16[2] != h32[2] * 2 or h16[3] != h32[3] * 2:
+        raise AssertionError(
+            "Corrected deepest-context reconnect must be exactly one H/32 -> H/16 2x transition: "
+            f"h32_context shape={h32}, h16_context shape={h16}"
+        )
+
+
 class HybridFoundationUNet(nn.Module):
     def __init__(
         self,

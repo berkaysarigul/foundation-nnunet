@@ -334,7 +334,9 @@ Current strategic direction:
     - Validation note (2026-04-20): D-056 now fixes this answer as `yes` for the current redesign path. The baseline U-Net bottoms out at `H/16`, while D-055 reserves `fx[3]` for a dedicated `H/32` slot. Therefore any corrected hybrid that keeps the four-stage Foundation X hierarchy must add an explicit deeper `H/32` context head rather than reusing `e4` or the current bottleneck by resize-only adaptation.
   - [x] Decide how the deepest Foundation X feature is used.
     - Validation note (2026-04-20): D-057 now fixes `fx[3]` as a pure deeper-context input. It enters only through a dedicated `H/32` context head, stays at native `H/32` for local processing, then makes exactly one learned `2x` transition to `H/16` and reconnects only through the `fx[2]`-aligned `H/16` context branch. Direct reuse of `fx[3]` in `e4`, decoder skips, or shallow encoder fusion is now off-protocol.
-  - [ ] Add explicit shape assertions for all fused stages.
+  - [x] Add explicit shape assertions for all fused stages.
+    - Validation note (2026-04-20): D-058 now adds `assert_corrected_hybrid_scale_contract()` in `src/models/hybrid.py` plus `tests/test_hybrid_scale_contract.py`. The helper enforces `fx[0]->e3`, `fx[1]->e4`, `fx[2]->H/16`, `fx[3]->H/32`, and exactly one `H/32 -> H/16` reconnect step while rejecting batch or spatial drift.
+  - [ ] Refactor the active hybrid forward path to satisfy the corrected D-055/D-056/D-057 shape contract.
 - Success criteria:
   - Fusion is scale-aligned by design and validated with shape checks.
 - Validation needed before close:
