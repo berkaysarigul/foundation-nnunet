@@ -385,6 +385,11 @@ How to check it:
   - `fx[2]->H/16 bottleneck/context`
   - `fx[3]->dedicated H/32 context slot`
   - no corrected redesign fuses Foundation X directly into `e1` or `e2`
+- Confirm the deeper-context requirement matches D-056:
+  - baseline U-Net bottoms out at `H/16`
+  - there is no natural `H/32` slot in the current architecture
+  - a corrected four-stage hybrid redesign therefore adds an explicit `H/32` context head
+  - resize-only reuse of `e4` or the current bottleneck for `fx[3]` is off-protocol
 
 Failure symptoms:
 - Large corrective upsampling into shallow encoder stages, missing bottleneck use of deep features, or undocumented stage remapping.

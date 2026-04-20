@@ -330,7 +330,8 @@ Current strategic direction:
   - [x] Define target stage mapping for 256 and 512 inputs.
     - Validation note (2026-04-20): D-054 now fixes the exact current-state inventory before redesign. The active code maps Foundation X `H/4,H/8,H/16,H/32` stages to U-Net `H,H/2,H/4,H/8` encoder stages (`fx[0]->e1`, `fx[1]->e2`, `fx[2]->e3`, `fx[3]->e4`), so every fusion currently requires a `4x` upsample into a shallower stage. The deepest Foundation X feature is not used at a natural `H/32` context slot; it is upsampled to `H/8` and only then pooled back to `H/16` before the bottleneck.
     - Validation note (2026-04-20): D-055 now fixes the corrected target mapping at the relative-scale level for both accepted input sizes. The intended alignments are `fx[0]->e3`, `fx[1]->e4`, `fx[2]->bottleneck/context(H/16)`, and `fx[3]->dedicated H/32 context slot`, which means no corrected redesign may fuse Foundation X directly into `e1` or `e2`.
-  - [ ] Decide whether the model needs a deeper encoder/bottleneck/context head.
+  - [x] Decide whether the model needs a deeper encoder/bottleneck/context head.
+    - Validation note (2026-04-20): D-056 now fixes this answer as `yes` for the current redesign path. The baseline U-Net bottoms out at `H/16`, while D-055 reserves `fx[3]` for a dedicated `H/32` slot. Therefore any corrected hybrid that keeps the four-stage Foundation X hierarchy must add an explicit deeper `H/32` context head rather than reusing `e4` or the current bottleneck by resize-only adaptation.
   - [ ] Decide how the deepest Foundation X feature is used.
   - [ ] Add explicit shape assertions for all fused stages.
 - Success criteria:

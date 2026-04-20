@@ -1506,6 +1506,29 @@ Impact on experiments / methodology:
 - The next `P1.10` blocker narrows to architecture: decide whether the model needs an explicit deeper `H/32` context head and how `fx[3]` should enter that path.
 - Future redesign work should treat `e1/e2` fusion as off-protocol unless a later explicit decision reopens that choice.
 
+## 2026-04-20 / D-056
+
+Decision:
+- If the hybrid path is kept, the redesign now requires an explicit deeper `H/32` context head.
+- The current U-Net path only exposes encoder skips at `H,H/2,H/4,H/8` plus a bottleneck at `H/16`; it does not contain a natural `H/32` slot.
+- Therefore the deepest Foundation X stage `fx[3]` (`H/32`) may not be forced into `e4` (`H/8`) or directly into the existing bottleneck (`H/16`) by corrective resize alone under the current redesign path.
+- The dedicated `H/32` slot reserved by D-055 is now interpreted as a real architectural context head, not a naming placeholder.
+
+Reason:
+- D-055 already fixed the corrected relative-scale mapping and reserved `fx[3]` for a dedicated `H/32` slot.
+- The baseline U-Net implementation confirms that no such slot exists today: the network bottoms out at `H/16`.
+- Without an explicit deeper context head, the redesign would either discard the deepest Foundation X feature or immediately reintroduce the same scale-mismatch behavior that D-054 and D-055 were meant to remove.
+
+Alternatives considered:
+- Reuse `e4` (`H/8`) as the deepest fusion site and accept large upsampling of `fx[3]`.
+- Inject `fx[3]` straight into the existing `H/16` bottleneck by resize-only adaptation.
+- Drop `fx[3]` entirely and keep only `fx[0:3]` in the redesign path.
+
+Impact on experiments / methodology:
+- `P1.10` now has a fixed architectural requirement: any corrected hybrid redesign must include an explicit `H/32` context head if it keeps the four-stage Foundation X hierarchy.
+- The next `P1.10` blocker narrows to implementation detail: decide exactly how `fx[3]` enters that new `H/32` context head and how that head reconnects to the `H/16` bottleneck path.
+- Future redesign work should treat resize-only reuse of `e4` or the current bottleneck for `fx[3]` as off-protocol unless a later explicit decision reopens that choice.
+
 ## Open decisions requiring evidence
 
 ### OD-005
