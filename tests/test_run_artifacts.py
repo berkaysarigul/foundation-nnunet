@@ -17,6 +17,7 @@ from src.training.run_artifacts import (
     PAIRED_DELTA_CSV_COLUMNS,
     SPLIT_LEVEL_CSV_COLUMNS,
     build_best_checkpoint_metadata,
+    build_final_repeated_split_summary_payload,
     build_paired_delta_records,
     build_split_level_records_from_authoritative_runs,
     build_repeated_split_manifest,
@@ -29,6 +30,7 @@ from src.training.run_artifacts import (
     resolve_initial_checkpoint_reference,
     write_config_snapshot,
     write_evaluation_csv,
+    write_final_repeated_split_summary,
     write_history_csv,
     write_paired_delta_csv,
     write_split_level_csv,
@@ -479,6 +481,215 @@ class TestRunArtifacts(unittest.TestCase):
                 list(PAIRED_DELTA_CSV_COLUMNS),
             )
             self.assertEqual(df["comparison_name"].tolist(), ["baseline_vs_hybrid"])
+
+    def test_build_final_repeated_split_summary_payload_reports_means_cis_and_counts(self) -> None:
+        split_manifest = {
+            "study_id": "study_alpha",
+            "dataset_fingerprint": "dataset-fp",
+            "base_split_fingerprint": "trusted-single-split-fp",
+            "split_policy": "repeated_stratified_train_val_test",
+            "selection_metric": "val_dice_pos_mean",
+            "split_instances": [
+                {"split_instance_id": "split_a"},
+                {"split_instance_id": "split_b"},
+            ],
+        }
+        split_level_records = [
+            {
+                "study_id": "study_alpha",
+                "split_instance_id": "split_a",
+                "split_seed": 100,
+                "model_name": "baseline",
+                "model_type": "pretrained_resnet34_unet",
+                "run_id": "baseline_split_a",
+                "run_dir": "/tmp/baseline_split_a",
+                "dataset_fingerprint": "dataset-fp",
+                "base_split_fingerprint": "trusted-single-split-fp",
+                "study_split_fingerprint": "study-fp-a",
+                "run_split_fingerprint": "run-fp-a",
+                "selection_metric": "val_dice_pos_mean",
+                "selected_threshold": 0.5,
+                "selected_postprocess": "none",
+                "selection_state_path": "/tmp/baseline_split_a/selection/selection_state.yaml",
+                "checkpoint_path": "/tmp/baseline_split_a/checkpoints/best_checkpoint.pth",
+                "train_mask_variant": "dilated_masks",
+                "eval_mask_variant": "original_masks",
+                "test_dice_mean": 0.40,
+                "test_dice_pos_mean": 0.50,
+                "test_iou_mean": 0.30,
+                "test_iou_pos_mean": 0.35,
+            },
+            {
+                "study_id": "study_alpha",
+                "split_instance_id": "split_b",
+                "split_seed": 101,
+                "model_name": "baseline",
+                "model_type": "pretrained_resnet34_unet",
+                "run_id": "baseline_split_b",
+                "run_dir": "/tmp/baseline_split_b",
+                "dataset_fingerprint": "dataset-fp",
+                "base_split_fingerprint": "trusted-single-split-fp",
+                "study_split_fingerprint": "study-fp-b",
+                "run_split_fingerprint": "run-fp-b",
+                "selection_metric": "val_dice_pos_mean",
+                "selected_threshold": 0.6,
+                "selected_postprocess": "none",
+                "selection_state_path": "/tmp/baseline_split_b/selection/selection_state.yaml",
+                "checkpoint_path": "/tmp/baseline_split_b/checkpoints/best_checkpoint.pth",
+                "train_mask_variant": "dilated_masks",
+                "eval_mask_variant": "original_masks",
+                "test_dice_mean": 0.42,
+                "test_dice_pos_mean": 0.60,
+                "test_iou_mean": 0.32,
+                "test_iou_pos_mean": 0.40,
+            },
+            {
+                "study_id": "study_alpha",
+                "split_instance_id": "split_a",
+                "split_seed": 100,
+                "model_name": "hybrid",
+                "model_type": "hybrid",
+                "run_id": "hybrid_split_a",
+                "run_dir": "/tmp/hybrid_split_a",
+                "dataset_fingerprint": "dataset-fp",
+                "base_split_fingerprint": "trusted-single-split-fp",
+                "study_split_fingerprint": "study-fp-a",
+                "run_split_fingerprint": "run-fp-a",
+                "selection_metric": "val_dice_pos_mean",
+                "selected_threshold": 0.55,
+                "selected_postprocess": "none",
+                "selection_state_path": "/tmp/hybrid_split_a/selection/selection_state.yaml",
+                "checkpoint_path": "/tmp/hybrid_split_a/checkpoints/best_checkpoint.pth",
+                "train_mask_variant": "dilated_masks",
+                "eval_mask_variant": "original_masks",
+                "test_dice_mean": 0.43,
+                "test_dice_pos_mean": 0.53,
+                "test_iou_mean": 0.33,
+                "test_iou_pos_mean": 0.39,
+            },
+            {
+                "study_id": "study_alpha",
+                "split_instance_id": "split_b",
+                "split_seed": 101,
+                "model_name": "hybrid",
+                "model_type": "hybrid",
+                "run_id": "hybrid_split_b",
+                "run_dir": "/tmp/hybrid_split_b",
+                "dataset_fingerprint": "dataset-fp",
+                "base_split_fingerprint": "trusted-single-split-fp",
+                "study_split_fingerprint": "study-fp-b",
+                "run_split_fingerprint": "run-fp-b",
+                "selection_metric": "val_dice_pos_mean",
+                "selected_threshold": 0.65,
+                "selected_postprocess": "none",
+                "selection_state_path": "/tmp/hybrid_split_b/selection/selection_state.yaml",
+                "checkpoint_path": "/tmp/hybrid_split_b/checkpoints/best_checkpoint.pth",
+                "train_mask_variant": "dilated_masks",
+                "eval_mask_variant": "original_masks",
+                "test_dice_mean": 0.47,
+                "test_dice_pos_mean": 0.67,
+                "test_iou_mean": 0.37,
+                "test_iou_pos_mean": 0.45,
+            },
+        ]
+        paired_delta_records = build_paired_delta_records(
+            split_level_records=split_level_records,
+            comparison_name="baseline_vs_hybrid",
+            reference_model="baseline",
+            candidate_model="hybrid",
+        )
+
+        payload = build_final_repeated_split_summary_payload(
+            split_manifest=split_manifest,
+            split_level_records=split_level_records,
+            paired_delta_records=paired_delta_records,
+            bootstrap_samples=2000,
+            bootstrap_seed=7,
+        )
+
+        self.assertEqual(payload["study_id"], "study_alpha")
+        self.assertEqual(payload["primary_metric"], "test_dice_pos_mean")
+        self.assertEqual(len(payload["model_summaries"]), 2)
+        self.assertEqual(len(payload["paired_comparisons"]), 1)
+
+        baseline_summary = next(
+            item for item in payload["model_summaries"] if item["model_name"] == "baseline"
+        )
+        self.assertAlmostEqual(baseline_summary["mean"], 0.55)
+        self.assertEqual(baseline_summary["contributing_split_count"], 2)
+        self.assertEqual(
+            baseline_summary["contributing_split_instance_ids"],
+            ["split_a", "split_b"],
+        )
+        self.assertLessEqual(baseline_summary["ci_lower"], baseline_summary["mean"])
+        self.assertGreaterEqual(baseline_summary["ci_upper"], baseline_summary["mean"])
+
+        comparison_summary = payload["paired_comparisons"][0]
+        self.assertEqual(comparison_summary["comparison_name"], "baseline_vs_hybrid")
+        self.assertEqual(comparison_summary["metric_name"], "test_dice_pos_mean")
+        self.assertAlmostEqual(comparison_summary["mean_delta"], 0.05)
+        self.assertEqual(comparison_summary["contributing_split_count"], 2)
+        self.assertEqual(
+            comparison_summary["contributing_split_instance_ids"],
+            ["split_a", "split_b"],
+        )
+        self.assertLessEqual(comparison_summary["ci_lower"], comparison_summary["mean_delta"])
+        self.assertGreaterEqual(comparison_summary["ci_upper"], comparison_summary["mean_delta"])
+
+    def test_write_final_repeated_split_summary_persists_yaml(self) -> None:
+        split_manifest = {
+            "study_id": "study_alpha",
+            "dataset_fingerprint": "dataset-fp",
+            "base_split_fingerprint": "trusted-single-split-fp",
+            "split_policy": "repeated_stratified_train_val_test",
+            "selection_metric": "val_dice_pos_mean",
+            "split_instances": [
+                {"split_instance_id": "split_a"},
+            ],
+        }
+        split_level_records = [
+            {
+                "study_id": "study_alpha",
+                "split_instance_id": "split_a",
+                "split_seed": 100,
+                "model_name": "baseline",
+                "model_type": "pretrained_resnet34_unet",
+                "run_id": "baseline_split_a",
+                "run_dir": "/tmp/baseline_split_a",
+                "dataset_fingerprint": "dataset-fp",
+                "base_split_fingerprint": "trusted-single-split-fp",
+                "study_split_fingerprint": "study-fp-a",
+                "run_split_fingerprint": "run-fp-a",
+                "selection_metric": "val_dice_pos_mean",
+                "selected_threshold": 0.5,
+                "selected_postprocess": "none",
+                "selection_state_path": "/tmp/baseline_split_a/selection/selection_state.yaml",
+                "checkpoint_path": "/tmp/baseline_split_a/checkpoints/best_checkpoint.pth",
+                "train_mask_variant": "dilated_masks",
+                "eval_mask_variant": "original_masks",
+                "test_dice_mean": 0.40,
+                "test_dice_pos_mean": 0.50,
+                "test_iou_mean": 0.30,
+                "test_iou_pos_mean": 0.35,
+            },
+        ]
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            summary_path = Path(tmp_dir) / "summary" / "final_summary.yaml"
+            payload = write_final_repeated_split_summary(
+                summary_path,
+                split_manifest=split_manifest,
+                split_level_records=split_level_records,
+                paired_delta_records=[],
+                bootstrap_samples=100,
+                bootstrap_seed=11,
+            )
+
+            self.assertTrue(summary_path.exists())
+            written = yaml.safe_load(summary_path.read_text(encoding="utf-8"))
+            self.assertEqual(written["study_id"], "study_alpha")
+            self.assertEqual(written["bootstrap_samples"], 100)
+            self.assertEqual(payload["model_summaries"][0]["contributing_split_count"], 1)
 
     def test_write_helpers_persist_yaml_and_history(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

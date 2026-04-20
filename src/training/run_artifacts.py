@@ -12,6 +12,7 @@ from typing import Any
 
 import pandas as pd
 import yaml
+import numpy as np
 
 from src.data.dataset_manifest import compute_split_fingerprint
 
@@ -741,6 +742,180 @@ def write_paired_delta_csv(path: Path, records: list[dict[str, Any]]) -> pd.Data
     df = build_paired_delta_dataframe(records)
     df.to_csv(path, index=False)
     return df
+
+
+def _bootstrap_percentile_ci(
+    values: list[float],
+    *,
+    ci_level: float,
+    bootstrap_samples: int,
+    bootstrap_seed: int,
+) -> dict[str, float]:
+    if not values:
+        raise ValueError("Bootstrap CI requires at least one value.")
+    if bootstrap_samples <= 0:
+        raise ValueError("bootstrap_samples must be positive.")
+    if not 0 < ci_level < 100:
+        raise ValueError("ci_level must be between 0 and 100.")
+
+    array = np.asarray(values, dtype=np.float64)
+    if not np.isfinite(array).all():
+        raise ValueError("Bootstrap CI values must all be finite.")
+
+    rng = np.random.default_rng(bootstrap_seed)
+    sampled_indices = rng.integers(0, len(array), size=(bootstrap_samples, len(array)))
+    sampled_means = array[sampled_indices].mean(axis=1)
+    alpha = (100.0 - ci_level) / 2.0
+    return {
+        "mean": float(array.mean()),
+        "ci_lower": float(np.percentile(sampled_means, alpha)),
+        "ci_upper": float(np.percentile(sampled_means, 100.0 - alpha)),
+    }
+
+
+def build_final_repeated_split_summary_payload(
+    *,
+    split_manifest: dict[str, Any],
+    split_level_records: list[dict[str, Any]],
+    paired_delta_records: list[dict[str, Any]],
+    primary_metric: str = "test_dice_pos_mean",
+    ci_level: float = 95.0,
+    bootstrap_samples: int = 10000,
+    bootstrap_seed: int = 42,
+) -> dict[str, Any]:
+    split_level_df = build_split_level_dataframe(split_level_records)
+    if primary_metric not in split_level_df.columns:
+        raise ValueError(f"Unknown primary_metric {primary_metric!r} for final repeated-split summary.")
+
+    study_id = str(split_manifest["study_id"])
+    dataset_fingerprint = str(split_manifest["dataset_fingerprint"])
+    base_split_fingerprint = str(split_manifest["base_split_fingerprint"])
+    split_policy = str(split_manifest["split_policy"])
+    selection_metric = str(split_manifest["selection_metric"])
+    manifest_instance_ids = {
+        str(instance["split_instance_id"])
+        for instance in split_manifest["split_instances"]
+    }
+
+    if set(split_level_df["study_id"]) != {study_id}:
+        raise ValueError("split_level_records must all match split_manifest study_id.")
+    if set(split_level_df["dataset_fingerprint"]) != {dataset_fingerprint}:
+        raise ValueError("split_level_records must all match split_manifest dataset_fingerprint.")
+    if set(split_level_df["base_split_fingerprint"]) != {base_split_fingerprint}:
+        raise ValueError("split_level_records must all match split_manifest base_split_fingerprint.")
+    if set(split_level_df["selection_metric"]) != {selection_metric}:
+        raise ValueError("split_level_records must all match split_manifest selection_metric.")
+
+    model_summaries: list[dict[str, Any]] = []
+    for model_name in sorted(split_level_df["model_name"].unique().tolist()):
+        model_df = split_level_df[split_level_df["model_name"] == model_name]
+        split_instance_ids = sorted(model_df["split_instance_id"].astype(str).tolist())
+        if len(split_instance_ids) != len(set(split_instance_ids)):
+            raise ValueError(
+                f"split_level_records contain duplicate split instances for model_name={model_name!r}."
+            )
+        if not set(split_instance_ids).issubset(manifest_instance_ids):
+            raise ValueError(
+                f"split_level_records reference split instances outside the split manifest for model_name={model_name!r}."
+            )
+
+        ci_payload = _bootstrap_percentile_ci(
+            model_df[primary_metric].astype(float).tolist(),
+            ci_level=ci_level,
+            bootstrap_samples=bootstrap_samples,
+            bootstrap_seed=bootstrap_seed,
+        )
+        model_summaries.append(
+            {
+                "model_name": model_name,
+                "model_type": str(model_df.iloc[0]["model_type"]),
+                "metric_name": primary_metric,
+                "mean": ci_payload["mean"],
+                "ci_lower": ci_payload["ci_lower"],
+                "ci_upper": ci_payload["ci_upper"],
+                "contributing_split_count": int(len(split_instance_ids)),
+                "contributing_split_instance_ids": split_instance_ids,
+            }
+        )
+
+    paired_delta_df = build_paired_delta_dataframe(paired_delta_records)
+    paired_comparisons: list[dict[str, Any]] = []
+    if not paired_delta_df.empty:
+        grouped = paired_delta_df.groupby("comparison_name", sort=True)
+        for comparison_name, comparison_df in grouped:
+            metric_names = sorted(comparison_df["metric_name"].astype(str).unique().tolist())
+            if len(metric_names) != 1:
+                raise ValueError(
+                    f"Paired comparison {comparison_name!r} must contain exactly one metric_name."
+                )
+            split_instance_ids = sorted(comparison_df["split_instance_id"].astype(str).tolist())
+            if len(split_instance_ids) != len(set(split_instance_ids)):
+                raise ValueError(
+                    f"Paired comparison {comparison_name!r} contains duplicate split instances."
+                )
+            if not set(split_instance_ids).issubset(manifest_instance_ids):
+                raise ValueError(
+                    f"Paired comparison {comparison_name!r} references split instances outside the split manifest."
+                )
+
+            ci_payload = _bootstrap_percentile_ci(
+                comparison_df["delta"].astype(float).tolist(),
+                ci_level=ci_level,
+                bootstrap_samples=bootstrap_samples,
+                bootstrap_seed=bootstrap_seed,
+            )
+            paired_comparisons.append(
+                {
+                    "comparison_name": str(comparison_name),
+                    "metric_name": metric_names[0],
+                    "reference_model": str(comparison_df.iloc[0]["reference_model"]),
+                    "candidate_model": str(comparison_df.iloc[0]["candidate_model"]),
+                    "mean_delta": ci_payload["mean"],
+                    "ci_lower": ci_payload["ci_lower"],
+                    "ci_upper": ci_payload["ci_upper"],
+                    "contributing_split_count": int(len(split_instance_ids)),
+                    "contributing_split_instance_ids": split_instance_ids,
+                }
+            )
+
+    return {
+        "study_id": study_id,
+        "schema_version": 1,
+        "dataset_fingerprint": dataset_fingerprint,
+        "base_split_fingerprint": base_split_fingerprint,
+        "split_policy": split_policy,
+        "selection_metric": selection_metric,
+        "primary_metric": primary_metric,
+        "ci_level": float(ci_level),
+        "bootstrap_samples": int(bootstrap_samples),
+        "bootstrap_seed": int(bootstrap_seed),
+        "model_summaries": model_summaries,
+        "paired_comparisons": paired_comparisons,
+    }
+
+
+def write_final_repeated_split_summary(
+    path: Path,
+    *,
+    split_manifest: dict[str, Any],
+    split_level_records: list[dict[str, Any]],
+    paired_delta_records: list[dict[str, Any]],
+    primary_metric: str = "test_dice_pos_mean",
+    ci_level: float = 95.0,
+    bootstrap_samples: int = 10000,
+    bootstrap_seed: int = 42,
+) -> dict[str, Any]:
+    payload = build_final_repeated_split_summary_payload(
+        split_manifest=split_manifest,
+        split_level_records=split_level_records,
+        paired_delta_records=paired_delta_records,
+        primary_metric=primary_metric,
+        ci_level=ci_level,
+        bootstrap_samples=bootstrap_samples,
+        bootstrap_seed=bootstrap_seed,
+    )
+    write_yaml(path, payload)
+    return payload
 
 
 def build_run_metadata(

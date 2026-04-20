@@ -1780,6 +1780,59 @@ Impact on experiments / methodology:
 - The next `P2.1` blocker narrows to the remaining final-summary surface: writing the publication-grade summary artifact that consumes split-level rows and paired-delta tables.
 - Any future repeated-split report that skips these helpers and ships only hand-built tables should be treated as non-authoritative for publication-grade evidence.
 
+## 2026-04-20 / D-065
+
+Decision:
+- The final repeated-split summary artifact is now fixed in code.
+- `src/training/run_artifacts.py` now owns:
+  - `_bootstrap_percentile_ci(...)`
+  - `build_final_repeated_split_summary_payload(...)`
+  - `write_final_repeated_split_summary(...)`
+- The canonical `summary/final_summary.yaml` contract is now:
+  - study-level context:
+    - `study_id`
+    - `dataset_fingerprint`
+    - `base_split_fingerprint`
+    - `split_policy`
+    - `selection_metric`
+    - `primary_metric`
+    - `ci_level`
+    - `bootstrap_samples`
+    - `bootstrap_seed`
+  - model summaries:
+    - `model_name`
+    - `model_type`
+    - `metric_name`
+    - arithmetic mean across split-level values
+    - two-sided percentile-bootstrap CI
+    - `contributing_split_count`
+    - `contributing_split_instance_ids`
+  - paired comparison summaries:
+    - `comparison_name`
+    - `metric_name`
+    - `reference_model`
+    - `candidate_model`
+    - mean paired delta
+    - two-sided percentile-bootstrap CI
+    - `contributing_split_count`
+    - `contributing_split_instance_ids`
+- The bootstrap unit is now enforced in code as the split-level value or paired split-level delta, not the image.
+
+Reason:
+- D-045 required a final summary artifact with means, 95% CIs, paired-delta CIs, and contributing split counts, but the repo still lacked the writer that actually produced that artifact.
+- D-044 already fixed split-level bootstrap and paired comparison semantics, so the summary writer needed to encode that same statistical unit explicitly rather than allow notebook-side reinvention.
+- Recording contributing split IDs inside the summary keeps the final headline numbers traceable back to the exact split instances included in each statistic.
+
+Alternatives considered:
+- Leave the final summary to notebooks or manual analysis.
+- Report only means and omit bootstrap CI metadata.
+- Bootstrap images instead of split-level values.
+
+Impact on experiments / methodology:
+- `P2.1` is now fully execution-ready from a methodology-contract perspective: split manifests, split-level tables, paired-delta tables, and final summary artifacts all have executable code paths.
+- The next blocker is no longer methodology design; it is practical orchestration/execution of a repeated-split study that populates the new artifact surfaces with real authoritative runs.
+- Any future repeated-split report that omits `summary/final_summary.yaml` or computes it outside this contract should be treated as non-authoritative for publication-grade evidence.
+
 ## Open decisions requiring evidence
 
 ### OD-005

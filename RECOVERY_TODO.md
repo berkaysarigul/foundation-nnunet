@@ -380,7 +380,7 @@ Current strategic direction:
   - Methodology review against `DECISIONS.md`.
 
 ### P2.1 Prepare repeated split / cross-validation upgrade path
-- Status: [~]
+- Status: [x]
 - Dependencies: P1.6, optionally P1.8 if hybrid is kept
 - Affected files/modules: evaluation pipeline, experiment orchestration, result aggregation
 - Why it matters: single-split results are fragile for publication.
@@ -395,7 +395,8 @@ Current strategic direction:
     - Validation note (2026-04-20): D-063 now fixes the first executable orchestration contract for repeated-split studies. `src/training/run_artifacts.py` now exposes a canonical study package layout (`metadata/split_manifest.yaml`, `aggregations/split_level_metrics.csv`, `comparisons/<name>_paired_deltas.csv`, `summary/final_summary.yaml`) plus a split-manifest builder that records exact train/val/test IDs, split seeds, dataset/split fingerprints, and per-instance split fingerprints while rejecting subset overlap. `py -3 -m unittest tests.test_run_artifacts -v`, `rg -n "D-063|split_manifest|paired_deltas|P2\\.1" ...`, and `git diff` were reviewed for consistency.
   - [x] Add split-level aggregation / paired-delta writers that consume the canonical split manifest and authoritative per-split run artifacts.
     - Validation note (2026-04-20): D-064 now fixes the machine-readable aggregation surface in code. `src/training/run_artifacts.py` can now build `split_level_metrics.csv` rows directly from the canonical split manifest plus authoritative per-split run packages, and can derive paired-delta rows only over shared split instances. `py -3 -m unittest tests.test_run_artifacts -v`, `rg -n "D-064|split_level_metrics|paired_delta|P2\\.1" ...`, and `git diff` were reviewed for consistency.
-  - [ ] Add the final repeated-split summary writer that consumes split-level rows and paired-delta tables.
+  - [x] Add the final repeated-split summary writer that consumes split-level rows and paired-delta tables.
+    - Validation note (2026-04-20): D-065 now fixes `summary/final_summary.yaml` generation in code. The final summary payload reports split-level means, split-bootstrap percentile CIs, paired-delta means/CIs, and contributing split counts/IDs directly from canonical split-level rows and paired-delta tables. `py -3 -m unittest tests.test_run_artifacts -v`, `rg -n "D-065|final_summary|bootstrap|P2\\.1" ...`, and `git diff` were reviewed for consistency.
 - Success criteria:
   - Publication-grade evaluation plan is specified and ready to execute.
 - Validation needed before close:
@@ -420,5 +421,5 @@ Current strategic direction:
 
 ## Top priority queue
 
-1. P2.1 Publication-grade repeated-split evaluation upgrade
+1. Execute a real repeated-split study using the completed D-063 / D-064 / D-065 artifact surfaces
 2. Future hybrid runs must implement the D-062 branch-specific normalization contract before being treated as authoritative

@@ -700,6 +700,11 @@ How to check it:
   - split-level rows carry dataset/split fingerprint context plus threshold and mask-variant context
   - paired-delta rows are built only over shared split instances
   - the default paired metric remains candidate minus reference on held-out `test` positive-only Dice mean
+- Confirm any final summary helper or artifact follows the D-065 contract:
+  - `summary/final_summary.yaml` is written from canonical split-level rows plus paired-delta rows
+  - model summaries report means, split-bootstrap percentile CIs, and contributing split counts / IDs
+  - paired comparison summaries report mean deltas, split-bootstrap percentile CIs, and contributing split counts / IDs
+  - the bootstrap unit is the split-level value or paired split-level delta, not the image
 
 Failure symptoms:
 - Only the final average metrics are retained.
