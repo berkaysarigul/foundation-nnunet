@@ -321,6 +321,85 @@ class TestRunArtifacts(unittest.TestCase):
             self.assertEqual(metadata["splits_path"], str(override_splits_path.resolve()))
             self.assertNotEqual(metadata["split_fingerprint"], "trusted-base-split-fp")
 
+    def test_build_run_metadata_records_hybrid_branch_input_views(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            dataset_root = root / "data" / "processed" / "trusted_v1"
+            dataset_root.mkdir(parents=True)
+            (dataset_root / "dataset_manifest.json").write_text(
+                json.dumps(
+                    {
+                        "dataset_fingerprint": "dataset-fp",
+                        "fingerprints": {"splits": "trusted-base-split-fp"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (dataset_root / "splits.json").write_text(
+                json.dumps(
+                    {
+                        "train": ["img_001"],
+                        "val": ["img_002"],
+                        "test": ["img_003"],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (root / "configs").mkdir()
+            (root / "configs" / "config.yaml").write_text("model:\n  type: hybrid\n", encoding="utf-8")
+            (root / "src").mkdir()
+            (root / "src" / "placeholder.py").write_text("VALUE = 1\n", encoding="utf-8")
+            (root / "requirements.txt").write_text("torch\n", encoding="utf-8")
+
+            cfg = {
+                "model": {"type": "hybrid"},
+                "foundation_x": {
+                    "checkpoint_path": "checkpoints/foundation_x.pth",
+                    "frozen": True,
+                },
+                "data": {
+                    "processed_dir": "data/processed/trusted_v1",
+                    "input_size": 512,
+                    "train_mask_variant": "dilated_masks",
+                    "eval_mask_variant": "original_masks",
+                },
+                "selection": {
+                    "metric": "val_dice_pos_mean",
+                    "postprocess": "none",
+                },
+                "seed": 42,
+            }
+
+            metadata = build_run_metadata(
+                cfg=cfg,
+                config_path="configs/config.yaml",
+                repo_root=root,
+                run_id="run_001",
+                resume_checkpoint_path=None,
+                started_at="2026-04-22T09:00:00Z",
+            )
+
+            self.assertIn("branch_input_views", metadata)
+            branch_input_views = metadata["branch_input_views"]
+            self.assertEqual(branch_input_views["dataset_emitted_view"]["space"], "grayscale")
+            self.assertEqual(branch_input_views["cnn_branch"]["transform"], "identity")
+            self.assertEqual(
+                branch_input_views["foundation_x_branch"]["rgb_adapter"],
+                "repeat_grayscale_to_rgb",
+            )
+            self.assertEqual(
+                branch_input_views["foundation_x_branch"]["normalization"]["type"],
+                "imagenet_mean_std",
+            )
+            self.assertEqual(
+                branch_input_views["foundation_x_branch"]["normalization"]["mean"],
+                [0.485, 0.456, 0.406],
+            )
+            self.assertEqual(
+                branch_input_views["foundation_x_branch"]["normalization"]["std"],
+                [0.229, 0.224, 0.225],
+            )
+
     def test_build_repeated_split_manifest_records_dataset_context_and_sorted_ids(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)

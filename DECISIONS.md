@@ -1963,6 +1963,111 @@ Impact on experiments / methodology:
 - The next practical blocker is no longer orchestration design; it is executing a real repeated-split study on a GPU-capable environment and filling the new study-level artifact package with authoritative runs.
 - Any future repeated-split study that lacks the D-069 finalization outputs should be treated as incomplete / non-authoritative at the study level even if per-split runs exist.
 
+## 2026-04-21 / D-070
+
+Decision:
+- D-062 is now implemented in the living Foundation X code path.
+- `src/models/backbone.py` now owns the canonical branch-specific helpers:
+  - `repeat_grayscale_to_rgb(...)`
+  - `normalize_foundation_x_input(...)`
+  - `FOUNDATION_X_RGB_MEAN`
+  - `FOUNDATION_X_RGB_STD`
+- `FoundationXBackbone.forward()` must now build the Foundation X branch input view by:
+  - starting from the shared grayscale `[0,1]` tensor
+  - repeating it to RGB
+  - applying explicit ImageNet channel-wise normalization
+  - only then calling the timm Swin-B feature extractor
+- The hybrid CNN path remains unchanged and continues to consume the raw grayscale view through `src/models/hybrid.py`.
+- Authoritative hybrid `run_metadata.yaml` must now record the branch-view contract explicitly under `branch_input_views`, including:
+  - the dataset-emitted grayscale `[0,1]` view
+  - the CNN identity view
+  - the Foundation X RGB + ImageNet mean/std view
+- `tests/test_hybrid_gradient_flow.py` is now the canonical targeted regression harness for this living D-062 implementation:
+  - helper-level channel-wise normalization math is checked directly
+  - non-grayscale inputs are rejected
+  - `FoundationXBackbone.forward()` is proven to apply the normalized Foundation X view
+  - the frozen/unfrozen gradient checks from D-053 still pass on the same path
+
+Reason:
+- D-062 had fixed the correct two-view policy in repo memory, but the code path still reflected the older D-060 inventory and only repeated grayscale to RGB without explicit mean/std normalization.
+- Leaving D-062 as a design-only decision would keep future hybrid runs in a fragile state where chat/docs claimed a normalization contract that the live model path did not actually execute.
+- Keeping the transform inside `src/models/backbone.py` preserves the intended branch ownership from D-062 and avoids silently changing non-hybrid dataset consumers.
+
+Alternatives considered:
+- Move the Foundation X normalization into `src/data/dataset.py`.
+- Normalize both branches to the same RGB/ImageNet view.
+- Keep D-062 as a metadata-only contract until a future hybrid training run forced the implementation.
+
+Impact on experiments / methodology:
+- Future hybrid runs no longer fail D-062 at the code-path level just because the Foundation X branch lacks explicit ImageNet normalization.
+- The remaining D-062 gap for authoritative hybrid evidence is now narrower: run metadata records the branch views explicitly, but config snapshots still mirror the raw config file and therefore do not yet expose branch-view fields on their own.
+- Any future hybrid run that bypasses `normalize_foundation_x_input(...)`, changes the Foundation X constants without a new decision, or leaves the branch views unrecorded in metadata should still be treated as pre-contract / non-authoritative.
+
+## 2026-04-22 / D-071
+
+Decision:
+- The first executed repeated-split pretrained baseline pilot is now recorded in repo memory as:
+  - `study_id=resnet34_repeated_split_pilot_v1`
+  - model: `pretrained_resnet34_unet`
+  - split seeds: `42`, `43`, `44`
+  - primary metric: held-out `test_dice_pos_mean`
+- The recorded per-split held-out test results are:
+  - `split_001=0.4911`
+  - `split_002=0.5196`
+  - `split_003=0.5067`
+- The recorded `summary/final_summary.yaml` values are:
+  - mean `0.5057809632887573`
+  - 95% CI `[0.49106974694330024, 0.5196164334743154]`
+  - contributing split count `3`
+  - contributing split IDs `split_001`, `split_002`, `split_003`
+- This pilot is now the first real repeated-split supervised reference study for `pretrained_resnet34_unet`.
+- D-042 is unchanged by this recording:
+  - the current leak-aware Foundation X comparison contract still names the trusted single-run `0.4951` baseline as the wording anchor
+  - D-071 is the repeated-split anchor for repeated-split methodology work unless a later explicit decision rebinds the Foundation X comparison contract
+
+Reason:
+- D-066, D-068, and D-069 had already made repeated-split execution possible in code, but the repo still lacked a recorded real-world study proving the stack worked end-to-end on a GPU environment.
+- The externally executed 3-split pilot closes that execution gap and shows that the pretrained supervised baseline remains stable around `0.506` under split variation rather than relying on only one trusted split.
+- Keeping D-071 distinct from D-042 avoids silently rewriting the already-fixed Foundation X framing/comparison boundary while still preserving the new repeated-split evidence.
+
+Alternatives considered:
+- Wait to record any repeated-split numbers until a larger pretrained study is run.
+- Immediately replace all existing baseline anchors with the pilot mean and CI.
+- Treat the pilot only as chat context and leave it out of repo memory until the artifact package is synced locally.
+
+Impact on experiments / methodology:
+- The repo now has real repeated-split supervised evidence, not just repeated-split orchestration code.
+- The next practical blocker narrows to scope: decide whether this 3-split pilot is the interim repeated-split anchor or whether the pretrained reference study should be expanded before candidate-model comparisons.
+- Future repeated-split candidate comparisons should reuse these split instances or a later explicitly superseding pretrained reference study rather than mixing incompatible reference widths.
+
+## 2026-04-22 / D-072
+
+Decision:
+- `resnet34_repeated_split_pilot_v1` is now accepted as the interim repeated-split supervised anchor.
+- Candidate-model repeated-split comparisons may begin immediately under this rule set:
+  - they must use the exact `split_001`, `split_002`, and `split_003` instances from D-071
+  - they must report paired split-level deltas against the D-071 pretrained reference on those shared split instances
+  - they must be labeled pilot/interim rather than publication-final if no wider pretrained repeated-split reference study has superseded D-071 yet
+- A later 5-split or wider pretrained repeated-split reference study may supersede D-071 under a new explicit decision, but that future widening does not retroactively invalidate the 3-split pilot.
+- D-042 remains unchanged:
+  - the current Foundation X wording/comparison boundary still names the trusted single-run `0.4951` baseline as its anchor
+  - D-072 governs repeated-split engineering comparisons, not the leak-aware wording contract for Foundation X
+
+Reason:
+- D-071 proved that the repeated-split execution stack works end-to-end and that the pretrained baseline is stable enough to anchor immediate engineering comparisons.
+- Blocking all candidate comparisons until a wider pretrained reference study exists would stall progress even though the pilot already supplies shared split instances, machine-readable summary values, and a defensible interim supervised reference.
+- At the same time, treating a 3-split pilot as the final publication-width anchor by default would overstate what the current evidence can support.
+
+Alternatives considered:
+- Require widening to 5 splits before allowing any candidate-model repeated-split comparison.
+- Treat the 3-split pilot as fully final and use it for all future publication claims without caveat.
+- Leave the pilot status informal and decide comparison-by-comparison.
+
+Impact on experiments / methodology:
+- The repo now has a clear immediate path forward: first candidate-model repeated-split comparisons can start on the exact D-071 split set.
+- Publication-final claims can still demand a wider pretrained repeated-split reference study later without blocking present engineering work.
+- Any candidate repeated-split comparison that mixes different split instances, omits paired deltas, or presents the 3-split pilot as an uncaveated final publication anchor should be treated as off-contract.
+
 ## Open decisions requiring evidence
 
 ### OD-005

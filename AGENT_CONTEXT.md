@@ -1,16 +1,16 @@
 # Foundation-nnU-Net Agent Context
 
 Current phase:
-- Post-hybrid-gate reporting and methodology cleanup
+- Hybrid single-split sanity-run prep
 
 Current blocker:
-- The repository now has a trusted regenerated dataset, corrected per-image validation metrics, demonstrated trainer/evaluator parity, a refreshed publication-facing stratified split, an accepted immediate trainer config surface, a complete validation-only threshold-selection path, a chosen pretrained baseline family, a fixed fair comparison protocol, a fixed baseline-gate output package, a concrete pretrained model path in code, trainer-side authoritative run artifact emission, a validated evaluation-side artifact path under the same authoritative run directory, a dedicated authoritative pretrained-run config, a Colab-friendly single entrypoint that chains `train -> select -> test` under one authoritative run directory, a safe `select_test` runner stage for continuing from an existing `best_checkpoint.pth` without reopening training, one completed authoritative pretrained baseline run on GPU/Colab, a fixed `P1.7` crop/ROI gate, a fixed immediate crop-comparison policy, an implemented D-031 train-only ROI crop path in code, one completed authoritative crop comparison run on GPU/Colab, a fixed D-033 defer-by-default hybrid gate, a fixed D-034 hybrid evidence contract, a fixed D-035 Foundation X framing boundary, a fixed D-036 canonical CSV contract for authoritative `history.csv` and `test_metrics.csv`, a fixed D-037 image-ID/subset-tag contract for per-image evaluation outputs, a fixed D-038 metadata-completeness contract for saved thresholds and mask variants, a fixed D-039 decision that removes the mislabeled `hausdorff` path from authoritative reporting, a fixed D-040 methodology role decision that defers Foundation X from the main paper path under the current recovered state, a fixed D-041 operational forbidden-claim list for Foundation X wording, a fixed D-042 baseline-comparison contract for any future leakage-aware Foundation X discussion, a fixed D-043 publication-grade evaluation direction (repeated stratified train/val/test splits), a fixed D-044 split-bootstrap / paired-delta strategy for repeated-split reporting, a fixed D-045 minimum evidence package for final repeated-split reporting, a fixed D-046 rule that downgrades `docs/foundation_nnunet_dev_guide.md` to legacy-only context beneath the recovery-memory files and current code/tests, a fixed D-047 rule that does the same for `CLAUDE.md`, a fixed D-048 rule that does the same for `notebooks/train_colab.ipynb`, a fixed D-049 rule that does the same for `notebooks/train_local.ipynb`, a fixed D-050 contract that makes `foundation_x.frozen` the single source of truth for hybrid gradient semantics, a fixed D-051 inventory that separates the real blockers, a fixed D-052 trainer-side mode-policy rule that stops re-forcing unfrozen backbones into `eval()`, a fixed D-053 code path that removes the remaining unconditional `torch.no_grad()` wrappers while targeted tests prove frozen vs unfrozen Foundation X gradient behavior, a fixed D-054 current-state fusion inventory that shows every Foundation X stage is being upsampled by `4x` into a shallower U-Net stage, a fixed D-055 corrected target mapping that aligns Foundation X scales to `e3`, `e4`, `H/16` bottleneck/context, and a dedicated `H/32` context slot, a fixed D-056 architectural requirement that any corrected four-stage hybrid redesign must add an explicit deeper `H/32` context head, a fixed D-057 deepest-feature usage rule that routes `fx[3]` only through that `H/32` head before a single `H/32 -> H/16` reconnection into the bottleneck/context branch, a fixed D-058 executable shape-contract helper plus regression harness for that corrected hybrid design, a fixed D-059 active hybrid forward path that actually implements the corrected scale-aligned contract, a fixed D-060 current-state normalization inventory that says the hybrid path uses a shared raw grayscale `[0,1]` view with RGB repetition on the Foundation X branch but no explicit mean/std normalization, a fixed D-061 directional normalization policy that forbids keeping that shared raw view as the final hybrid contract, a fixed D-062 final two-view hybrid normalization contract, a fixed D-063 repeated-split study layout plus split-manifest contract, a fixed D-064 split-level aggregation / paired-delta writer contract, a fixed D-065 final repeated-split summary contract, a fixed D-066 study-manifest runner that materializes canonical repeated split instances from the trusted dataset, a fixed D-067 split-override-aware train/eval surface plus effective split fingerprint metadata, a fixed D-068 per-split authoritative pretrained study runner plus execution inventory, and now a fixed D-069 study finalization runner that turns one or more run inventories into split-level tables, optional paired-delta tables, and `summary/final_summary.yaml`. The repo no longer has an open study-orchestration design blocker; the next practical blocker is executing a real repeated-split study on a GPU-capable environment and filling the new study-level package with authoritative runs.
+- The repository now has the repaired hybrid code path, explicit hybrid branch views in living code and `run_metadata.yaml`, an interim repeated-split supervised anchor, and no remaining orchestration-design blocker. The next shortest-path blocker is practical execution: launch the first GPU/Colab hybrid sanity run on the trusted single split before spending more budget on wider candidate comparisons.
 
 Highest-priority open tasks:
-1. Execute a real repeated-split pretrained baseline study on a GPU-capable environment using D-066, D-068, and D-069.
-2. Add candidate-model repeated-split comparisons only after the pretrained repeated-split study package exists.
-3. Keep hybrid work paused unless a future candidate clears D-033 with the full D-034 evidence package on a GPU-capable environment.
-4. Treat any future hybrid run as non-authoritative unless it implements D-062 in code and metadata.
+1. Run the first GPU/Colab hybrid sanity check on the trusted single split with `configs/hybrid_single_split_sanity.yaml` and `scripts/run_hybrid_single_split_sanity.py`.
+2. If the hybrid sanity run is promising, decide whether to widen it to the exact `split_001` / `split_002` / `split_003` pilot instances from `resnet34_repeated_split_pilot_v1`.
+3. Expand the pretrained repeated-split reference study beyond the 3-split pilot before any publication-final claims that need a wider supervised reference anchor.
+4. Treat any future hybrid run as non-authoritative unless it preserves D-070 in code and records the D-062 branch views in config/run metadata.
 
 What is already trusted:
 - The high-level repo structure and module boundaries.
@@ -194,10 +194,10 @@ What is already trusted:
   - `src/models/hybrid.py` no longer uses the old `fx[0]->e1`, `fx[1]->e2`, `fx[2]->e3`, `fx[3]->e4` ladder
   - the live path now uses `fx[0]->e3`, `fx[1]->e4`, `fx[2]->H/16 context`, and `fx[3]->H/32 head -> H/16 reconnect`
   - `tests.test_hybrid_scale_contract`, `tests.test_hybrid_gradient_flow`, and `tests.test_hybrid_backbone_mode_policy` all pass against this refactor
-- D-060 now fixes the current-state normalization inventory:
+- D-060 now captures the pre-implementation normalization inventory:
   - `src/data/dataset.py` emits grayscale tensors scaled to `[0,1]`
-  - `src/models/backbone.py` repeats that tensor to RGB for Foundation X but applies no explicit mean/std normalization
-  - the hybrid CNN branch currently receives the same raw `[0,1]` grayscale view
+  - before D-070, `src/models/backbone.py` repeated that tensor to RGB for Foundation X but applied no explicit mean/std normalization
+  - the hybrid CNN branch stayed on the same raw `[0,1]` grayscale view
 - D-061 now fixes the directional normalization policy:
   - the hybrid may not keep one shared implicit raw `[0,1]` view as its final normalization contract
   - Foundation X and CNN branches must move to explicitly recorded branch-specific views
@@ -206,6 +206,23 @@ What is already trusted:
   - the CNN branch keeps that raw grayscale view
   - the Foundation X branch owns RGB repetition plus explicit ImageNet mean/std normalization inside the hybrid model path
   - authoritative hybrid configs and run metadata must record both branch views explicitly
+- D-070 now implements that contract in the living Foundation X path:
+  - `src/models/backbone.py` now owns `repeat_grayscale_to_rgb(...)` and `normalize_foundation_x_input(...)`
+  - `FoundationXBackbone.forward()` now applies grayscale-to-RGB repetition plus explicit ImageNet mean/std normalization before the timm Swin-B backbone runs
+  - `tests.test_hybrid_gradient_flow` now proves helper-level normalization math, rejects non-grayscale inputs, verifies the forward path applies the normalized Foundation X view, and preserves the frozen/unfrozen gradient semantics from D-053
+  - authoritative `run_metadata.yaml` now records `branch_input_views` explicitly for hybrid runs, including the dataset-emitted grayscale view, the CNN identity view, and the Foundation X RGB + ImageNet mean/std view
+  - `configs/hybrid_single_split_sanity.yaml` now records the same branch views explicitly, so the first shortest-path hybrid sanity run can carry both config-side and run-metadata-side branch-view provenance
+- D-071 now records the first executed repeated-split pretrained baseline pilot from external GPU/Colab study artifacts:
+  - `study_id=resnet34_repeated_split_pilot_v1`
+  - split seeds `42`, `43`, `44`
+  - held-out `test_dice_pos_mean` values: `split_001=0.4911`, `split_002=0.5196`, `split_003=0.5067`
+  - `summary/final_summary.yaml` reports mean `0.5057809632887573` with 95% CI `[0.49106974694330024, 0.5196164334743154]` over `3` contributing splits
+  - this is now the first real repeated-split supervised reference study for `pretrained_resnet34_unet`, but D-042 remains pegged to the trusted single-run `0.4951` anchor for current Foundation X comparison wording until a later explicit decision changes that contract
+- D-072 now fixes how that pilot is used:
+  - `resnet34_repeated_split_pilot_v1` is accepted as the interim repeated-split supervised anchor
+  - candidate-model repeated-split comparisons may start immediately, but only on the exact `split_001` / `split_002` / `split_003` instances from the pilot
+  - those comparisons must be labeled pilot/interim rather than publication-final if no wider pretrained repeated-split reference study has superseded D-071 yet
+  - a later 5-split or wider pretrained reference study may supersede the pilot under a new explicit decision without invalidating the pilot itself
 - D-063 now fixes the first executable repeated-split orchestration contract:
   - repeated-split studies have a canonical package layout with metadata, aggregation, comparison, and summary surfaces
   - split manifests must record exact train/val/test IDs, split seeds, dataset context, and per-instance split fingerprints
@@ -252,6 +269,6 @@ Current strategic direction:
 - Fix trust issues first, then build a strong pretrained CNN baseline, then keep the hybrid deferred unless it clears the recorded D-033 gate with the full D-034 evidence package and stays inside the D-035 claim boundary.
 
 Next 3 actions:
-1. Execute a real repeated-split pretrained baseline study using the completed D-066 / D-068 / D-069 execution surfaces.
-2. Finalize the resulting study package into `split_level_metrics.csv`, optional paired-delta tables, and `summary/final_summary.yaml` with the D-069 runner on GPU-generated authoritative runs.
-3. Keep hybrid work paused until a future candidate justifies reopening under D-033, D-034, D-035, D-040, D-041, D-042, D-043, D-044, and D-045, and implements D-062.
+1. Select and run the first candidate-model repeated-split comparison on the exact `split_001` / `split_002` / `split_003` pilot instances.
+2. Expand the pretrained repeated-split reference study beyond the 3-split pilot before any publication-final claims that need a wider supervised reference anchor.
+3. Keep hybrid work paused until a future candidate justifies reopening under D-033, D-034, D-035, D-040, D-041, D-042, D-043, D-044, and D-045, preserves D-070 in code, and records the D-062 branch views in metadata.

@@ -23,6 +23,9 @@ DEFAULT_CODE_FINGERPRINT_PATTERNS = (
     "requirements.txt",
 )
 
+HYBRID_FOUNDATION_X_RGB_MEAN = (0.485, 0.456, 0.406)
+HYBRID_FOUNDATION_X_RGB_STD = (0.229, 0.224, 0.225)
+
 HISTORY_CSV_COLUMNS = (
     "epoch",
     "train_loss",
@@ -476,6 +479,37 @@ def resolve_initial_checkpoint_reference(cfg: dict[str, Any], *, repo_root: Path
     if model_type == "hybrid":
         return canonicalize_workspace_path(cfg["foundation_x"]["checkpoint_path"], repo_root)
     return "random_init"
+
+
+def resolve_branch_input_views(cfg: dict[str, Any]) -> dict[str, Any] | None:
+    if cfg["model"]["type"] != "hybrid":
+        return None
+
+    return {
+        "dataset_emitted_view": {
+            "space": "grayscale",
+            "value_range": "[0,1]",
+            "owner": "src/data/dataset.py",
+        },
+        "cnn_branch": {
+            "source_view": "dataset_emitted_view",
+            "space": "grayscale",
+            "value_range": "[0,1]",
+            "transform": "identity",
+            "owner": "src/models/hybrid.py",
+        },
+        "foundation_x_branch": {
+            "source_view": "dataset_emitted_view",
+            "space": "rgb",
+            "rgb_adapter": "repeat_grayscale_to_rgb",
+            "normalization": {
+                "type": "imagenet_mean_std",
+                "mean": list(HYBRID_FOUNDATION_X_RGB_MEAN),
+                "std": list(HYBRID_FOUNDATION_X_RGB_STD),
+            },
+            "owner": "src/models/backbone.py",
+        },
+    }
 
 
 def write_yaml(path: Path, payload: dict[str, Any]) -> None:
@@ -950,8 +984,9 @@ def build_run_metadata(
     dataset_manifest = load_dataset_manifest(cfg["data"]["processed_dir"], repo_root=repo_root)
     effective_splits = resolve_effective_splits_context(cfg, repo_root=repo_root)
     code_provenance = resolve_code_provenance(repo_root)
+    branch_input_views = resolve_branch_input_views(cfg)
 
-    return {
+    metadata = {
         "run_id": run_id,
         "started_at": started_at or utc_timestamp(),
         "model_type": cfg["model"]["type"],
@@ -979,6 +1014,9 @@ def build_run_metadata(
         "selected_threshold": None,
         "selected_postprocess": cfg["selection"]["postprocess"],
     }
+    if branch_input_views is not None:
+        metadata["branch_input_views"] = branch_input_views
+    return metadata
 
 
 def build_best_checkpoint_metadata(

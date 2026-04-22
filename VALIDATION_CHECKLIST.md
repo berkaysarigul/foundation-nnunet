@@ -540,13 +540,20 @@ How to check it:
   - frozen/unfrozen backbone gradient behavior is validated
   - fusion-stage shapes are asserted/documented at the active input size
   - branch-normalization policy is explicit in config and run metadata
-- Confirm current-state normalization inventory before accepting any `P1.11` policy claim:
+- Confirm the pre-D-070 normalization inventory before interpreting any historical hybrid run:
   - `src/data/dataset.py` emits grayscale `[0,1]`
-  - `src/models/backbone.py` only repeats to RGB for Foundation X
-  - no explicit per-channel mean/std normalization is currently applied in the hybrid path
+  - before D-070, `src/models/backbone.py` only repeated that tensor to RGB for Foundation X
+  - no explicit per-channel mean/std normalization existed in the pre-D-070 hybrid path
 - Confirm directional normalization policy before accepting any future hybrid run:
   - one shared implicit raw `[0,1]` view is no longer acceptable as the final hybrid contract
   - Foundation X and CNN branches must move to explicitly recorded branch-specific views
+- Confirm the living D-070 implementation before accepting any authoritative hybrid claim:
+  - `src/models/backbone.py` exposes `normalize_foundation_x_input(...)` and uses explicit ImageNet mean/std constants for the Foundation X branch
+  - `FoundationXBackbone.forward()` applies grayscale-to-RGB repetition plus explicit ImageNet mean/std normalization before calling the timm backbone
+  - `py -3 -m unittest tests.test_hybrid_gradient_flow -v` passes, including helper-level normalization math, non-grayscale input rejection, forward-path normalization, and frozen/unfrozen gradient checks
+  - authoritative hybrid `run_metadata.yaml` records `branch_input_views` with the dataset grayscale view, the CNN identity view, and the Foundation X RGB + ImageNet mean/std view
+  - `configs/hybrid_single_split_sanity.yaml` records the same branch views explicitly on the config side
+  - `py -3 -m unittest tests.test_hybrid_single_split_sanity_config tests.test_hybrid_single_split_sanity_runner -v` passes before the first Colab/GPU sanity launch
 - Confirm the final D-062 branch-specific normalization contract before accepting any authoritative hybrid claim:
   - `src/data/dataset.py` still emits the shared grayscale `[0,1]` tensor only
   - the CNN branch consumes that raw grayscale view directly
@@ -721,6 +728,15 @@ How to check it:
   - it writes `aggregations/split_level_metrics.csv` from authoritative per-split run packages rather than copied notebook metrics
   - it writes `comparisons/<comparison_name>_paired_deltas.csv` only from explicit comparison specs formatted as `comparison_name:reference_model:candidate_model`
   - it writes `summary/final_summary.yaml` from the canonical split-level and paired-delta helpers instead of inventing a separate aggregation path
+- Confirm any repo-memory record of a completed repeated-split study copies the exact executed-study values rather than a rounded chat paraphrase:
+  - `study_id`
+  - the per-split primary metric values
+  - the mean / CI / contributing split count and IDs from `summary/final_summary.yaml`
+  - whether the executed study artifact package is local to the workspace or currently external-to-workspace
+- Confirm any use of D-071 as a comparison anchor respects D-072:
+  - the comparison reuses the exact `split_001` / `split_002` / `split_003` instances from `resnet34_repeated_split_pilot_v1`
+  - paired deltas are computed on those shared split instances rather than against an unmatched wider/narrower reference set
+  - write-ups label the result as pilot/interim rather than publication-final if no wider pretrained repeated-split reference study has superseded D-071
 - Confirm any concrete aggregation helper or table writer follows the D-064 contract:
   - split-level rows are sourced from authoritative per-split run artifacts, not manually typed summaries
   - split-level rows carry dataset/split fingerprint context plus threshold and mask-variant context

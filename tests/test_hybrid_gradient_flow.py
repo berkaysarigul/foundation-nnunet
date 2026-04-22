@@ -9,7 +9,12 @@ import torch.nn.functional as F
 if "timm" not in sys.modules:
     sys.modules["timm"] = types.SimpleNamespace(create_model=lambda *args, **kwargs: None)
 
-from src.models.backbone import FoundationXBackbone
+from src.models.backbone import (
+    FOUNDATION_X_RGB_MEAN,
+    FOUNDATION_X_RGB_STD,
+    FoundationXBackbone,
+    normalize_foundation_x_input,
+)
 from src.models.hybrid import HybridFoundationUNet
 
 
@@ -40,7 +45,7 @@ class DummyFoundationXBackbone(torch.nn.Module):
         return self
 
     def forward(self, x: torch.Tensor):
-        x = x.repeat(1, 3, 1, 1)
+        x = normalize_foundation_x_input(x)
         with torch.set_grad_enabled(not self.frozen):
             return [
                 self.proj1(F.avg_pool2d(x, 4)),
@@ -50,6 +55,29 @@ class DummyFoundationXBackbone(torch.nn.Module):
             ]
 
 
+class FoundationXBackboneNormalizationTests(unittest.TestCase):
+    def test_normalize_foundation_x_input_repeats_and_normalizes_per_channel(self):
+        x = torch.tensor([[[[0.0, 1.0]]]], dtype=torch.float32)
+
+        normalized = normalize_foundation_x_input(x)
+
+        self.assertEqual(normalized.shape, (1, 3, 1, 2))
+        for channel_index, (mean, std) in enumerate(
+            zip(FOUNDATION_X_RGB_MEAN, FOUNDATION_X_RGB_STD)
+        ):
+            expected = (x[:, :1] - mean) / std
+            torch.testing.assert_close(
+                normalized[:, channel_index : channel_index + 1],
+                expected,
+            )
+
+    def test_normalize_foundation_x_input_rejects_non_grayscale_input(self):
+        x = torch.randn(2, 3, 8, 8)
+
+        with self.assertRaises(AssertionError):
+            normalize_foundation_x_input(x)
+
+
 class FoundationXBackboneGradientPolicyTests(unittest.TestCase):
     def _make_backbone_without_checkpoint(self, frozen: bool) -> FoundationXBackbone:
         backbone = FoundationXBackbone.__new__(FoundationXBackbone)
@@ -57,6 +85,14 @@ class FoundationXBackboneGradientPolicyTests(unittest.TestCase):
         backbone.backbone = DummyFeaturesOnlyBackbone()
         backbone.frozen = frozen
         return backbone
+
+    def test_foundation_x_backbone_forward_applies_branch_normalization(self):
+        backbone = self._make_backbone_without_checkpoint(frozen=False)
+        x = torch.tensor([[[[0.0, 1.0], [0.5, 0.25]]]], dtype=torch.float32)
+
+        features = backbone(x)
+
+        torch.testing.assert_close(features[0], normalize_foundation_x_input(x))
 
     def test_foundation_x_backbone_forward_disables_grad_when_frozen(self):
         backbone = self._make_backbone_without_checkpoint(frozen=True)
