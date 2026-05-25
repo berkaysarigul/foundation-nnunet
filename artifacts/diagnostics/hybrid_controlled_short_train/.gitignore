@@ -1,0 +1,4 @@
+# Generated outputs for controlled short hybrid training diagnostics.
+visuals/
+*.npy
+*.pth

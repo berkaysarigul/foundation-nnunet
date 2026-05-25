@@ -1,0 +1,332 @@
+{
+  "schema_version": 1,
+  "audit_name": "hybrid_adapter_sanity",
+  "status": "PASS",
+  "strict": true,
+  "limited_run": true,
+  "generated_at_utc": "2026-05-25T11:40:01.854189+00:00",
+  "setup": {
+    "command": "python scripts/sanity_hybrid_adapter.py --input_dir C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\nnUNet_raw\\Dataset101_Pneumothorax\\imagesTs --labels_dir C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\nnUNet_raw\\Dataset101_Pneumothorax\\heldout_labelsTs --foundation_checkpoint C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\checkpoints\\foundation_x.pth --output_dir C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\artifacts\\diagnostics\\hybrid_adapter_sanity --img_size 512 --device auto --num_cases 8 --strict",
+    "device": "cpu",
+    "num_cases_requested": 8,
+    "num_cases_processed": 8,
+    "batch_size_forward": 1,
+    "batch_size_backward": 1,
+    "input_dir": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\nnUNet_raw\\Dataset101_Pneumothorax\\imagesTs",
+    "labels_dir": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\nnUNet_raw\\Dataset101_Pneumothorax\\heldout_labelsTs",
+    "foundation_checkpoint": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\checkpoints\\foundation_x.pth",
+    "foundation_checkpoint_sha256": "9b7eb0215b8fdb50d1413fee306e70ed8ac7b646cff342dbce78ca44fd0f32c3",
+    "foundation_checkpoint_size_bytes": 2816610642,
+    "frozen_backbone": true,
+    "img_size": 512
+  },
+  "selection": {
+    "priority_fn_ids": [
+      "siim_009589",
+      "siim_009791",
+      "siim_009082",
+      "siim_010023"
+    ],
+    "priority_fp_ids": [
+      "siim_009416",
+      "siim_009693",
+      "siim_009266"
+    ],
+    "selected_case_ids": [
+      "siim_009589",
+      "siim_009791",
+      "siim_009082",
+      "siim_010023",
+      "siim_009416",
+      "siim_009693",
+      "siim_009266",
+      "siim_009079"
+    ]
+  },
+  "forward": {
+    "input_shape_sample": [
+      1,
+      1,
+      512,
+      512
+    ],
+    "foundation_feature_shapes_sample": [
+      [
+        1,
+        128,
+        128,
+        128
+      ],
+      [
+        1,
+        256,
+        64,
+        64
+      ],
+      [
+        1,
+        512,
+        32,
+        32
+      ],
+      [
+        1,
+        1024,
+        16,
+        16
+      ]
+    ],
+    "adapter_fusion_shapes_sample": {
+      "fusion_e3": {
+        "input_shape": [
+          [
+            1,
+            128,
+            128,
+            128
+          ],
+          [
+            1,
+            256,
+            128,
+            128
+          ]
+        ],
+        "output_shape": [
+          1,
+          256,
+          128,
+          128
+        ]
+      },
+      "fusion_e4": {
+        "input_shape": [
+          [
+            1,
+            256,
+            64,
+            64
+          ],
+          [
+            1,
+            512,
+            64,
+            64
+          ]
+        ],
+        "output_shape": [
+          1,
+          512,
+          64,
+          64
+        ]
+      },
+      "h16_fx_context": {
+        "input_shape": [
+          [
+            1,
+            512,
+            32,
+            32
+          ],
+          [
+            1,
+            1024,
+            32,
+            32
+          ]
+        ],
+        "output_shape": [
+          1,
+          1024,
+          32,
+          32
+        ]
+      },
+      "h32_context_head": {
+        "input_shape": [
+          [
+            1,
+            1024,
+            16,
+            16
+          ]
+        ],
+        "output_shape": [
+          1,
+          1024,
+          16,
+          16
+        ]
+      },
+      "h32_to_h16": {
+        "input_shape": [
+          [
+            1,
+            1024,
+            16,
+            16
+          ]
+        ],
+        "output_shape": [
+          1,
+          1024,
+          32,
+          32
+        ]
+      },
+      "context_merge": {
+        "input_shape": [
+          [
+            1,
+            2048,
+            32,
+            32
+          ]
+        ],
+        "output_shape": [
+          1,
+          1024,
+          32,
+          32
+        ]
+      },
+      "dec4": {
+        "input_shape": [
+          [
+            1,
+            1024,
+            64,
+            64
+          ]
+        ],
+        "output_shape": [
+          1,
+          512,
+          64,
+          64
+        ]
+      },
+      "dec3": {
+        "input_shape": [
+          [
+            1,
+            512,
+            128,
+            128
+          ]
+        ],
+        "output_shape": [
+          1,
+          256,
+          128,
+          128
+        ]
+      },
+      "dec2": {
+        "input_shape": [
+          [
+            1,
+            256,
+            256,
+            256
+          ]
+        ],
+        "output_shape": [
+          1,
+          128,
+          256,
+          256
+        ]
+      },
+      "dec1": {
+        "input_shape": [
+          [
+            1,
+            128,
+            512,
+            512
+          ]
+        ],
+        "output_shape": [
+          1,
+          64,
+          512,
+          512
+        ]
+      }
+    },
+    "prob_output_shape_sample": [
+      1,
+      1,
+      512,
+      512
+    ],
+    "raw_logits_shape_sample": [
+      1,
+      1,
+      512,
+      512
+    ],
+    "prob_min_across_cases": 0.5200456380844116,
+    "prob_max_across_cases": 0.5260282754898071,
+    "prob_mean_across_cases": 0.5226752087473869,
+    "prob_std_across_cases": 0.0003742855551536195,
+    "logits_min_across_cases": 0.08022572845220566,
+    "logits_max_across_cases": 0.104207344353199,
+    "logits_mean_across_cases": 0.09076320007443428,
+    "logits_std_across_cases": 0.001500229351222515,
+    "prob_nan_total": 0,
+    "prob_inf_total": 0,
+    "logits_nan_total": 0,
+    "logits_inf_total": 0,
+    "total_forward_ms": 27493.06869506836
+  },
+  "losses": {
+    "dice_focal_loss": 0.9132792353630066,
+    "bce_with_logits_loss": 0.7540329098701477,
+    "backward_total_loss": 1.6673121452331543
+  },
+  "gradients": {
+    "summary": {
+      "frozen_backbone_params": 325,
+      "frozen_backbone_grad_present": 0,
+      "trainable_non_backbone_params": 90,
+      "trainable_non_backbone_grad_present": 90,
+      "trainable_non_backbone_grad_finite": 90,
+      "trainable_non_backbone_grad_nonzero": 90
+    },
+    "frozen_backbone_no_grad": true,
+    "trainable_gradients_present": true,
+    "trainable_gradients_finite": true
+  },
+  "pass_criteria": {
+    "model_instantiates": true,
+    "checkpoint_loads": true,
+    "num_cases_ok": true,
+    "forward_all_cases": true,
+    "feature_stage_contract_ok": true,
+    "output_shape_compatible": true,
+    "output_finite": true,
+    "loss_finite": true,
+    "backward_success": true,
+    "frozen_backbone_no_grad": true,
+    "trainable_gradients_present": true,
+    "trainable_gradients_finite": true,
+    "no_forbidden_writes": true
+  },
+  "outputs": {
+    "summary_json": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\artifacts\\diagnostics\\hybrid_adapter_sanity\\hybrid_adapter_sanity_summary.json",
+    "summary_yaml": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\artifacts\\diagnostics\\hybrid_adapter_sanity\\hybrid_adapter_sanity_summary.yaml",
+    "report_md": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\artifacts\\diagnostics\\hybrid_adapter_sanity\\hybrid_adapter_sanity_report.md",
+    "selection_log_csv": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\artifacts\\diagnostics\\hybrid_adapter_sanity\\selection_log.csv",
+    "forward_stats_csv": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\artifacts\\diagnostics\\hybrid_adapter_sanity\\per_case_forward_stats.csv",
+    "gradient_stats_csv": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\artifacts\\diagnostics\\hybrid_adapter_sanity\\gradient_stats.csv",
+    "visuals_dir": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\artifacts\\diagnostics\\hybrid_adapter_sanity\\visuals",
+    "visual_count": 24
+  },
+  "warnings": [],
+  "failures": [],
+  "next_recommended_pr": "PR-6 Tiny Hybrid Training Smoke",
+  "exit_code": 0
+}

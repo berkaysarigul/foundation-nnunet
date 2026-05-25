@@ -1,0 +1,3 @@
+# Generated outputs for Hybrid tiny-train smoke diagnostics.
+visuals/
+*.npy

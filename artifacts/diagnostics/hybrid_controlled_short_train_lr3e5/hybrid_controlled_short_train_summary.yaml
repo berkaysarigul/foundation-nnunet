@@ -1,0 +1,503 @@
+audit_name: hybrid_controlled_short_train
+degeneracy:
+  all_background_point_count: 0
+  all_foreground_point_count: 5
+  any_degenerate_validation_point: true
+  persistent_collapse_from_start: false
+exit_code: 2
+failures: []
+generated_at_utc: '2026-05-25T13:14:43.515051+00:00'
+gradients:
+  frozen_backbone_no_grad: true
+  optimizer_excludes_frozen_backbone: true
+  summary_last_step:
+    frozen_backbone_grad_present: 0
+    frozen_backbone_params: 325
+    grad_nonfinite_count: 0
+    grad_norm_l2_total: 0.7802179750974972
+    trainable_non_backbone_grad_finite: 90
+    trainable_non_backbone_grad_nonzero: 90
+    trainable_non_backbone_grad_present: 90
+    trainable_non_backbone_params: 90
+  trainable_gradients_finite: true
+  trainable_gradients_present: true
+limited_run: true
+next_recommended_pr: Blocking fix PR
+outputs:
+  diagnostic_checkpoint_path: ''
+  diagnostic_checkpoint_saved: false
+  gradient_stats_csv: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train_lr3e5\gradient_stats.csv
+  progress_png: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train_lr3e5\progress.png
+  report_md: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train_lr3e5\hybrid_controlled_short_train_report.md
+  selection_log_csv: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train_lr3e5\selection_log.csv
+  summary_json: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train_lr3e5\hybrid_controlled_short_train_summary.json
+  summary_yaml: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train_lr3e5\hybrid_controlled_short_train_summary.yaml
+  train_steps_csv: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train_lr3e5\train_steps.csv
+  validation_steps_csv: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train_lr3e5\validation_steps.csv
+  visual_count: 24
+  visuals_dir: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train_lr3e5\visuals
+pass_criteria:
+  checkpoint_loads: true
+  feature_stage_contract_ok: true
+  frozen_backbone_no_grad: true
+  gradients_finite: true
+  losses_finite: true
+  max_steps_completed: true
+  model_instantiates: true
+  no_forbidden_writes: true
+  no_persistent_degeneracy: true
+  optimizer_excludes_frozen_backbone: true
+  optimizer_step_success: true
+  outputs_finite: true
+  train_selection_ok: true
+  train_val_disjoint: true
+  trainable_gradients_finite: true
+  trainable_gradients_present: true
+  val_selection_ok: true
+  validation_finite: true
+  validation_schedule_complete: true
+schema_version: 1
+selection:
+  counts:
+    overlap_count: 0
+    source_negative: 7051
+    source_positive: 2022
+    source_total: 9073
+    train_negative: 16
+    train_positive: 16
+    train_total: 32
+    val_negative: 8
+    val_positive: 8
+    val_total: 16
+  train_case_ids:
+  - siim_000004
+  - siim_000001
+  - siim_000009
+  - siim_000002
+  - siim_000013
+  - siim_000003
+  - siim_000022
+  - siim_000005
+  - siim_000023
+  - siim_000006
+  - siim_000028
+  - siim_000007
+  - siim_000030
+  - siim_000008
+  - siim_000033
+  - siim_000010
+  - siim_000037
+  - siim_000011
+  - siim_000041
+  - siim_000012
+  - siim_000043
+  - siim_000014
+  - siim_000049
+  - siim_000015
+  - siim_000055
+  - siim_000016
+  - siim_000060
+  - siim_000017
+  - siim_000062
+  - siim_000018
+  - siim_000064
+  - siim_000019
+  val_case_ids:
+  - siim_000069
+  - siim_000071
+  - siim_000072
+  - siim_000073
+  - siim_000076
+  - siim_000077
+  - siim_000079
+  - siim_000084
+  - siim_000020
+  - siim_000021
+  - siim_000024
+  - siim_000025
+  - siim_000026
+  - siim_000027
+  - siim_000029
+  - siim_000031
+setup:
+  batch_size: 1
+  bce_loss_weight: 1.0
+  command: py scripts/controlled_train_hybrid_short.py --input_dir C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\nnUNet_raw\Dataset101_Pneumothorax\imagesTr
+    --labels_dir C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\nnUNet_raw\Dataset101_Pneumothorax\labelsTr
+    --foundation_checkpoint C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\checkpoints\foundation_x.pth
+    --output_dir C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train_lr3e5
+    --img_size 512 --device auto --num_train_cases 32 --num_val_cases 16 --max_steps
+    25 --batch_size 1 --lr 3e-05 --bce_loss_weight 1.0 --val_every 5 --strict
+  device: cpu
+  foundation_checkpoint: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\checkpoints\foundation_x.pth
+  foundation_checkpoint_sha256: 9b7eb0215b8fdb50d1413fee306e70ed8ac7b646cff342dbce78ca44fd0f32c3
+  foundation_checkpoint_size_bytes: 2816610642
+  frozen_backbone: true
+  img_size: 512
+  input_dir: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\nnUNet_raw\Dataset101_Pneumothorax\imagesTr
+  labels_dir: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\nnUNet_raw\Dataset101_Pneumothorax\labelsTr
+  learning_rate: 3.0e-05
+  max_steps: 25
+  num_train_cases_processed: 32
+  num_train_cases_requested: 32
+  num_train_neg: 16
+  num_train_pos: 16
+  num_val_cases_processed: 16
+  num_val_cases_requested: 16
+  num_val_neg: 8
+  num_val_pos: 8
+  seed: 42
+  val_every: 5
+  weight_decay: 0.01
+status: BLOCKED
+strict: true
+suspicious_signals:
+  any_degenerate_validation_point: true
+  suspicious_loss_behavior: false
+training:
+  foundation_feature_shapes_sample:
+  - - 1
+    - 128
+    - 128
+    - 128
+  - - 1
+    - 256
+    - 64
+    - 64
+  - - 1
+    - 512
+    - 32
+    - 32
+  - - 1
+    - 1024
+    - 16
+    - 16
+  frozen_backbone_param_count: 325
+  grad_nonfinite_total: 0
+  grad_norm_l2_per_step:
+  - 0.6770080611079088
+  - 0.7559079894238369
+  - 0.6445198117452006
+  - 0.6547790501688449
+  - 0.6307806478278017
+  - 0.7306554398367656
+  - 0.6745274060808549
+  - 0.698048266099999
+  - 0.6806491327351646
+  - 0.6813207869681863
+  - 0.6882950184351517
+  - 0.6705758744357696
+  - 0.6609118441106308
+  - 0.6677125357329816
+  - 0.6683862484321244
+  - 0.6493031943716575
+  - 0.6872235663447059
+  - 0.6891110870627051
+  - 0.6752993935265258
+  - 0.7373408091806138
+  - 0.6434405694105981
+  - 0.7687813816711437
+  - 0.7404372877599599
+  - 0.7105364645469603
+  - 0.7802179750974972
+  logits_inf_total: 0
+  logits_nan_total: 0
+  loss_total_per_step:
+  - 1.7671746015548706
+  - 1.7790683507919312
+  - 1.7347596883773804
+  - 1.7766053676605225
+  - 1.6901960372924805
+  - 1.7729194164276123
+  - 1.7604442834854126
+  - 1.7709121704101562
+  - 1.740135669708252
+  - 1.7689517736434937
+  - 1.765061378479004
+  - 1.7670544385910034
+  - 1.7490745782852173
+  - 1.7653143405914307
+  - 1.754357099533081
+  - 1.766374111175537
+  - 1.7579305171966553
+  - 1.7597315311431885
+  - 1.7471171617507935
+  - 1.752949595451355
+  - 1.6754186153411865
+  - 1.7477467060089111
+  - 1.7323980331420898
+  - 1.7491226196289062
+  - 1.722793698310852
+  optimizer_trainable_param_count: 90
+  optimizer_trainable_param_names:
+  - enc1.block.0.weight
+  - enc1.block.1.weight
+  - enc1.block.1.bias
+  - enc1.block.3.weight
+  - enc1.block.4.weight
+  - enc1.block.4.bias
+  - enc2.block.0.weight
+  - enc2.block.1.weight
+  - enc2.block.1.bias
+  - enc2.block.3.weight
+  - enc2.block.4.weight
+  - enc2.block.4.bias
+  - enc3.block.0.weight
+  - enc3.block.1.weight
+  - enc3.block.1.bias
+  - enc3.block.3.weight
+  - enc3.block.4.weight
+  - enc3.block.4.bias
+  - enc4.block.0.weight
+  - enc4.block.1.weight
+  - enc4.block.1.bias
+  - enc4.block.3.weight
+  - enc4.block.4.weight
+  - enc4.block.4.bias
+  - fusion_e3.conv.0.weight
+  - fusion_e3.conv.0.bias
+  - fusion_e3.conv.1.weight
+  - fusion_e3.conv.1.bias
+  - fusion_e4.conv.0.weight
+  - fusion_e4.conv.0.bias
+  - fusion_e4.conv.1.weight
+  - fusion_e4.conv.1.bias
+  - h16_unet_context.block.0.weight
+  - h16_unet_context.block.1.weight
+  - h16_unet_context.block.1.bias
+  - h16_unet_context.block.3.weight
+  - h16_unet_context.block.4.weight
+  - h16_unet_context.block.4.bias
+  - h16_fx_context.conv.0.weight
+  - h16_fx_context.conv.0.bias
+  - h16_fx_context.conv.1.weight
+  - h16_fx_context.conv.1.bias
+  - h32_context_head.block.0.weight
+  - h32_context_head.block.1.weight
+  - h32_context_head.block.1.bias
+  - h32_context_head.block.3.weight
+  - h32_context_head.block.4.weight
+  - h32_context_head.block.4.bias
+  - h32_to_h16.weight
+  - h32_to_h16.bias
+  - context_merge.block.0.weight
+  - context_merge.block.1.weight
+  - context_merge.block.1.bias
+  - context_merge.block.3.weight
+  - context_merge.block.4.weight
+  - context_merge.block.4.bias
+  - up4.weight
+  - up4.bias
+  - dec4.block.0.weight
+  - dec4.block.1.weight
+  - dec4.block.1.bias
+  - dec4.block.3.weight
+  - dec4.block.4.weight
+  - dec4.block.4.bias
+  - up3.weight
+  - up3.bias
+  - dec3.block.0.weight
+  - dec3.block.1.weight
+  - dec3.block.1.bias
+  - dec3.block.3.weight
+  - dec3.block.4.weight
+  - dec3.block.4.bias
+  - up2.weight
+  - up2.bias
+  - dec2.block.0.weight
+  - dec2.block.1.weight
+  - dec2.block.1.bias
+  - dec2.block.3.weight
+  - dec2.block.4.weight
+  - dec2.block.4.bias
+  - up1.weight
+  - up1.bias
+  - dec1.block.0.weight
+  - dec1.block.1.weight
+  - dec1.block.1.bias
+  - dec1.block.3.weight
+  - dec1.block.4.weight
+  - dec1.block.4.bias
+  - final.weight
+  - final.bias
+  pred_non_empty_rate_per_step:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  pred_pos_pixel_ratio_per_step:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 0.9997673034667969
+  - 0.8525848388671875
+  prob_inf_total: 0
+  prob_nan_total: 0
+  prob_output_shape_sample:
+  - 1
+  - 1
+  - 512
+  - 512
+  raw_logits_shape_sample:
+  - 1
+  - 1
+  - 512
+  - 512
+  steps_completed: 25
+  total_train_ms: 175933.17317962646
+validation:
+  dice_mean_per_step:
+  - 0.009647867700550705
+  - 0.009647867700550705
+  - 0.009647867700550705
+  - 0.009647867700550705
+  - 0.009647867700550705
+  - 0.010354844023822807
+  dice_pos_mean_per_step:
+  - 0.01929573540110141
+  - 0.01929573540110141
+  - 0.01929573540110141
+  - 0.01929573540110141
+  - 0.01929573540110141
+  - 0.020709688047645614
+  executed_steps:
+  - 0
+  - 5
+  - 10
+  - 15
+  - 20
+  - 25
+  logits_max_per_step:
+  - 0.1021011620759964
+  - 0.09036111831665039
+  - 0.08617249876260757
+  - 0.08421479910612106
+  - 0.08204483240842819
+  - 0.08011013269424438
+  logits_mean_per_step:
+  - 0.09080293469134659
+  - 0.07998732562963085
+  - 0.06949752781075702
+  - 0.059543990550072756
+  - 0.045923287867111195
+  - -0.0013026991444357052
+  logits_min_per_step:
+  - 0.08136864751577377
+  - 0.07324434071779251
+  - 0.05595557391643524
+  - 0.039303552359342575
+  - 0.0183570496737957
+  - -0.05901468172669411
+  logits_std_per_step:
+  - 0.001765603372757835
+  - 0.0025745942909971013
+  - 0.006363105591611003
+  - 0.009543411670137553
+  - 0.012721190364627278
+  - 0.0199246523112521
+  loss_total_mean_per_step:
+  - 1.7704522907733917
+  - 1.7641577497124672
+  - 1.758097104728222
+  - 1.7523833215236664
+  - 1.7446203082799911
+  - 1.718184232711792
+  num_points: 6
+  pred_pos_pixel_ratio_mean_per_step:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 0.43982815742492676
+  prediction_non_empty_rate_per_step:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  prob_foreground_ratio_thr05_per_step:
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 1.0
+  - 0.43982815742492676
+  prob_max_per_step:
+  - 0.5255031585693359
+  - 0.5225749611854553
+  - 0.5215298533439636
+  - 0.5210412740707397
+  - 0.5204997062683105
+  - 0.5200168490409851
+  prob_mean_per_step:
+  - 0.5226851312996246
+  - 0.5199861434332149
+  - 0.5173672152361632
+  - 0.5148812582540074
+  - 0.5114783308839606
+  - 0.4996742684556139
+  prob_min_per_step:
+  - 0.5203309655189514
+  - 0.5183029174804688
+  - 0.5139852166175842
+  - 0.5098246335983276
+  - 0.5045891404151917
+  - 0.4852506220340729
+  prob_std_per_step:
+  - 0.0004404916687739596
+  - 0.0006426086297634859
+  - 0.001588798551633823
+  - 0.0023836230541564233
+  - 0.0031784244565159045
+  - 0.004980639763362085
+  scheduled_steps:
+  - 0
+  - 5
+  - 10
+  - 15
+  - 20
+  - 25
+warnings: []

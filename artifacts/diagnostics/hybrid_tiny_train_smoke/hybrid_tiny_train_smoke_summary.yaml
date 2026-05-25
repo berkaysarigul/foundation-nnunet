@@ -1,0 +1,270 @@
+audit_name: hybrid_tiny_train_smoke
+exit_code: 0
+failures: []
+generated_at_utc: '2026-05-25T12:08:06.796961+00:00'
+gradients:
+  frozen_backbone_no_grad: true
+  summary_last_step:
+    frozen_backbone_grad_present: 0
+    frozen_backbone_params: 325
+    grad_nonfinite_count: 0
+    grad_norm_l2_total: 1.860563554187551
+    trainable_non_backbone_grad_finite: 90
+    trainable_non_backbone_grad_nonzero: 90
+    trainable_non_backbone_grad_present: 90
+    trainable_non_backbone_params: 90
+  trainable_gradients_finite: true
+  trainable_gradients_present: true
+limited_run: true
+next_recommended_pr: PR-7 Controlled Short Hybrid Training
+outputs:
+  gradient_stats_csv: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_tiny_train_smoke\gradient_stats.csv
+  report_md: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_tiny_train_smoke\hybrid_tiny_train_smoke_report.md
+  selection_log_csv: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_tiny_train_smoke\selection_log.csv
+  summary_json: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_tiny_train_smoke\hybrid_tiny_train_smoke_summary.json
+  summary_yaml: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_tiny_train_smoke\hybrid_tiny_train_smoke_summary.yaml
+  train_steps_csv: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_tiny_train_smoke\train_steps.csv
+  visual_count: 24
+  visuals_dir: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_tiny_train_smoke\visuals
+pass_criteria:
+  checkpoint_loads: true
+  feature_stage_contract_ok: true
+  frozen_backbone_no_grad: true
+  gradients_finite: true
+  losses_finite: true
+  max_steps_completed: true
+  model_instantiates: true
+  no_forbidden_writes: true
+  optimizer_excludes_frozen_backbone: true
+  optimizer_step_success: true
+  outputs_finite: true
+  train_selection_ok: true
+  trainable_gradients_finite: true
+  trainable_gradients_present: true
+  val_selection_ok: true
+  validation_finite: true
+  validation_forward_success: true
+schema_version: 1
+selection:
+  counts:
+    source_negative: 7051
+    source_positive: 2022
+    source_total: 9073
+    train_negative: 4
+    train_positive: 4
+    train_total: 8
+    val_negative: 2
+    val_positive: 2
+    val_total: 4
+  train_case_ids:
+  - siim_000004
+  - siim_000009
+  - siim_000013
+  - siim_000022
+  - siim_000001
+  - siim_000002
+  - siim_000003
+  - siim_000005
+  val_case_ids:
+  - siim_000023
+  - siim_000028
+  - siim_000006
+  - siim_000007
+setup:
+  batch_size: 1
+  command: py scripts/tiny_train_hybrid_smoke.py --input_dir C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\nnUNet_raw\Dataset101_Pneumothorax\imagesTr
+    --labels_dir C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\nnUNet_raw\Dataset101_Pneumothorax\labelsTr
+    --foundation_checkpoint C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\checkpoints\foundation_x.pth
+    --output_dir C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_tiny_train_smoke
+    --img_size 512 --device auto --num_train_cases 8 --num_val_cases 4 --max_steps
+    5 --batch_size 1 --lr 0.0001 --strict
+  device: cpu
+  foundation_checkpoint: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\checkpoints\foundation_x.pth
+  foundation_checkpoint_sha256: 9b7eb0215b8fdb50d1413fee306e70ed8ac7b646cff342dbce78ca44fd0f32c3
+  foundation_checkpoint_size_bytes: 2816610642
+  frozen_backbone: true
+  img_size: 512
+  input_dir: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\nnUNet_raw\Dataset101_Pneumothorax\imagesTr
+  labels_dir: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\nnUNet_raw\Dataset101_Pneumothorax\labelsTr
+  learning_rate: 0.0001
+  max_steps: 5
+  num_train_cases_processed: 8
+  num_train_cases_requested: 8
+  num_train_neg: 4
+  num_train_pos: 4
+  num_val_cases_processed: 4
+  num_val_cases_requested: 4
+  num_val_neg: 2
+  num_val_pos: 2
+  seed: 42
+  weight_decay: 0.01
+status: PASS
+strict: true
+training_smoke:
+  foundation_feature_shapes_sample:
+  - - 1
+    - 128
+    - 128
+    - 128
+  - - 1
+    - 256
+    - 64
+    - 64
+  - - 1
+    - 512
+    - 32
+    - 32
+  - - 1
+    - 1024
+    - 16
+    - 16
+  frozen_backbone_param_count: 325
+  grad_nonfinite_total: 0
+  grad_norm_l2_per_step:
+  - 2.459545532505268
+  - 2.2607878951799005
+  - 2.0369280150717857
+  - 1.866612550535916
+  - 1.860563554187551
+  logits_inf_total: 0
+  logits_nan_total: 0
+  loss_total_per_step:
+  - 1.7968134880065918
+  - 1.7207274436950684
+  - 1.656131386756897
+  - 1.7212010622024536
+  - 1.7106261253356934
+  optimizer_trainable_param_count: 90
+  optimizer_trainable_param_names:
+  - enc1.block.0.weight
+  - enc1.block.1.weight
+  - enc1.block.1.bias
+  - enc1.block.3.weight
+  - enc1.block.4.weight
+  - enc1.block.4.bias
+  - enc2.block.0.weight
+  - enc2.block.1.weight
+  - enc2.block.1.bias
+  - enc2.block.3.weight
+  - enc2.block.4.weight
+  - enc2.block.4.bias
+  - enc3.block.0.weight
+  - enc3.block.1.weight
+  - enc3.block.1.bias
+  - enc3.block.3.weight
+  - enc3.block.4.weight
+  - enc3.block.4.bias
+  - enc4.block.0.weight
+  - enc4.block.1.weight
+  - enc4.block.1.bias
+  - enc4.block.3.weight
+  - enc4.block.4.weight
+  - enc4.block.4.bias
+  - fusion_e3.conv.0.weight
+  - fusion_e3.conv.0.bias
+  - fusion_e3.conv.1.weight
+  - fusion_e3.conv.1.bias
+  - fusion_e4.conv.0.weight
+  - fusion_e4.conv.0.bias
+  - fusion_e4.conv.1.weight
+  - fusion_e4.conv.1.bias
+  - h16_unet_context.block.0.weight
+  - h16_unet_context.block.1.weight
+  - h16_unet_context.block.1.bias
+  - h16_unet_context.block.3.weight
+  - h16_unet_context.block.4.weight
+  - h16_unet_context.block.4.bias
+  - h16_fx_context.conv.0.weight
+  - h16_fx_context.conv.0.bias
+  - h16_fx_context.conv.1.weight
+  - h16_fx_context.conv.1.bias
+  - h32_context_head.block.0.weight
+  - h32_context_head.block.1.weight
+  - h32_context_head.block.1.bias
+  - h32_context_head.block.3.weight
+  - h32_context_head.block.4.weight
+  - h32_context_head.block.4.bias
+  - h32_to_h16.weight
+  - h32_to_h16.bias
+  - context_merge.block.0.weight
+  - context_merge.block.1.weight
+  - context_merge.block.1.bias
+  - context_merge.block.3.weight
+  - context_merge.block.4.weight
+  - context_merge.block.4.bias
+  - up4.weight
+  - up4.bias
+  - dec4.block.0.weight
+  - dec4.block.1.weight
+  - dec4.block.1.bias
+  - dec4.block.3.weight
+  - dec4.block.4.weight
+  - dec4.block.4.bias
+  - up3.weight
+  - up3.bias
+  - dec3.block.0.weight
+  - dec3.block.1.weight
+  - dec3.block.1.bias
+  - dec3.block.3.weight
+  - dec3.block.4.weight
+  - dec3.block.4.bias
+  - up2.weight
+  - up2.bias
+  - dec2.block.0.weight
+  - dec2.block.1.weight
+  - dec2.block.1.bias
+  - dec2.block.3.weight
+  - dec2.block.4.weight
+  - dec2.block.4.bias
+  - up1.weight
+  - up1.bias
+  - dec1.block.0.weight
+  - dec1.block.1.weight
+  - dec1.block.1.bias
+  - dec1.block.3.weight
+  - dec1.block.4.weight
+  - dec1.block.4.bias
+  - final.weight
+  - final.bias
+  prob_inf_total: 0
+  prob_nan_total: 0
+  prob_output_shape_sample:
+  - 1
+  - 1
+  - 512
+  - 512
+  raw_logits_shape_sample:
+  - 1
+  - 1
+  - 512
+  - 512
+  steps_completed: 5
+  total_train_step_ms: 32953.87387275696
+validation_smoke:
+  case_ids:
+  - siim_000023
+  - siim_000028
+  - siim_000006
+  - siim_000007
+  logits_inf_total: 0
+  logits_nan_total: 0
+  loss_total_per_case:
+  - 1.7594668865203857
+  - 1.787650465965271
+  - 1.7904212474822998
+  - 1.791028618812561
+  mean_total_loss: 1.7821418046951294
+  num_cases_processed: 4
+  prob_inf_total: 0
+  prob_nan_total: 0
+  prob_output_shape_sample:
+  - 1
+  - 1
+  - 512
+  - 512
+  raw_logits_shape_sample:
+  - 1
+  - 1
+  - 512
+  - 512
+warnings: []
