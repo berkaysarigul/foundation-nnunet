@@ -2068,6 +2068,34 @@ Impact on experiments / methodology:
 - Publication-final claims can still demand a wider pretrained repeated-split reference study later without blocking present engineering work.
 - Any candidate repeated-split comparison that mixes different split instances, omits paired deltas, or presents the 3-split pilot as an uncaveated final publication anchor should be treated as off-contract.
 
+## 2026-05-25 / D-073
+
+Decision:
+- The Foundation X checkpoint loader contract is now verified at the code level (unit tests with stubbed backbone; runtime checkpoint execution deferred to GPU/Colab session).
+- Authoritative checkpoint loader: `FoundationXBackbone` in `src/models/backbone.py`.
+- Checkpoint location: `checkpoints/foundation_x.pth` (~2.62 GiB, Swin-B, embed_dim=128, patch_size=4, window_size=7).
+- Correct top-level key: `ckpt["model"]` (NOT `ckpt["state_dict"]` or top-level direct weights).
+- Correct backbone key prefix to strip: `"backbone.0."` (NOT `"backbone."` as the legacy `docs/foundation_nnunet_dev_guide.md` states — that doc is non-authoritative per D-046).
+- Key remapping via `_remap_key()`: converts `layers.N.*` → `layers_N.*`, shifts downsample index to N+1.
+- `torch.load(weights_only=False)` required (pickled checkpoint state).
+- `load_state_dict(strict=False)` required (many non-backbone keys in checkpoint are discarded).
+- Expected missing/unexpected key counts: unknown until real checkpoint is loaded; the smoke test records them in `load_metadata.json`.
+- Smoke test output root: `artifacts/diagnostics/foundation_x_smoke/` (diagnostic, not authoritative training output; mirrors `artifacts/diagnostics/patient_split_audit/` convention).
+- The smoke test does NOT modify `nnUNet_raw/Dataset101_Pneumothorax/`, `data/processed/pneumothorax_trusted_v1/`, `checkpoints/foundation_x.pth`, or `artifacts/runs/`.
+- D-039 applies: no `hausdorff` key in any smoke output JSON/YAML/CSV.
+- D-035/D-040–D-042 apply: the smoke report must NOT claim Foundation X generalizes or is the superior model; it documents only that the code path runs.
+
+Reason:
+- The first runtime exercise of the real checkpoint was needed before any PR-5 hybrid adapter work could begin. D-073 records the verified loader interface and the diagnostic output convention so future agents do not need to re-derive them.
+
+Alternatives considered:
+- Verify only by running the hybrid sanity script (confounds checkpoint loading with architecture compatibility; harder to diagnose failures in isolation).
+- Skip the standalone smoke test entirely (removes the ability to detect checkpoint key-mapping regressions independently of hybrid code changes).
+
+Impact on experiments / methodology:
+- PR-5 (hybrid adapter sanity test) is now unblocked at the code level, pending the GPU/Colab execution of `scripts/smoke_foundation_x.py` with the real checkpoint.
+- Any future agent that modifies `src/models/backbone.py` should re-run `py -m pytest tests/test_smoke_foundation_x.py tests/test_hybrid_gradient_flow.py tests/test_hybrid_scale_contract.py -v` to catch regressions.
+
 ## Open decisions requiring evidence
 
 ### OD-005

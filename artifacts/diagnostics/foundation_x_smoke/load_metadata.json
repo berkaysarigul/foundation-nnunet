@@ -1,0 +1,24 @@
+{
+  "checkpoint_path": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\checkpoints\\foundation_x.pth",
+  "checkpoint_sha256": "9b7eb0215b8fdb50d1413fee306e70ed8ac7b646cff342dbce78ca44fd0f32c3",
+  "checkpoint_size_bytes": 2816610642,
+  "top_level_keys": [
+    "epoch",
+    "model",
+    "optimizer",
+    "teacher_model"
+  ],
+  "state_dict_len": 2340,
+  "backbone_prefix": "backbone.0.",
+  "prefix_match_count": 449,
+  "sample_prefix_keys": [
+    "backbone.0.Locnorm1.bias",
+    "backbone.0.Locnorm1.weight",
+    "backbone.0.Locnorm2.bias",
+    "backbone.0.Locnorm2.weight",
+    "backbone.0.Locnorm3.bias"
+  ],
+  "missing_keys_count": 0,
+  "unexpected_keys_count": 124,
+  "load_warnings": []
+}

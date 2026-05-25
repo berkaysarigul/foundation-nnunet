@@ -1,16 +1,17 @@
 # Foundation-nnU-Net Agent Context
 
 Current phase:
-- Hybrid single-split sanity-run prep
+- Foundation X smoke test implemented (P1.13); awaiting GPU/Colab execution of real checkpoint run.
 
 Current blocker:
-- The repository now has the repaired hybrid code path, explicit hybrid branch views in living code and `run_metadata.yaml`, an interim repeated-split supervised anchor, and no remaining orchestration-design blocker. The next shortest-path blocker is practical execution: launch the first GPU/Colab hybrid sanity run on the trusted single split before spending more budget on wider candidate comparisons.
+- The repository now has `scripts/smoke_foundation_x.py`, `scripts/visualize_foundation_x_smoke.py`, and `tests/test_smoke_foundation_x.py` (35/35 unit tests pass with stubbed backbone). The next blocker is practical execution: run the smoke test on a GPU/Colab session with the real `checkpoints/foundation_x.pth` to obtain a PASS/PARTIAL_PASS/BLOCKED status. That outcome gates PR-5 (hybrid adapter sanity on `pneumothorax_trusted_v1`).
 
 Highest-priority open tasks:
-1. Run the first GPU/Colab hybrid sanity check on the trusted single split with `configs/hybrid_single_split_sanity.yaml` and `scripts/run_hybrid_single_split_sanity.py`.
-2. If the hybrid sanity run is promising, decide whether to widen it to the exact `split_001` / `split_002` / `split_003` pilot instances from `resnet34_repeated_split_pilot_v1`.
-3. Expand the pretrained repeated-split reference study beyond the 3-split pilot before any publication-final claims that need a wider supervised reference anchor.
-4. Treat any future hybrid run as non-authoritative unless it preserves D-070 in code and records the D-062 branch views in config/run metadata.
+1. Run the Foundation X smoke test on GPU/Colab: `python scripts/smoke_foundation_x.py --input_dir nnUNet_raw/Dataset101_Pneumothorax/imagesTs --labels_dir nnUNet_raw/Dataset101_Pneumothorax/heldout_labelsTs --checkpoint checkpoints/foundation_x.pth --output_dir artifacts/diagnostics/foundation_x_smoke --img_size 512 --device auto --num_cases 12`. Record PASS/PARTIAL_PASS/BLOCKED in RECOVERY_TODO.md §P1.13 and here.
+2. If smoke status is PASS: run the first GPU/Colab hybrid sanity check on the trusted single split with `configs/hybrid_single_split_sanity.yaml` and `scripts/run_hybrid_single_split_sanity.py`.
+3. If the hybrid sanity run is promising, decide whether to widen it to the exact `split_001` / `split_002` / `split_003` pilot instances from `resnet34_repeated_split_pilot_v1`.
+4. Expand the pretrained repeated-split reference study beyond the 3-split pilot before any publication-final claims that need a wider supervised reference anchor.
+5. Treat any future hybrid run as non-authoritative unless it preserves D-070 in code and records the D-062 branch views in config/run metadata.
 
 What is already trusted:
 - The high-level repo structure and module boundaries.
@@ -38,6 +39,8 @@ What is already trusted:
 - The accepted DICOM intensity policy is now: preserve native 8-bit intensities when already in display range, apply modality/VOI transforms only if present, invert `MONOCHROME1` if encountered, and use Windows long-path-safe reads for local preprocessing.
 - `scripts/audit_dicom_intensity.py` is now the canonical metadata audit entrypoint and `tests/test_dicom_intensity_policy.py` is the canonical unit-test harness for the intensity policy.
 - The canonical trusted processed dataset root is now `data/processed/pneumothorax_trusted_v1`.
+- `nnUNet_raw/Dataset101_Pneumothorax/` is now in scope as a **read-only** derived nnU-Net v2 export (PR-2 / `scripts/export_siim_to_nnunet.py`). It must not be modified by any smoke test, training script, or agent. Its `imagesTs/` (1602 PNGs) and `heldout_labelsTs/` (1602 binary 0/1 masks) are the canonical source for the Foundation X smoke test case selection.
+- The nnU-Net v2 / Dataset101 workflow documented in `docs/nnunet_colab_pipeline.md` (PR-1/2/3) is now acknowledged as an active parallel track alongside the `pneumothorax_trusted_v1` recovery track. PR-4 (Foundation X smoke test, P1.13) is the first task formally recorded in recovery memory for that track.
 - `data/processed/pneumothorax_trusted_v1/dataset_manifest.json` is now the authoritative dataset manifest, with dataset fingerprint `c47230301897c0b474bef236a09e6151b74911d75e739575ab91043bc6cc7b6d` and split fingerprint `40d562818cf8f128b0c14bfaccb8d7dae2a49b9380aac48832d70d70cb0dc695`.
 - The trusted regenerated dataset currently contains 10,675 images, 2,379 positive studies, and 8,296 negative studies under the accepted local raw bundle.
 - `scripts/validate_processed_dataset.py` is now the canonical end-to-end validation entrypoint for the trusted processed dataset contract.

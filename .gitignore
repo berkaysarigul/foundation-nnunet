@@ -30,3 +30,8 @@ Thumbs.db
 # Authoritative run outputs will live here, but not be committed by default
 /artifacts/runs/*
 !/artifacts/runs/README.md
+
+# nnU-Net raw dataset (large; managed outside git)
+/nnUNet_raw/
+/nnUNet_results/
+/nnUNet_results_smoke/

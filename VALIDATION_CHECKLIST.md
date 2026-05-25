@@ -757,3 +757,38 @@ Failure symptoms:
 What to do if it fails:
 - Re-anchor the report bundle to D-045.
 - Regenerate the missing machine-readable artifacts before treating the repeated-split result as publication-grade evidence.
+
+## 20. Foundation X smoke gate (P1.13 / D-073)
+
+Purpose: confirm that the Foundation X checkpoint loads and produces finite, spatially-structured feature maps on Dataset101 images before any PR-5 hybrid adapter work begins.
+
+What to check:
+- `artifacts/diagnostics/foundation_x_smoke/foundation_x_smoke_summary.json` exists and has `status` equal to `PASS` or `PARTIAL_PASS`.
+- `schema_version` is `1`.
+- `audit_name` is `"foundation_x_smoke"`.
+- All four per-stage shapes match `(1, {128,256,512,1024}, img_size/{4,8,16,32}, img_size/{4,8,16,32})`.
+- `nan_count_total` and `inf_count_total` are `0` in every stage (PASS) or `> 0` only under PARTIAL_PASS with documented failures.
+- No `hausdorff` key anywhere in the JSON or YAML (D-039).
+- `artifacts/diagnostics/foundation_x_smoke/foundation_x_smoke_report.md` exists and contains the six required sections: Repository findings, Smoke test setup, Results, Failure cases, Decision, Next recommended PR.
+- `artifacts/diagnostics/foundation_x_smoke/selection_log.csv` exists with exactly `num_cases` rows.
+- `artifacts/diagnostics/foundation_x_smoke/per_case_stats.csv` exists with exactly `num_cases × 4` rows.
+- `artifacts/diagnostics/foundation_x_smoke/load_metadata.json` records `checkpoint_sha256`, `prefix_match_count`, `missing_keys_count`, `unexpected_keys_count`.
+- The report does NOT claim Foundation X generalizes, is the superior model, or is a clean-external-pretraining source (D-035 / D-040–D-042 framing boundary).
+- None of the following were modified by the smoke run: `nnUNet_raw/Dataset101_Pneumothorax/`, `data/processed/pneumothorax_trusted_v1/`, `checkpoints/foundation_x.pth`, `artifacts/runs/`.
+
+How to check it:
+- `py -m pytest tests/test_smoke_foundation_x.py -v` → 35 passed, 0 failed (stubbed; no real checkpoint required).
+- `python scripts/smoke_foundation_x.py --dry_run ...` → prints 12 selected case IDs without loading the model.
+- `python scripts/smoke_foundation_x.py --input_dir nnUNet_raw/Dataset101_Pneumothorax/imagesTs --labels_dir nnUNet_raw/Dataset101_Pneumothorax/heldout_labelsTs --checkpoint checkpoints/foundation_x.pth --output_dir artifacts/diagnostics/foundation_x_smoke --img_size 512 --device auto --num_cases 12` → must exit 0 (PASS or PARTIAL_PASS).
+- `python -c "import json,sys; d=json.load(open('artifacts/diagnostics/foundation_x_smoke/foundation_x_smoke_summary.json')); assert d['schema_version']==1 and 'hausdorff' not in json.dumps(d) and d['status'] in ['PASS','PARTIAL_PASS','BLOCKED']"` → exits 0.
+
+Failure symptoms:
+- `status: BLOCKED` with checkpoint not found → checkpoint file missing; restore `checkpoints/foundation_x.pth`.
+- `status: BLOCKED` with `num_cases_ok: false` → fewer than 12 cases available in `nnUNet_raw/Dataset101_Pneumothorax/imagesTs`; verify PR-2 export ran successfully.
+- `status: PARTIAL_PASS` with NaN/Inf → inspect `per_case_stats.csv` and visual overlays to determine whether features are degenerate (noise) or structured. Degenerate → blocking-fix PR before PR-5.
+- Shape mismatch (`shapes_match_contract: false`) → timm version incompatibility or checkpoint was trained at a different `img_size`; document in `load_metadata.json` and open a blocking-fix PR.
+
+What to do if it fails:
+- Check `artifacts/diagnostics/foundation_x_smoke/load_metadata.json` for `missing_keys_count` and `unexpected_keys_count`.
+- A large `unexpected_keys_count` (> 500) may indicate a timm API version mismatch; check `timm.__version__` and compare against the version used when `backbone.py` was written.
+- Do not advance to PR-5 (hybrid adapter sanity) until this gate passes.

@@ -1,0 +1,5 @@
+# Generated outputs for Foundation X smoke test.
+# Large binary artifacts are excluded from git; text reports are tracked.
+visuals/
+raw_features/
+*.npy

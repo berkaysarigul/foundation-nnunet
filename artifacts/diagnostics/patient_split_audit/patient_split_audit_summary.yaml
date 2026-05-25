@@ -1,0 +1,96 @@
+schema_version: 1
+audit_name: patient_level_split_leakage_audit
+status: PASS
+strict: true
+limited_run: false
+generated_at_utc: '2026-05-24T17:15:19.120209+00:00'
+inputs:
+  raw_dir: data/raw/SIIM-ACR
+  selected_dicom_root: data/raw/SIIM-ACR/dicom-images-train
+  processed_dir: data/processed/pneumothorax_trusted_v1
+  splits_path: data/processed/pneumothorax_trusted_v1/splits.json
+  images_dir: data/processed/pneumothorax_trusted_v1/images
+  dataset_manifest_path: data/processed/pneumothorax_trusted_v1/dataset_manifest.json
+  output_dir: artifacts/diagnostics/patient_split_audit
+split_file:
+  keys:
+  - train
+  - val
+  - test
+  counts:
+    train: 7471
+    val: 1602
+    test: 1602
+    total: 10675
+  unique_id_count: 10675
+  duplicate_ids_within_split_count: 0
+  duplicate_ids_across_splits_count: 0
+  ids_have_file_extensions: false
+processed_dataset:
+  expected_image_count: 10675
+  expected_count_source: dataset_manifest.counts.images
+  image_png_count: 10675
+  original_mask_png_count: 10675
+  dilated_mask_png_count: 10675
+  split_total_matches_expected: true
+  split_union_matches_images: true
+raw_dicom:
+  raw_dicom_files_scanned: 10712
+  raw_dicom_read_success_count: 10712
+  raw_dicom_read_error_count: 0
+  raw_unique_path_stem_count: 10712
+  raw_ids_in_processed_split_count: 10675
+  raw_ids_not_in_processed_split_count: 37
+  processed_ids_missing_raw_metadata_count: 0
+  path_stem_sop_mismatch_count: 0
+  primary_match_method: path_stem
+metadata_completeness:
+  PatientID:
+    nonempty_count: 10675
+    missing_count: 0
+    empty_count: 0
+  StudyInstanceUID:
+    nonempty_count: 10675
+    missing_count: 0
+    empty_count: 0
+  SeriesInstanceUID:
+    nonempty_count: 10675
+    missing_count: 0
+    empty_count: 0
+  SOPInstanceUID:
+    nonempty_count: 10675
+    missing_count: 0
+    empty_count: 0
+leakage:
+  PatientID:
+    cross_split_key_count: 0
+    affected_image_count: 0
+    pass: true
+  StudyInstanceUID:
+    cross_split_key_count: 0
+    affected_image_count: 0
+    pass: true
+  SeriesInstanceUID:
+    cross_split_key_count: 0
+    affected_image_count: 0
+    pass: true
+  SOPInstanceUID:
+    duplicate_key_count: 0
+    affected_image_count: 0
+    pass: true
+pass_criteria:
+  processed_image_total_matches_expected: true
+  no_patient_id_cross_split_leakage: true
+  no_study_instance_uid_cross_split_leakage: true
+  no_series_instance_uid_cross_split_leakage: true
+  no_duplicated_sop_instance_uid: true
+  no_processed_image_ids_missing_raw_metadata: true
+outputs:
+  dicom_split_metadata_csv: artifacts/diagnostics/patient_split_audit/dicom_split_metadata.csv
+  leakage_cases_csv: artifacts/diagnostics/patient_split_audit/leakage_cases.csv
+  missing_metadata_cases_csv: artifacts/diagnostics/patient_split_audit/missing_metadata_cases.csv
+  summary_yaml: artifacts/diagnostics/patient_split_audit/patient_split_audit_summary.yaml
+warnings:
+- 37 raw DICOM files not present in processed split
+failures: []
+exit_code: 0

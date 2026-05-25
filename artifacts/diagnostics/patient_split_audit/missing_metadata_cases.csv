@@ -1,0 +1,1 @@
+case_type,processed_image_id,split,tag_name,image_id_from_path_stem,sop_instance_uid,raw_relative_path,dicom_read_error_type,message

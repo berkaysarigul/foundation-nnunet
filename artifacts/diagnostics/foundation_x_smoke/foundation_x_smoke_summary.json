@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "audit_name": "foundation_x_smoke",
+  "status": "PASS",
+  "strict": false,
+  "limited_run": true,
+  "generated_at_utc": "2026-05-25T11:10:59.795091+00:00",
+  "inputs": {
+    "input_dir": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\nnUNet_raw\\Dataset101_Pneumothorax\\imagesTs",
+    "labels_dir": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\nnUNet_raw\\Dataset101_Pneumothorax\\heldout_labelsTs",
+    "checkpoint": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\checkpoints\\foundation_x.pth",
+    "checkpoint_sha256": "9b7eb0215b8fdb50d1413fee306e70ed8ac7b646cff342dbce78ca44fd0f32c3",
+    "checkpoint_size_bytes": 2816610642,
+    "img_size": 512,
+    "num_cases_requested": 12,
+    "num_cases_processed": 12,
+    "device": "cpu",
+    "case_list_source": "priority_plus_filler"
+  },
+  "checkpoint_metadata": {
+    "top_level_keys": [
+      "epoch",
+      "model",
+      "optimizer",
+      "teacher_model"
+    ],
+    "state_dict_len": 2340,
+    "backbone_prefix": "backbone.0.",
+    "prefix_match_count": 449,
+    "missing_keys_count": 0,
+    "unexpected_keys_count": 124,
+    "sample_prefix_keys": [
+      "backbone.0.Locnorm1.bias",
+      "backbone.0.Locnorm1.weight",
+      "backbone.0.Locnorm2.bias",
+      "backbone.0.Locnorm2.weight",
+      "backbone.0.Locnorm3.bias"
+    ]
+  },
+  "inference": {
+    "total_wall_seconds": 16.1,
+    "per_stage": {
+      "stage_0": {
+        "expected_shape": [
+          1,
+          128,
+          128,
+          128
+        ],
+        "observed_shape_sample": [
+          1,
+          128,
+          128,
+          128
+        ],
+        "shapes_match_contract": true,
+        "mean_across_cases": -0.26633316262935597,
+        "std_across_cases": 1.1179966082175572,
+        "min_across_cases": -14.871618270874023,
+        "max_across_cases": 8.302789688110352,
+        "nan_count_total": 0,
+        "inf_count_total": 0
+      },
+      "stage_1": {
+        "expected_shape": [
+          1,
+          256,
+          64,
+          64
+        ],
+        "observed_shape_sample": [
+          1,
+          256,
+          64,
+          64
+        ],
+        "shapes_match_contract": true,
+        "mean_across_cases": 0.066285097040236,
+        "std_across_cases": 1.565233548482259,
+        "min_across_cases": -12.184985160827637,
+        "max_across_cases": 22.1165771484375,
+        "nan_count_total": 0,
+        "inf_count_total": 0
+      },
+      "stage_2": {
+        "expected_shape": [
+          1,
+          512,
+          32,
+          32
+        ],
+        "observed_shape_sample": [
+          1,
+          512,
+          32,
+          32
+        ],
+        "shapes_match_contract": true,
+        "mean_across_cases": 0.16915336002906164,
+        "std_across_cases": 11.528613408406576,
+        "min_across_cases": -545.369384765625,
+        "max_across_cases": 1114.0576171875,
+        "nan_count_total": 0,
+        "inf_count_total": 0
+      },
+      "stage_3": {
+        "expected_shape": [
+          1,
+          1024,
+          16,
+          16
+        ],
+        "observed_shape_sample": [
+          1,
+          1024,
+          16,
+          16
+        ],
+        "shapes_match_contract": true,
+        "mean_across_cases": 0.008405527449212968,
+        "std_across_cases": 12.058635950088501,
+        "min_across_cases": -517.3031005859375,
+        "max_across_cases": 337.32159423828125,
+        "nan_count_total": 0,
+        "inf_count_total": 0
+      }
+    }
+  },
+  "pass_criteria": {
+    "checkpoint_loads": true,
+    "num_cases_ok": true,
+    "shapes_match_contract": true,
+    "features_finite": true,
+    "features_non_degenerate": true
+  },
+  "outputs": {
+    "report_md": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\artifacts\\diagnostics\\foundation_x_smoke\\foundation_x_smoke_report.md",
+    "summary_json": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\artifacts\\diagnostics\\foundation_x_smoke\\foundation_x_smoke_summary.json",
+    "summary_yaml": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\artifacts\\diagnostics\\foundation_x_smoke\\foundation_x_smoke_summary.yaml",
+    "per_case_stats_csv": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\artifacts\\diagnostics\\foundation_x_smoke\\per_case_stats.csv",
+    "selection_log_csv": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\artifacts\\diagnostics\\foundation_x_smoke\\selection_log.csv",
+    "load_metadata_json": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\artifacts\\diagnostics\\foundation_x_smoke\\load_metadata.json",
+    "visuals_dir": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\artifacts\\diagnostics\\foundation_x_smoke\\visuals"
+  },
+  "load_warnings": [],
+  "warnings": [
+    "Large unexpected_keys_count=124; checkpoint has extra keys."
+  ],
+  "failures": [],
+  "exit_code": 0,
+  "decision_for_next_pr": "PR-5_hybrid_adapter_sanity"
+}

@@ -1,0 +1,1 @@
+case_type,key_name,key_value,splits,split_count,image_count,train_count,val_count,test_count,processed_image_ids,patient_ids,study_instance_uids,series_instance_uids,sop_instance_uids,raw_relative_paths

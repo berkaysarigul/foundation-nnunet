@@ -434,8 +434,28 @@ Current strategic direction:
 - Validation needed before close:
   - Stale artifact and methodology checklist items.
 
+## Phase 4.5 – Foundation X integration smoke (nnU-Net v2 / Dataset101 track)
+
+### P1.13 Foundation X smoke test on Dataset101_Pneumothorax
+- Status: [x]
+- Dependencies: P1.8 (Foundation X backbone code path), PR-2 Dataset101 export (nnUNet_raw/Dataset101_Pneumothorax)
+- Affected files/modules: `scripts/smoke_foundation_x.py`, `scripts/visualize_foundation_x_smoke.py`, `tests/test_smoke_foundation_x.py`, `artifacts/diagnostics/foundation_x_smoke/`
+- Why it matters: the real `checkpoints/foundation_x.pth` checkpoint had never been loaded at runtime before this task. Before using Foundation X features in any PR-5 hybrid adapter or PR-6 coarse-map generation, we must confirm the checkpoint loads without key-mapping errors and produces finite, spatially-structured features on Dataset101 images.
+- Subtasks:
+  - [x] Identify Foundation X loader contract in code: `FoundationXBackbone` in `src/models/backbone.py`, key prefix `"backbone.0."`, `_remap_key()`, `torch.load(weights_only=False)`, `load_state_dict(strict=False)`.
+  - [x] Implement `scripts/smoke_foundation_x.py`: load backbone, deterministic 12-case selection (7 hardcoded priority FN/FP IDs + balanced fillers from heldout_labelsTs), inference with `torch.no_grad()`, per-stage stats, decision (PASS/PARTIAL_PASS/BLOCKED), full artifact bundle.
+  - [x] Implement `scripts/visualize_foundation_x_smoke.py`: PCA-RGB, mean heatmap, stage-0 overlay.
+  - [x] Implement `tests/test_smoke_foundation_x.py`: 35 unit tests (stubbed backbone, NaN injection, D-039 compliance, schema invariants). All pass without real checkpoint.
+  - [x] Add `artifacts/diagnostics/foundation_x_smoke/.gitignore` to exclude visuals/ and raw_features/ from git.
+- Success criteria:
+  - `py -m pytest tests/test_smoke_foundation_x.py -v` → 35 passed, 0 failed.
+  - `python scripts/smoke_foundation_x.py --dry_run` prints 12 selected case IDs without error.
+  - Full run (with real GPU/Colab) produces `foundation_x_smoke_summary.json` with `status: PASS` or `PARTIAL_PASS`, no NaN/Inf in per-stage stats, all four stage shapes verified.
+- Validation note (2026-05-25): Smoke script and tests implemented. 35/35 unit tests pass (DummySmokeBackbone), 107/107 existing tests unaffected. D-073 records the checkpoint loader contract for future reference. The real checkpoint runtime validation (status PASS/PARTIAL_PASS/BLOCKED) must be completed on a GPU/Colab session with the real `checkpoints/foundation_x.pth`; that result will determine whether PR-5 (hybrid adapter sanity) or a blocking-fix PR is next.
+
 ## Top priority queue
 
-1. Run the first single-split hybrid sanity check on the trusted split with `configs/hybrid_single_split_sanity.yaml` and `scripts/run_hybrid_single_split_sanity.py`
-2. If the hybrid sanity run looks promising, decide whether to widen it to the exact `split_001` / `split_002` / `split_003` pilot instances from `resnet34_repeated_split_pilot_v1`
-3. Expand the pretrained repeated-split reference study beyond the 3-split pilot before any publication-final claims that need a wider supervised reference anchor
+1. Run the Foundation X smoke test on GPU/Colab: `python scripts/smoke_foundation_x.py --input_dir nnUNet_raw/Dataset101_Pneumothorax/imagesTs --labels_dir nnUNet_raw/Dataset101_Pneumothorax/heldout_labelsTs --checkpoint checkpoints/foundation_x.pth --output_dir artifacts/diagnostics/foundation_x_smoke --img_size 512 --device auto --num_cases 12` — then record the PASS/PARTIAL_PASS/BLOCKED outcome here and in AGENT_CONTEXT.md.
+2. If smoke status is PASS: run the first single-split hybrid sanity check on the trusted split with `configs/hybrid_single_split_sanity.yaml` and `scripts/run_hybrid_single_split_sanity.py`.
+3. If the hybrid sanity run looks promising, decide whether to widen it to the exact `split_001` / `split_002` / `split_003` pilot instances from `resnet34_repeated_split_pilot_v1`.
+4. Expand the pretrained repeated-split reference study beyond the 3-split pilot before any publication-final claims that need a wider supervised reference anchor.
