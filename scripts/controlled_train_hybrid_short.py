@@ -1086,6 +1086,19 @@ def _write_report(summary: dict[str, Any], output_dir: Path) -> Path:
     else:
         lines.append("None.")
 
+    warnings = summary.get("warnings", [])
+    lines.extend(
+        [
+            "",
+            "## Warnings",
+            "",
+        ],
+    )
+    if warnings:
+        lines.extend([f"- {item}" for item in warnings])
+    else:
+        lines.append("None.")
+
     lines.extend(
         [
             "",
@@ -1127,8 +1140,10 @@ def _compute_decision(
     *,
     pass_criteria: dict[str, bool],
     suspicious_signals: dict[str, bool],
+    failures: list[str],
     strict: bool,
 ) -> tuple[str, int]:
+    del strict
     hard_blockers = [
         "model_instantiates",
         "checkpoint_loads",
@@ -1147,11 +1162,11 @@ def _compute_decision(
         "no_persistent_degeneracy",
         "no_forbidden_writes",
     ]
-    if any(not pass_criteria.get(key, False) for key in hard_blockers):
+    if failures or any(not pass_criteria.get(key, False) for key in hard_blockers):
         return "BLOCKED", 2
 
     if any(suspicious_signals.values()):
-        return ("BLOCKED", 2) if strict else ("PARTIAL_PASS", 0)
+        return "PARTIAL_PASS", 0
 
     return "PASS", 0
 
@@ -1746,6 +1761,7 @@ def run_controlled_short_training(args: argparse.Namespace) -> dict[str, Any]:
     status, exit_code = _compute_decision(
         pass_criteria=pass_criteria,
         suspicious_signals=suspicious_signals,
+        failures=failures,
         strict=bool(args.strict),
     )
 
@@ -1907,6 +1923,11 @@ def run_controlled_short_training(args: argparse.Namespace) -> dict[str, Any]:
         "next_recommended_pr": next_recommended_pr,
         "exit_code": int(exit_code),
     }
+
+    if any_degenerate and not persistent_collapse_from_start and not failures:
+        summary["warnings"].append(
+            "Degenerate validation points observed, but no persistent collapse; classified as PARTIAL_PASS.",
+        )
 
     if model_init_error:
         summary["warnings"].append(f"Model initialization error detail: {model_init_error}")

@@ -1,0 +1,4 @@
+# Generated outputs for controlled short hybrid training diagnostics (lr3e5 50-step run).
+visuals/
+*.npy
+*.pth

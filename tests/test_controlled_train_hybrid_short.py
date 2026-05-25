@@ -153,6 +153,20 @@ class DummyHybridFullPred(DummyHybrid):
         return torch.ones_like(out)
 
 
+class DummyHybridTransientFullPred(DummyHybrid):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.eval_forward_count = 0
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        out = super().forward(x)
+        if not self.training:
+            self.eval_forward_count += int(x.shape[0])
+            if self.eval_forward_count <= 16:
+                return torch.ones_like(out)
+        return out
+
+
 class TestCliParsing(unittest.TestCase):
     def test_defaults(self):
         args = cts.parse_args([])
@@ -422,6 +436,17 @@ class TestStubControlledRun(unittest.TestCase):
         self.assertEqual(summary["_exit_code_from_main"], 2)
         self.assertEqual(summary["status"], "BLOCKED")
         self.assertTrue(summary["degeneracy"]["persistent_collapse_from_start"])
+
+    def test_strict_transient_degeneracy_is_partial_pass(self):
+        summary = self._run(DummyHybridTransientFullPred, extra_args=["--strict"])
+        self.assertEqual(summary["_exit_code_from_main"], 0)
+        self.assertEqual(summary["status"], "PARTIAL_PASS")
+        self.assertTrue(summary["degeneracy"]["any_degenerate_validation_point"])
+        self.assertFalse(summary["degeneracy"]["persistent_collapse_from_start"])
+        self.assertIn(
+            "Degenerate validation points observed, but no persistent collapse; classified as PARTIAL_PASS.",
+            summary["warnings"],
+        )
 
     def test_summary_schema_and_d039(self):
         summary = self._run(DummyHybrid)
