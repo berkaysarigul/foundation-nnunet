@@ -67,6 +67,50 @@ from src.training.metrics import dice_score
 STAGE_CHANNEL_EXPECT = [128, 256, 512, 1024]
 STAGE_STRIDE_EXPECT = [4, 8, 16, 32]
 
+VALIDATION_THRESHOLD_SWEEP = (0.05, 0.10, 0.20, 0.30, 0.40, 0.50)
+
+
+def _threshold_suffix(threshold: float) -> str:
+    return f"{int(round(threshold * 100)):03d}"
+
+
+def _threshold_key(threshold: float) -> str:
+    return f"{threshold:.2f}"
+
+
+def _build_threshold_sweep_summary(
+    validation_rows: list[dict[str, Any]],
+) -> dict[str, dict[str, list[Any]]]:
+    """Aggregate per-step threshold sweep metrics into list-of-lists for summary."""
+
+    summary: dict[str, dict[str, list[Any]]] = {}
+    for threshold in VALIDATION_THRESHOLD_SWEEP:
+        key = _threshold_key(threshold)
+        summary[key] = {
+            "dice_mean_per_step": [],
+            "dice_pos_mean_per_step": [],
+            "prediction_non_empty_rate_per_step": [],
+            "pred_pos_pixel_ratio_per_step": [],
+            "all_background_per_step": [],
+            "all_foreground_per_step": [],
+        }
+    for row in validation_rows:
+        sweep = row.get("threshold_sweep", {})
+        for threshold in VALIDATION_THRESHOLD_SWEEP:
+            key = _threshold_key(threshold)
+            bucket = sweep.get(key, {}) if isinstance(sweep, dict) else {}
+            summary[key]["dice_mean_per_step"].append(float(bucket.get("dice_mean", float("nan"))))
+            summary[key]["dice_pos_mean_per_step"].append(float(bucket.get("dice_pos_mean", float("nan"))))
+            summary[key]["prediction_non_empty_rate_per_step"].append(
+                float(bucket.get("prediction_non_empty_rate", float("nan"))),
+            )
+            summary[key]["pred_pos_pixel_ratio_per_step"].append(
+                float(bucket.get("pred_pos_pixel_ratio", float("nan"))),
+            )
+            summary[key]["all_background_per_step"].append(bool(bucket.get("all_background", False)))
+            summary[key]["all_foreground_per_step"].append(bool(bucket.get("all_foreground", False)))
+    return summary
+
 FORBIDDEN_OUTPUT_SEGMENTS = [
     "artifacts/runs",
     "nnunet_results",
@@ -341,8 +385,12 @@ def _list_labeled_cases(input_dir: Path, labels_dir: Path) -> list[dict[str, Any
         label_path = labels_dir / f"{case_id}.png"
         if not label_path.exists():
             continue
-        label_max = int(np.array(Image.open(label_path).convert("L")).max())
+        label_arr = np.array(Image.open(label_path).convert("L"))
+        label_max = int(label_arr.max())
         is_positive = label_max > 0
+        foreground_pixels = int((label_arr > 0).sum())
+        total_pixels = int(label_arr.size)
+        foreground_ratio = float(foreground_pixels) / float(total_pixels) if total_pixels > 0 else 0.0
         all_cases.append(
             {
                 "case_id": case_id,
@@ -350,6 +398,9 @@ def _list_labeled_cases(input_dir: Path, labels_dir: Path) -> list[dict[str, Any
                 "label_path": str(label_path),
                 "label_max": label_max,
                 "is_positive": is_positive,
+                "foreground_pixels": foreground_pixels,
+                "total_pixels": total_pixels,
+                "foreground_ratio": foreground_ratio,
             },
         )
     return all_cases
@@ -634,12 +685,49 @@ def _stage_contract_ok(
     return len(errors) == 0, errors
 
 
-def _positive_ratio_and_non_empty_rate(probabilities: torch.Tensor) -> tuple[float, float]:
-    pred_bin = (probabilities >= 0.5).float()
+def _positive_ratio_and_non_empty_rate(
+    probabilities: torch.Tensor,
+    threshold: float = 0.5,
+) -> tuple[float, float]:
+    pred_bin = (probabilities >= threshold).float()
     pos_ratio = float(pred_bin.mean().item())
     per_case_non_empty = pred_bin.reshape(pred_bin.shape[0], -1).sum(dim=1) > 0
     non_empty_rate = float(per_case_non_empty.float().mean().item())
     return pos_ratio, non_empty_rate
+
+
+def _assert_trainable_modules_in_train_mode(
+    model: torch.nn.Module,
+) -> tuple[bool, str]:
+    """Check that the hybrid network is in train mode while keeping the
+    frozen Foundation X backbone in eval. Returns (ok, message)."""
+
+    if not bool(getattr(model, "training", False)):
+        return False, "Top-level model.training is False before optimizer step."
+
+    frozen_backbone = bool(getattr(model, "frozen_backbone", False))
+    foundation_x = getattr(model, "foundation_x", None)
+    if frozen_backbone and foundation_x is not None:
+        backbone = getattr(foundation_x, "backbone", None)
+        if backbone is not None and bool(backbone.training):
+            return (
+                False,
+                "Frozen Foundation X backbone is in train mode before optimizer step.",
+            )
+
+    for name, module in model.named_modules():
+        if name == "":
+            continue
+        if name.startswith("foundation_x"):
+            continue
+        if not module.training:
+            return (
+                False,
+                f"Trainable hybrid submodule '{name}' is not in train mode "
+                "before optimizer step.",
+            )
+
+    return True, ""
 
 
 class HookRecorder:
@@ -845,6 +933,9 @@ def _write_selection_log(rows: list[dict[str, Any]], output_dir: Path) -> Path:
         "is_positive",
         "label_max",
         "selection_bucket",
+        "foreground_pixels",
+        "total_pixels",
+        "foreground_ratio",
         "image_path",
         "label_path",
     ]
@@ -923,6 +1014,18 @@ def _write_validation_steps(rows: list[dict[str, Any]], output_dir: Path) -> Pat
         "logits_inf_total",
         "val_ms",
     ]
+    for threshold in VALIDATION_THRESHOLD_SWEEP:
+        suffix = _threshold_suffix(threshold)
+        fieldnames.extend(
+            [
+                f"dice_mean_thr_{suffix}",
+                f"dice_pos_mean_thr_{suffix}",
+                f"prediction_non_empty_rate_thr_{suffix}",
+                f"pred_pos_pixel_ratio_thr_{suffix}",
+                f"all_background_thr_{suffix}",
+                f"all_foreground_thr_{suffix}",
+            ]
+        )
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         writer.writeheader()
@@ -1051,6 +1154,44 @@ def _write_report(summary: dict[str, Any], output_dir: Path) -> Path:
         f"- Validation probability foreground ratio @0.5 per step: {validation['prob_foreground_ratio_thr05_per_step']}",
         f"- Validation non-empty rate per step: {validation['prediction_non_empty_rate_per_step']}",
         "",
+        "## Validation threshold sweep",
+        "",
+    ]
+    threshold_sweep = validation.get("threshold_sweep") if isinstance(validation, dict) else None
+    if isinstance(threshold_sweep, dict) and threshold_sweep:
+        for key in sorted(threshold_sweep.keys()):
+            bucket = threshold_sweep[key]
+            lines.extend(
+                [
+                    f"### threshold = {key}",
+                    "",
+                    f"- dice_mean per step: {bucket.get('dice_mean_per_step', [])}",
+                    f"- dice_pos_mean per step: {bucket.get('dice_pos_mean_per_step', [])}",
+                    f"- prediction_non_empty_rate per step: {bucket.get('prediction_non_empty_rate_per_step', [])}",
+                    f"- pred_pos_pixel_ratio per step: {bucket.get('pred_pos_pixel_ratio_per_step', [])}",
+                    f"- all_background per step: {bucket.get('all_background_per_step', [])}",
+                    f"- all_foreground per step: {bucket.get('all_foreground_per_step', [])}",
+                    "",
+                ]
+            )
+    else:
+        lines.extend(["- Not produced.", ""])
+
+    train_mode = summary.get("train_mode") or {}
+    lines.extend(
+        [
+            "## Train-mode preservation",
+            "",
+            f"- train_mode_restored_after_validation: {train_mode.get('train_mode_restored_after_validation')}",
+            f"- trainable_in_train_mode_before_step: {train_mode.get('trainable_in_train_mode_before_step')}",
+            f"- steps_checked / steps_passed: {train_mode.get('steps_checked')} / {train_mode.get('steps_passed')}",
+            f"- training_mode_violation_steps: {train_mode.get('training_mode_violation_steps')}",
+            f"- post_validation_checks: {train_mode.get('post_validation_checks')}",
+            "",
+        ],
+    )
+
+    lines.extend([
         "## Gradient and frozen-backbone checks",
         "",
         f"- Frozen backbone no-grad check: {gradients['frozen_backbone_no_grad']}",
@@ -1079,7 +1220,7 @@ def _write_report(summary: dict[str, Any], output_dir: Path) -> Path:
         "",
         "## Failure cases",
         "",
-    ]
+    ])
     failures = summary.get("failures", [])
     if failures:
         lines.extend([f"- {item}" for item in failures])
@@ -1161,6 +1302,8 @@ def _compute_decision(
         "validation_finite",
         "no_persistent_degeneracy",
         "no_forbidden_writes",
+        "train_mode_restored_after_validation",
+        "trainable_in_train_mode_before_step",
     ]
     if failures or any(not pass_criteria.get(key, False) for key in hard_blockers):
         return "BLOCKED", 2
@@ -1200,79 +1343,128 @@ def _evaluate_validation_point(
     prob_aggregate = _new_tensor_aggregate()
     logits_aggregate = _new_tensor_aggregate()
 
-    model.eval()
-    with torch.no_grad():
-        for case in val_cases:
-            hook_recorder.clear()
-            image_tensor, mask_tensor = _load_case_tensor(case, img_size, device)
-            probs = model(image_tensor)
-            raw_logits = hook_recorder.raw_logits
-            if raw_logits is None:
-                raise RuntimeError(f"Validation case {case['case_id']}: raw logits hook capture is None.")
+    sweep_accumulators: dict[float, dict[str, list[float]]] = {
+        threshold: {
+            "dice": [],
+            "dice_pos": [],
+            "pos_ratio": [],
+            "non_empty": [],
+        }
+        for threshold in VALIDATION_THRESHOLD_SWEEP
+    }
 
-            if list(probs.shape) != list(mask_tensor.shape) or list(raw_logits.shape) != list(mask_tensor.shape):
-                raise RuntimeError(
-                    f"Validation case {case['case_id']}: output shape mismatch "
-                    f"prob={list(probs.shape)} logits={list(raw_logits.shape)} mask={list(mask_tensor.shape)}",
+    was_training = bool(getattr(model, "training", False))
+    frozen_backbone = bool(getattr(model, "frozen_backbone", False))
+
+    try:
+        model.eval()
+        with torch.no_grad():
+            for case in val_cases:
+                hook_recorder.clear()
+                image_tensor, mask_tensor = _load_case_tensor(case, img_size, device)
+                probs = model(image_tensor)
+                raw_logits = hook_recorder.raw_logits
+                if raw_logits is None:
+                    raise RuntimeError(
+                        f"Validation case {case['case_id']}: raw logits hook capture is None.",
+                    )
+
+                if list(probs.shape) != list(mask_tensor.shape) or list(raw_logits.shape) != list(mask_tensor.shape):
+                    raise RuntimeError(
+                        f"Validation case {case['case_id']}: output shape mismatch "
+                        f"prob={list(probs.shape)} logits={list(raw_logits.shape)} mask={list(mask_tensor.shape)}",
+                    )
+
+                prob_stats = _tensor_stats(probs)
+                logits_stats = _tensor_stats(raw_logits)
+                _update_tensor_aggregate(prob_aggregate, probs)
+                _update_tensor_aggregate(logits_aggregate, raw_logits)
+
+                loss_dice = criterion_dice(probs, mask_tensor)
+                loss_bce = criterion_bce_logits(raw_logits, mask_tensor)
+                total_loss = loss_dice + float(bce_loss_weight) * loss_bce
+
+                dice_all = float(dice_score(probs, mask_tensor, threshold=0.5, reduction="mean").item())
+                dice_pos = dice_score(probs, mask_tensor, threshold=0.5, reduction="positive_mean")
+                dice_pos_val = float(dice_pos.item()) if bool(torch.isfinite(dice_pos).item()) else float("nan")
+
+                pos_ratio, non_empty_rate = _positive_ratio_and_non_empty_rate(probs, threshold=0.5)
+
+                case_sweep: dict[str, dict[str, float]] = {}
+                for threshold in VALIDATION_THRESHOLD_SWEEP:
+                    dice_t_mean = float(
+                        dice_score(probs, mask_tensor, threshold=threshold, reduction="mean").item(),
+                    )
+                    dice_t_pos = dice_score(probs, mask_tensor, threshold=threshold, reduction="positive_mean")
+                    dice_t_pos_val = (
+                        float(dice_t_pos.item()) if bool(torch.isfinite(dice_t_pos).item()) else float("nan")
+                    )
+                    pos_ratio_t, non_empty_rate_t = _positive_ratio_and_non_empty_rate(
+                        probs,
+                        threshold=threshold,
+                    )
+                    sweep_accumulators[threshold]["dice"].append(dice_t_mean)
+                    sweep_accumulators[threshold]["dice_pos"].append(dice_t_pos_val)
+                    sweep_accumulators[threshold]["pos_ratio"].append(pos_ratio_t)
+                    sweep_accumulators[threshold]["non_empty"].append(non_empty_rate_t)
+                    case_sweep[_threshold_key(threshold)] = {
+                        "dice_mean": dice_t_mean,
+                        "dice_pos_mean": dice_t_pos_val,
+                        "pred_pos_pixel_ratio": pos_ratio_t,
+                        "prediction_non_empty_rate": non_empty_rate_t,
+                    }
+
+                total_losses.append(float(total_loss.item()))
+                dice_losses.append(float(loss_dice.item()))
+                bce_losses.append(float(loss_bce.item()))
+                dice_values.append(dice_all)
+                dice_pos_values.append(dice_pos_val)
+                pos_ratios.append(pos_ratio)
+                non_empty_rates.append(non_empty_rate)
+
+                rows.append(
+                    {
+                        "case_id": case["case_id"],
+                        "loss_total": float(total_loss.item()),
+                        "loss_dice_focal": float(loss_dice.item()),
+                        "loss_bce_with_logits": float(loss_bce.item()),
+                        "dice_mean": dice_all,
+                        "dice_pos_mean": dice_pos_val,
+                        "prob_min": prob_stats["min"],
+                        "prob_max": prob_stats["max"],
+                        "prob_mean": prob_stats["mean"],
+                        "prob_std": prob_stats["std"],
+                        "logits_min": logits_stats["min"],
+                        "logits_max": logits_stats["max"],
+                        "logits_mean": logits_stats["mean"],
+                        "logits_std": logits_stats["std"],
+                        "pred_pos_pixel_ratio": pos_ratio,
+                        "prediction_non_empty_rate": non_empty_rate,
+                        "prob_shape": list(probs.shape),
+                        "raw_logits_shape": list(raw_logits.shape),
+                        "threshold_sweep": case_sweep,
+                    },
                 )
 
-            prob_stats = _tensor_stats(probs)
-            logits_stats = _tensor_stats(raw_logits)
-            _update_tensor_aggregate(prob_aggregate, probs)
-            _update_tensor_aggregate(logits_aggregate, raw_logits)
-
-            loss_dice = criterion_dice(probs, mask_tensor)
-            loss_bce = criterion_bce_logits(raw_logits, mask_tensor)
-            total_loss = loss_dice + float(bce_loss_weight) * loss_bce
-
-            dice_all = float(dice_score(probs, mask_tensor, threshold=0.5, reduction="mean").item())
-            dice_pos = dice_score(probs, mask_tensor, threshold=0.5, reduction="positive_mean")
-            dice_pos_val = float(dice_pos.item()) if bool(torch.isfinite(dice_pos).item()) else float("nan")
-
-            pos_ratio, non_empty_rate = _positive_ratio_and_non_empty_rate(probs)
-
-            total_losses.append(float(total_loss.item()))
-            dice_losses.append(float(loss_dice.item()))
-            bce_losses.append(float(loss_bce.item()))
-            dice_values.append(dice_all)
-            dice_pos_values.append(dice_pos_val)
-            pos_ratios.append(pos_ratio)
-            non_empty_rates.append(non_empty_rate)
-
-            rows.append(
-                {
-                    "case_id": case["case_id"],
-                    "loss_total": float(total_loss.item()),
-                    "loss_dice_focal": float(loss_dice.item()),
-                    "loss_bce_with_logits": float(loss_bce.item()),
-                    "dice_mean": dice_all,
-                    "dice_pos_mean": dice_pos_val,
-                    "prob_min": prob_stats["min"],
-                    "prob_max": prob_stats["max"],
-                    "prob_mean": prob_stats["mean"],
-                    "prob_std": prob_stats["std"],
-                    "logits_min": logits_stats["min"],
-                    "logits_max": logits_stats["max"],
-                    "logits_mean": logits_stats["mean"],
-                    "logits_std": logits_stats["std"],
-                    "pred_pos_pixel_ratio": pos_ratio,
-                    "prediction_non_empty_rate": non_empty_rate,
-                    "prob_shape": list(probs.shape),
-                    "raw_logits_shape": list(raw_logits.shape),
-                },
-            )
-
-            if not no_visuals and len(visual_paths) < 24:
-                written = _write_visuals(
-                    output_dir,
-                    f"val_step_{step_index:04d}",
-                    case["case_id"],
-                    image_tensor,
-                    mask_tensor,
-                    probs,
-                    raw_logits,
-                )
-                visual_paths.extend(written)
+                if not no_visuals and len(visual_paths) < 24:
+                    written = _write_visuals(
+                        output_dir,
+                        f"val_step_{step_index:04d}",
+                        case["case_id"],
+                        image_tensor,
+                        mask_tensor,
+                        probs,
+                        raw_logits,
+                    )
+                    visual_paths.extend(written)
+    finally:
+        # PR-7D BN-mode fix: restore the previous training mode after validation
+        # so subsequent optimizer steps see BatchNorm in train mode.
+        model.train(mode=was_training)
+        if frozen_backbone and getattr(model, "foundation_x", None) is not None:
+            backbone = getattr(model.foundation_x, "backbone", None)
+            if backbone is not None:
+                backbone.eval()
 
     pred_non_empty_rate_mean = float(np.mean(non_empty_rates)) if non_empty_rates else 0.0
     pred_pos_ratio_mean = float(np.mean(pos_ratios)) if pos_ratios else 0.0
@@ -1282,7 +1474,25 @@ def _evaluate_validation_point(
     prob_summary = _finalize_tensor_aggregate(prob_aggregate)
     logits_summary = _finalize_tensor_aggregate(logits_aggregate)
 
-    out = {
+    threshold_sweep_out: dict[str, dict[str, float | bool]] = {}
+    for threshold in VALIDATION_THRESHOLD_SWEEP:
+        acc = sweep_accumulators[threshold]
+        dice_t = acc["dice"]
+        dice_pos_t = acc["dice_pos"]
+        pos_ratio_t_vals = acc["pos_ratio"]
+        non_empty_t_vals = acc["non_empty"]
+        non_empty_mean = float(np.mean(non_empty_t_vals)) if non_empty_t_vals else 0.0
+        pos_ratio_mean_t = float(np.mean(pos_ratio_t_vals)) if pos_ratio_t_vals else 0.0
+        threshold_sweep_out[_threshold_key(threshold)] = {
+            "dice_mean": float(np.mean(dice_t)) if dice_t else float("nan"),
+            "dice_pos_mean": float(np.nanmean(dice_pos_t)) if dice_pos_t else float("nan"),
+            "prediction_non_empty_rate": non_empty_mean,
+            "pred_pos_pixel_ratio": pos_ratio_mean_t,
+            "all_background": bool(non_empty_mean == 0.0),
+            "all_foreground": bool(pos_ratio_mean_t >= 0.95),
+        }
+
+    out: dict[str, Any] = {
         "step": int(step_index),
         "num_cases": len(val_cases),
         "loss_total_mean": float(np.mean(total_losses)) if total_losses else float("nan"),
@@ -1310,7 +1520,17 @@ def _evaluate_validation_point(
         "logits_inf_total": int(logits_summary["inf_count"]),
         "val_ms": (time.time() - t0) * 1000.0,
         "per_case_rows": rows,
+        "threshold_sweep": threshold_sweep_out,
     }
+    for threshold in VALIDATION_THRESHOLD_SWEEP:
+        suffix = _threshold_suffix(threshold)
+        bucket = threshold_sweep_out[_threshold_key(threshold)]
+        out[f"dice_mean_thr_{suffix}"] = bucket["dice_mean"]
+        out[f"dice_pos_mean_thr_{suffix}"] = bucket["dice_pos_mean"]
+        out[f"prediction_non_empty_rate_thr_{suffix}"] = bucket["prediction_non_empty_rate"]
+        out[f"pred_pos_pixel_ratio_thr_{suffix}"] = bucket["pred_pos_pixel_ratio"]
+        out[f"all_background_thr_{suffix}"] = bucket["all_background"]
+        out[f"all_foreground_thr_{suffix}"] = bucket["all_foreground"]
     return out, visual_paths
 
 
@@ -1448,6 +1668,13 @@ def run_controlled_short_training(args: argparse.Namespace) -> dict[str, Any]:
     trainable_gradients_finite = True
     latest_gradient_summary: dict[str, Any] = {}
 
+    trainable_in_train_mode_before_step = True
+    training_mode_violation_steps: list[int] = []
+    train_mode_checked_steps = 0
+    train_mode_passed_steps = 0
+    train_mode_restored_after_validation = True
+    train_mode_check_after_validation: list[dict[str, Any]] = []
+
     criterion_dice = DiceFocalLoss()
     criterion_bce_logits = torch.nn.BCEWithLogitsLoss()
     scheduled_val_steps = _validation_schedule(int(args.max_steps), int(args.val_every))
@@ -1491,6 +1718,20 @@ def run_controlled_short_training(args: argparse.Namespace) -> dict[str, Any]:
             )
             validation_step_rows.append(val_row)
             executed_val_steps.append(0)
+            post_val_ok, post_val_msg = _assert_trainable_modules_in_train_mode(model)
+            train_mode_check_after_validation.append(
+                {
+                    "after_val_step": 0,
+                    "ok": bool(post_val_ok),
+                    "model_training": bool(getattr(model, "training", False)),
+                    "message": post_val_msg,
+                },
+            )
+            if not post_val_ok:
+                train_mode_restored_after_validation = False
+                failures.append(
+                    f"Train mode not restored after validation step 0: {post_val_msg}",
+                )
         except Exception as exc:
             failures.append(f"Validation step 0 failed: {exc}")
             optimizer_step_success = False
@@ -1518,6 +1759,20 @@ def run_controlled_short_training(args: argparse.Namespace) -> dict[str, Any]:
             optimizer.zero_grad(set_to_none=True)
             hook_recorder.clear()
             step_start = time.time()
+
+            train_mode_checked_steps += 1
+            step_train_mode_ok, step_train_mode_msg = _assert_trainable_modules_in_train_mode(model)
+            if step_train_mode_ok:
+                train_mode_passed_steps += 1
+            else:
+                trainable_in_train_mode_before_step = False
+                training_mode_violation_steps.append(int(step_number))
+                failures.append(
+                    f"Step {step_number}: trainable modules not in train mode "
+                    f"({step_train_mode_msg}).",
+                )
+                optimizer_step_success = False
+                break
 
             probs = model(batch_x)
             raw_logits = hook_recorder.raw_logits
@@ -1693,6 +1948,23 @@ def run_controlled_short_training(args: argparse.Namespace) -> dict[str, Any]:
                     )
                     validation_step_rows.append(val_row)
                     executed_val_steps.append(step_number)
+                    post_val_ok, post_val_msg = _assert_trainable_modules_in_train_mode(model)
+                    train_mode_check_after_validation.append(
+                        {
+                            "after_val_step": int(step_number),
+                            "ok": bool(post_val_ok),
+                            "model_training": bool(getattr(model, "training", False)),
+                            "message": post_val_msg,
+                        },
+                    )
+                    if not post_val_ok:
+                        train_mode_restored_after_validation = False
+                        failures.append(
+                            f"Train mode not restored after validation step {step_number}: "
+                            f"{post_val_msg}",
+                        )
+                        optimizer_step_success = False
+                        break
                 except Exception as exc:
                     failures.append(f"Validation step {step_number} failed: {exc}")
                     optimizer_step_success = False
@@ -1757,6 +2029,8 @@ def run_controlled_short_training(args: argparse.Namespace) -> dict[str, Any]:
         ) if validation_csv_rows else False,
         "no_persistent_degeneracy": not persistent_collapse_from_start,
         "no_forbidden_writes": output_guardrail_ok,
+        "train_mode_restored_after_validation": train_mode_restored_after_validation,
+        "trainable_in_train_mode_before_step": trainable_in_train_mode_before_step,
     }
     status, exit_code = _compute_decision(
         pass_criteria=pass_criteria,
@@ -1888,6 +2162,15 @@ def run_controlled_short_training(args: argparse.Namespace) -> dict[str, Any]:
             ],
             "prediction_non_empty_rate_per_step": [float(row["prediction_non_empty_rate"]) for row in validation_csv_rows],
             "pred_pos_pixel_ratio_mean_per_step": [float(row["pred_pos_pixel_ratio_mean"]) for row in validation_csv_rows],
+            "threshold_sweep": _build_threshold_sweep_summary(validation_step_rows),
+        },
+        "train_mode": {
+            "train_mode_restored_after_validation": bool(train_mode_restored_after_validation),
+            "trainable_in_train_mode_before_step": bool(trainable_in_train_mode_before_step),
+            "steps_checked": int(train_mode_checked_steps),
+            "steps_passed": int(train_mode_passed_steps),
+            "training_mode_violation_steps": list(training_mode_violation_steps),
+            "post_validation_checks": list(train_mode_check_after_validation),
         },
         "gradients": {
             "summary_last_step": latest_gradient_summary,

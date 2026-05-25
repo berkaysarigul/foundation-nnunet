@@ -407,6 +407,85 @@ class TestStubControlledRun(unittest.TestCase):
             self.assertIn(key, val_rows[0])
             self.assertTrue(np.isfinite(float(val_rows[0][key])))
 
+    def test_validation_csv_threshold_sweep_columns(self):
+        self._run(DummyHybrid)
+        val_csv = self.output_dir / "validation_steps.csv"
+        with val_csv.open(encoding="utf-8") as handle:
+            val_rows = list(csv.DictReader(handle))
+        self.assertGreater(len(val_rows), 0)
+        for suffix in ("005", "010", "020", "030", "040", "050"):
+            for stat in (
+                "dice_mean_thr_",
+                "dice_pos_mean_thr_",
+                "prediction_non_empty_rate_thr_",
+                "pred_pos_pixel_ratio_thr_",
+                "all_background_thr_",
+                "all_foreground_thr_",
+            ):
+                column = f"{stat}{suffix}"
+                self.assertIn(column, val_rows[0])
+        for suffix in ("005", "010", "020", "030", "040", "050"):
+            value = val_rows[0][f"dice_mean_thr_{suffix}"]
+            self.assertTrue(np.isfinite(float(value)))
+
+    def test_summary_threshold_sweep_block(self):
+        summary = self._run(DummyHybrid)
+        sweep = summary["validation"]["threshold_sweep"]
+        for key in ("0.05", "0.10", "0.20", "0.30", "0.40", "0.50"):
+            self.assertIn(key, sweep)
+            bucket = sweep[key]
+            for series in (
+                "dice_mean_per_step",
+                "dice_pos_mean_per_step",
+                "prediction_non_empty_rate_per_step",
+                "pred_pos_pixel_ratio_per_step",
+                "all_background_per_step",
+                "all_foreground_per_step",
+            ):
+                self.assertIn(series, bucket)
+                self.assertEqual(
+                    len(bucket[series]),
+                    len(summary["validation"]["executed_steps"]),
+                )
+
+    def test_selection_log_includes_foreground_ratio(self):
+        self._run(DummyHybrid)
+        sel_csv = self.output_dir / "selection_log.csv"
+        with sel_csv.open(encoding="utf-8") as handle:
+            rows = list(csv.DictReader(handle))
+        self.assertGreater(len(rows), 0)
+        for column in ("foreground_pixels", "total_pixels", "foreground_ratio"):
+            self.assertIn(column, rows[0])
+        for row in rows:
+            total = float(row["total_pixels"])
+            fg = float(row["foreground_pixels"])
+            ratio = float(row["foreground_ratio"])
+            self.assertGreater(total, 0.0)
+            self.assertGreaterEqual(fg, 0.0)
+            self.assertGreaterEqual(ratio, 0.0)
+            self.assertLessEqual(ratio, 1.0)
+            if total > 0:
+                self.assertAlmostEqual(ratio, fg / total, places=6)
+        positive_rows = [r for r in rows if r["is_positive"].lower() == "true"]
+        negative_rows = [r for r in rows if r["is_positive"].lower() == "false"]
+        self.assertGreater(len(positive_rows), 0)
+        self.assertGreater(len(negative_rows), 0)
+        for r in positive_rows:
+            self.assertGreater(float(r["foreground_pixels"]), 0.0)
+        for r in negative_rows:
+            self.assertEqual(float(r["foreground_pixels"]), 0.0)
+
+    def test_train_mode_restored_after_validation(self):
+        summary = self._run(DummyHybrid)
+        self.assertTrue(summary["pass_criteria"]["train_mode_restored_after_validation"])
+        self.assertTrue(summary["pass_criteria"]["trainable_in_train_mode_before_step"])
+        train_mode = summary["train_mode"]
+        self.assertEqual(train_mode["training_mode_violation_steps"], [])
+        self.assertEqual(train_mode["steps_checked"], train_mode["steps_passed"])
+        for entry in train_mode["post_validation_checks"]:
+            self.assertTrue(entry["ok"])
+            self.assertTrue(entry["model_training"])
+
     def test_bce_loss_weight_changes_total_loss_but_logs_unweighted_bce(self):
         summary = self._run(DummyHybrid, extra_args=["--bce_loss_weight", "0.1"])
         self.assertEqual(summary["setup"]["bce_loss_weight"], 0.1)
@@ -488,6 +567,159 @@ class TestGuardrails(unittest.TestCase):
         ok, msg = cts._validate_output_guardrail(Path("artifacts/runs/smoke"))
         self.assertFalse(ok)
         self.assertIn("forbidden", msg.lower())
+
+
+class TestValidationModeRestore(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = Path(tempfile.mkdtemp())
+        self.input_dir, self.labels_dir = _build_dataset_fixture(
+            self.tmpdir, num_positive=4, num_negative=4
+        )
+        self.output_dir = self.tmpdir / "artifacts" / "diagnostics" / "hybrid_controlled_short_train"
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+
+    def tearDown(self):
+        import shutil
+
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _make_val_cases(self) -> list[dict[str, Any]]:
+        return [
+            {
+                "case_id": f"siim_{100000 + idx:06d}",
+                "image_path": str(self.input_dir / f"siim_{100000 + idx:06d}_0000.png"),
+                "label_path": str(self.labels_dir / f"siim_{100000 + idx:06d}.png"),
+                "label_max": 1,
+                "is_positive": True,
+                "foreground_pixels": 1,
+                "total_pixels": 1,
+                "foreground_ratio": 1.0,
+            }
+            for idx in range(2)
+        ]
+
+    def test_eval_then_restore_train(self):
+        from src.training.losses import DiceFocalLoss
+
+        model = DummyHybrid(backbone_checkpoint="unused", frozen_backbone=True, img_size=128)
+        model.train()
+        self.assertTrue(model.training)
+        self.assertFalse(model.foundation_x.backbone.training)
+
+        hook_recorder = cts._register_hooks(model)
+        try:
+            criterion_dice = DiceFocalLoss()
+            criterion_bce = torch.nn.BCEWithLogitsLoss()
+            cases = self._make_val_cases()
+            row, _ = cts._evaluate_validation_point(
+                model=model,
+                hook_recorder=hook_recorder,
+                val_cases=cases,
+                img_size=128,
+                device=torch.device("cpu"),
+                criterion_dice=criterion_dice,
+                criterion_bce_logits=criterion_bce,
+                bce_loss_weight=1.0,
+                step_index=0,
+                output_dir=self.output_dir,
+                no_visuals=True,
+                visual_paths=[],
+            )
+        finally:
+            hook_recorder.close()
+
+        self.assertTrue(model.training)
+        self.assertFalse(model.foundation_x.backbone.training)
+        for module_name, module in model.named_modules():
+            if module_name == "" or module_name.startswith("foundation_x"):
+                continue
+            self.assertTrue(
+                module.training,
+                f"submodule '{module_name}' should be in train mode after validation",
+            )
+        ok, msg = cts._assert_trainable_modules_in_train_mode(model)
+        self.assertTrue(ok, msg)
+        self.assertIn("threshold_sweep", row)
+        self.assertEqual(set(row["threshold_sweep"].keys()), {"0.05", "0.10", "0.20", "0.30", "0.40", "0.50"})
+
+    def test_eval_start_restores_eval(self):
+        model = DummyHybrid(backbone_checkpoint="unused", frozen_backbone=True, img_size=128)
+        model.eval()
+        self.assertFalse(model.training)
+
+        hook_recorder = cts._register_hooks(model)
+        try:
+            from src.training.losses import DiceFocalLoss
+
+            cases = self._make_val_cases()
+            cts._evaluate_validation_point(
+                model=model,
+                hook_recorder=hook_recorder,
+                val_cases=cases,
+                img_size=128,
+                device=torch.device("cpu"),
+                criterion_dice=DiceFocalLoss(),
+                criterion_bce_logits=torch.nn.BCEWithLogitsLoss(),
+                bce_loss_weight=1.0,
+                step_index=0,
+                output_dir=self.output_dir,
+                no_visuals=True,
+                visual_paths=[],
+            )
+        finally:
+            hook_recorder.close()
+
+        self.assertFalse(model.training)
+
+
+class TestThresholdSweepMetrics(unittest.TestCase):
+    def test_positive_ratio_threshold_parameter(self):
+        probs = torch.linspace(0.0, 1.0, steps=11).view(1, 1, 1, 11)
+        pos_low, non_empty_low = cts._positive_ratio_and_non_empty_rate(probs, threshold=0.05)
+        pos_mid, _ = cts._positive_ratio_and_non_empty_rate(probs, threshold=0.5)
+        pos_high, _ = cts._positive_ratio_and_non_empty_rate(probs, threshold=0.95)
+        self.assertGreater(pos_low, pos_mid)
+        self.assertGreater(pos_mid, pos_high)
+        self.assertEqual(non_empty_low, 1.0)
+
+
+class TestSelectionLogForegroundRatio(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = Path(tempfile.mkdtemp())
+        self.input_dir, self.labels_dir = _build_dataset_fixture(
+            self.tmpdir, num_positive=3, num_negative=3
+        )
+
+    def tearDown(self):
+        import shutil
+
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def test_list_labeled_cases_includes_foreground_stats(self):
+        cases = cts._list_labeled_cases(self.input_dir, self.labels_dir)
+        self.assertGreater(len(cases), 0)
+        for case in cases:
+            self.assertIn("foreground_pixels", case)
+            self.assertIn("total_pixels", case)
+            self.assertIn("foreground_ratio", case)
+            self.assertGreater(case["total_pixels"], 0)
+            if case["is_positive"]:
+                self.assertGreater(case["foreground_pixels"], 0)
+            else:
+                self.assertEqual(case["foreground_pixels"], 0)
+
+
+class TestAssertTrainMode(unittest.TestCase):
+    def test_train_mode_detection(self):
+        model = DummyHybrid(backbone_checkpoint="unused", frozen_backbone=True, img_size=128)
+        model.train()
+        ok, msg = cts._assert_trainable_modules_in_train_mode(model)
+        self.assertTrue(ok, msg)
+
+        model.eval()
+        ok_eval, msg_eval = cts._assert_trainable_modules_in_train_mode(model)
+        self.assertFalse(ok_eval)
+        self.assertIn("training", msg_eval.lower())
 
 
 if __name__ == "__main__":

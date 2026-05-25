@@ -1,0 +1,5 @@
+# Generated outputs for controlled short hybrid training diagnostics
+# (lr3e5 50-step run with PR-7D BN-mode fix + threshold sweep + foreground-ratio logging).
+visuals/
+*.npy
+*.pth
