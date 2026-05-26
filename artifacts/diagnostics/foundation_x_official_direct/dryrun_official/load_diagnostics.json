@@ -1,0 +1,162 @@
+{
+  "model": {
+    "status": "loaded",
+    "official_commit": "5e0b473cf3f595320ce982697d4365e1d9a4f642",
+    "vendored_root": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\third_party\\foundation_x",
+    "vendored_swin_path": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\third_party\\foundation_x\\models\\dino\\swin_transformer_CyclicSegmentation.py",
+    "model_name": "swin_B_224_22k",
+    "pretrain_img_size": 224,
+    "num_classes": 1,
+    "checkpoint_info": {
+      "checkpoint_path": "checkpoints\\foundation_x.pth",
+      "top_level_type": "dict",
+      "top_level_keys": [
+        "model",
+        "teacher_model",
+        "optimizer",
+        "epoch"
+      ],
+      "selected_state_key": "model",
+      "state_dict_len": 2340,
+      "state_dict_key_sample": [
+        "transformer.level_embed",
+        "transformer.encoder.layers.0.self_attn.sampling_offsets.weight",
+        "transformer.encoder.layers.0.self_attn.sampling_offsets.bias",
+        "transformer.encoder.layers.0.self_attn.attention_weights.weight",
+        "transformer.encoder.layers.0.self_attn.attention_weights.bias",
+        "transformer.encoder.layers.0.self_attn.value_proj.weight",
+        "transformer.encoder.layers.0.self_attn.value_proj.bias",
+        "transformer.encoder.layers.0.self_attn.output_proj.weight",
+        "transformer.encoder.layers.0.self_attn.output_proj.bias",
+        "transformer.encoder.layers.0.norm1.weight",
+        "transformer.encoder.layers.0.norm1.bias",
+        "transformer.encoder.layers.0.linear1.weight",
+        "transformer.encoder.layers.0.linear1.bias",
+        "transformer.encoder.layers.0.linear2.weight",
+        "transformer.encoder.layers.0.linear2.bias",
+        "transformer.encoder.layers.0.norm2.weight",
+        "transformer.encoder.layers.0.norm2.bias",
+        "transformer.encoder.layers.1.self_attn.sampling_offsets.weight",
+        "transformer.encoder.layers.1.self_attn.sampling_offsets.bias",
+        "transformer.encoder.layers.1.self_attn.attention_weights.weight"
+      ],
+      "prefix_counts": {
+        "transformer": 1298,
+        "label_enc": 1,
+        "input_proj": 16,
+        "backbone": 449,
+        "bbox_embed": 216,
+        "class_embed": 72,
+        "bbox_embed_": 216,
+        "class_embed_": 72
+      }
+    },
+    "route_stats": {
+      "raw_total": 2340,
+      "raw_with_backbone0_prefix": 449,
+      "routed_swin": 351,
+      "routed_segnorm": 8,
+      "routed_locnorm": 6,
+      "routed_ppn": 30,
+      "routed_fpn": 18,
+      "routed_segmentation_heads": 12,
+      "routed_classification_heads": 22,
+      "routed_swin_head": 2,
+      "skipped_non_backbone0": 1891,
+      "routed_other_backbone0": 0
+    },
+    "stripped_backbone0_key_count": 449,
+    "shape_compatible_key_count": 449,
+    "missing": [
+      "Locnorm0.weight",
+      "Locnorm0.bias"
+    ],
+    "unexpected": [],
+    "unexpected_before_shape_filter": [],
+    "shape_mismatches": [],
+    "missing_count": 2,
+    "unexpected_count": 0,
+    "unexpected_before_shape_filter_count": 0,
+    "shape_mismatch_count": 0
+  },
+  "teacher_model": {
+    "status": "loaded",
+    "official_commit": "5e0b473cf3f595320ce982697d4365e1d9a4f642",
+    "vendored_root": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\third_party\\foundation_x",
+    "vendored_swin_path": "C:\\Users\\beko5\\Desktop\\Foundation-nnU-Net\\foundation-nnunet\\third_party\\foundation_x\\models\\dino\\swin_transformer_CyclicSegmentation.py",
+    "model_name": "swin_B_224_22k",
+    "pretrain_img_size": 224,
+    "num_classes": 1,
+    "checkpoint_info": {
+      "checkpoint_path": "checkpoints\\foundation_x.pth",
+      "top_level_type": "dict",
+      "top_level_keys": [
+        "model",
+        "teacher_model",
+        "optimizer",
+        "epoch"
+      ],
+      "selected_state_key": "teacher_model",
+      "state_dict_len": 2340,
+      "state_dict_key_sample": [
+        "transformer.level_embed",
+        "transformer.encoder.layers.0.self_attn.sampling_offsets.weight",
+        "transformer.encoder.layers.0.self_attn.sampling_offsets.bias",
+        "transformer.encoder.layers.0.self_attn.attention_weights.weight",
+        "transformer.encoder.layers.0.self_attn.attention_weights.bias",
+        "transformer.encoder.layers.0.self_attn.value_proj.weight",
+        "transformer.encoder.layers.0.self_attn.value_proj.bias",
+        "transformer.encoder.layers.0.self_attn.output_proj.weight",
+        "transformer.encoder.layers.0.self_attn.output_proj.bias",
+        "transformer.encoder.layers.0.norm1.weight",
+        "transformer.encoder.layers.0.norm1.bias",
+        "transformer.encoder.layers.0.linear1.weight",
+        "transformer.encoder.layers.0.linear1.bias",
+        "transformer.encoder.layers.0.linear2.weight",
+        "transformer.encoder.layers.0.linear2.bias",
+        "transformer.encoder.layers.0.norm2.weight",
+        "transformer.encoder.layers.0.norm2.bias",
+        "transformer.encoder.layers.1.self_attn.sampling_offsets.weight",
+        "transformer.encoder.layers.1.self_attn.sampling_offsets.bias",
+        "transformer.encoder.layers.1.self_attn.attention_weights.weight"
+      ],
+      "prefix_counts": {
+        "transformer": 1298,
+        "label_enc": 1,
+        "input_proj": 16,
+        "backbone": 449,
+        "bbox_embed": 216,
+        "class_embed": 72,
+        "bbox_embed_": 216,
+        "class_embed_": 72
+      }
+    },
+    "route_stats": {
+      "raw_total": 2340,
+      "raw_with_backbone0_prefix": 449,
+      "routed_swin": 351,
+      "routed_segnorm": 8,
+      "routed_locnorm": 6,
+      "routed_ppn": 30,
+      "routed_fpn": 18,
+      "routed_segmentation_heads": 12,
+      "routed_classification_heads": 22,
+      "routed_swin_head": 2,
+      "skipped_non_backbone0": 1891,
+      "routed_other_backbone0": 0
+    },
+    "stripped_backbone0_key_count": 449,
+    "shape_compatible_key_count": 449,
+    "missing": [
+      "Locnorm0.weight",
+      "Locnorm0.bias"
+    ],
+    "unexpected": [],
+    "unexpected_before_shape_filter": [],
+    "shape_mismatches": [],
+    "missing_count": 2,
+    "unexpected_count": 0,
+    "unexpected_before_shape_filter_count": 0,
+    "shape_mismatch_count": 0
+  }
+}

@@ -1,0 +1,329 @@
+{
+  "audit_name": "foundation_x_official_direct_stage_a_b",
+  "schema_version": 1,
+  "generated_at": "2026-05-26T20:34:29.757194+00:00",
+  "official_foundation_x_commit": "5e0b473cf3f595320ce982697d4365e1d9a4f642",
+  "do_not_use_as_priors": true,
+  "framing_notice": "PR-9A reverse-engineered predictions were trivial and must not be exported as nnU-Net priors. This run only diagnoses the official Foundation_X segmentation path.",
+  "stage": "both",
+  "dataset_root": "nnUNet_raw\\Dataset101_Pneumothorax",
+  "checkpoint": "checkpoints\\foundation_x.pth",
+  "state_keys_requested": [
+    "model",
+    "teacher_model"
+  ],
+  "state_keys_loaded": [
+    "model",
+    "teacher_model"
+  ],
+  "heads_requested": [
+    5,
+    2
+  ],
+  "head4_channel": 12,
+  "head_specs_evaluated": [
+    {
+      "head_idx": 5,
+      "channel": null,
+      "key": "head_5",
+      "label": "official SIIM-ACR pneumothorax segmentation head"
+    },
+    {
+      "head_idx": 2,
+      "channel": null,
+      "key": "head_2",
+      "label": "official CANDID-PTX pneumothorax diagnostic head"
+    },
+    {
+      "head_idx": 4,
+      "channel": 12,
+      "key": "head_4_ch12",
+      "label": "official ChestX-Det multiclass segmentation head, channel 12"
+    }
+  ],
+  "preprocess_variants": [
+    "official_siim_224",
+    "official_siim_512",
+    "current_pr9a_512"
+  ],
+  "device": "cpu",
+  "threshold": 0.5,
+  "dataset_counts": {
+    "imagesTs_count": 1602,
+    "heldout_labelsTs_count": 1602,
+    "matched_cases": 1602,
+    "positive_cases": 357,
+    "negative_cases": 1245
+  },
+  "selected_cases": [
+    {
+      "case_id": "siim_009202",
+      "label_is_positive": true,
+      "label_foreground_pixels": 1275
+    },
+    {
+      "case_id": "siim_010316",
+      "label_is_positive": false,
+      "label_foreground_pixels": 0
+    }
+  ],
+  "stage_b_rows": 36,
+  "non_trivial_mask_rows": 19,
+  "nonconstant_probability_rows": 24,
+  "non_trivial_enough_to_consider_stage_c": true,
+  "aggregates_by_state_preprocess_head": [
+    {
+      "state_key": "model",
+      "preprocess_variant": "current_pr9a_512",
+      "head_key": "head_2",
+      "cases": 2,
+      "gt_positive_cases": 1,
+      "gt_negative_cases": 1,
+      "pred_positive_cases": 1,
+      "mean_dice": 0.7153846153846154,
+      "mean_positive_dice": 0.4307692307692308,
+      "mean_negative_specificity": 1.0,
+      "mean_prob_std": 0.018770851751696682,
+      "non_trivial_masks": 1
+    },
+    {
+      "state_key": "model",
+      "preprocess_variant": "current_pr9a_512",
+      "head_key": "head_4_ch12",
+      "cases": 2,
+      "gt_positive_cases": 1,
+      "gt_negative_cases": 1,
+      "pred_positive_cases": 1,
+      "mean_dice": 0.0,
+      "mean_positive_dice": 0.0,
+      "mean_negative_specificity": 0.9997177124023438,
+      "mean_prob_std": 0.008141935591993388,
+      "non_trivial_masks": 1
+    },
+    {
+      "state_key": "model",
+      "preprocess_variant": "current_pr9a_512",
+      "head_key": "head_5",
+      "cases": 2,
+      "gt_positive_cases": 1,
+      "gt_negative_cases": 1,
+      "pred_positive_cases": 1,
+      "mean_dice": 0.702088452088452,
+      "mean_positive_dice": 0.40417690417690416,
+      "mean_negative_specificity": 1.0,
+      "mean_prob_std": 0.01705980034793697,
+      "non_trivial_masks": 1
+    },
+    {
+      "state_key": "model",
+      "preprocess_variant": "official_siim_224",
+      "head_key": "head_2",
+      "cases": 2,
+      "gt_positive_cases": 1,
+      "gt_negative_cases": 1,
+      "pred_positive_cases": 1,
+      "mean_dice": 0.6522491349480969,
+      "mean_positive_dice": 0.3044982698961938,
+      "mean_negative_specificity": 1.0,
+      "mean_prob_std": 0.012889769953217112,
+      "non_trivial_masks": 1
+    },
+    {
+      "state_key": "model",
+      "preprocess_variant": "official_siim_224",
+      "head_key": "head_4_ch12",
+      "cases": 2,
+      "gt_positive_cases": 1,
+      "gt_negative_cases": 1,
+      "pred_positive_cases": 0,
+      "mean_dice": 0.5,
+      "mean_positive_dice": 0.0,
+      "mean_negative_specificity": 1.0,
+      "mean_prob_std": 0.0005330760177457705,
+      "non_trivial_masks": 0
+    },
+    {
+      "state_key": "model",
+      "preprocess_variant": "official_siim_224",
+      "head_key": "head_5",
+      "cases": 2,
+      "gt_positive_cases": 1,
+      "gt_negative_cases": 1,
+      "pred_positive_cases": 1,
+      "mean_dice": 0.7122186495176849,
+      "mean_positive_dice": 0.42443729903536975,
+      "mean_negative_specificity": 1.0,
+      "mean_prob_std": 0.015615351778851316,
+      "non_trivial_masks": 1
+    },
+    {
+      "state_key": "model",
+      "preprocess_variant": "official_siim_512",
+      "head_key": "head_2",
+      "cases": 2,
+      "gt_positive_cases": 1,
+      "gt_negative_cases": 1,
+      "pred_positive_cases": 1,
+      "mean_dice": 0.893597671880684,
+      "mean_positive_dice": 0.7871953437613678,
+      "mean_negative_specificity": 1.0,
+      "mean_prob_std": 0.03651018510052495,
+      "non_trivial_masks": 1
+    },
+    {
+      "state_key": "model",
+      "preprocess_variant": "official_siim_512",
+      "head_key": "head_4_ch12",
+      "cases": 2,
+      "gt_positive_cases": 1,
+      "gt_negative_cases": 1,
+      "pred_positive_cases": 1,
+      "mean_dice": 0.0,
+      "mean_positive_dice": 0.0,
+      "mean_negative_specificity": 0.9922447204589844,
+      "mean_prob_std": 0.040278376545757055,
+      "non_trivial_masks": 1
+    },
+    {
+      "state_key": "model",
+      "preprocess_variant": "official_siim_512",
+      "head_key": "head_5",
+      "cases": 2,
+      "gt_positive_cases": 1,
+      "gt_negative_cases": 1,
+      "pred_positive_cases": 1,
+      "mean_dice": 0.8977110157367668,
+      "mean_positive_dice": 0.7954220314735336,
+      "mean_negative_specificity": 1.0,
+      "mean_prob_std": 0.03705242378353546,
+      "non_trivial_masks": 1
+    },
+    {
+      "state_key": "teacher_model",
+      "preprocess_variant": "current_pr9a_512",
+      "head_key": "head_2",
+      "cases": 2,
+      "gt_positive_cases": 1,
+      "gt_negative_cases": 1,
+      "pred_positive_cases": 1,
+      "mean_dice": 0.7684350132625994,
+      "mean_positive_dice": 0.5368700265251989,
+      "mean_negative_specificity": 1.0,
+      "mean_prob_std": 0.02351932980642399,
+      "non_trivial_masks": 1
+    },
+    {
+      "state_key": "teacher_model",
+      "preprocess_variant": "current_pr9a_512",
+      "head_key": "head_4_ch12",
+      "cases": 2,
+      "gt_positive_cases": 1,
+      "gt_negative_cases": 1,
+      "pred_positive_cases": 2,
+      "mean_dice": 0.0,
+      "mean_positive_dice": 0.0,
+      "mean_negative_specificity": 0.8710212707519531,
+      "mean_prob_std": 0.19003940001130104,
+      "non_trivial_masks": 2
+    },
+    {
+      "state_key": "teacher_model",
+      "preprocess_variant": "current_pr9a_512",
+      "head_key": "head_5",
+      "cases": 2,
+      "gt_positive_cases": 1,
+      "gt_negative_cases": 1,
+      "pred_positive_cases": 1,
+      "mean_dice": 0.7797276060764798,
+      "mean_positive_dice": 0.5594552121529597,
+      "mean_negative_specificity": 1.0,
+      "mean_prob_std": 0.02403677451437866,
+      "non_trivial_masks": 1
+    },
+    {
+      "state_key": "teacher_model",
+      "preprocess_variant": "official_siim_224",
+      "head_key": "head_2",
+      "cases": 2,
+      "gt_positive_cases": 1,
+      "gt_negative_cases": 1,
+      "pred_positive_cases": 1,
+      "mean_dice": 0.6778523489932886,
+      "mean_positive_dice": 0.35570469798657717,
+      "mean_negative_specificity": 1.0,
+      "mean_prob_std": 0.014297700487788702,
+      "non_trivial_masks": 1
+    },
+    {
+      "state_key": "teacher_model",
+      "preprocess_variant": "official_siim_224",
+      "head_key": "head_4_ch12",
+      "cases": 2,
+      "gt_positive_cases": 1,
+      "gt_negative_cases": 1,
+      "pred_positive_cases": 1,
+      "mean_dice": 0.0,
+      "mean_positive_dice": 0.0,
+      "mean_negative_specificity": 0.9545001594387755,
+      "mean_prob_std": 0.10323446989059448,
+      "non_trivial_masks": 1
+    },
+    {
+      "state_key": "teacher_model",
+      "preprocess_variant": "official_siim_224",
+      "head_key": "head_5",
+      "cases": 2,
+      "gt_positive_cases": 1,
+      "gt_negative_cases": 1,
+      "pred_positive_cases": 1,
+      "mean_dice": 0.7687861271676301,
+      "mean_positive_dice": 0.5375722543352601,
+      "mean_negative_specificity": 1.0,
+      "mean_prob_std": 0.021029828116958513,
+      "non_trivial_masks": 1
+    },
+    {
+      "state_key": "teacher_model",
+      "preprocess_variant": "official_siim_512",
+      "head_key": "head_2",
+      "cases": 2,
+      "gt_positive_cases": 1,
+      "gt_negative_cases": 1,
+      "pred_positive_cases": 1,
+      "mean_dice": 0.8897399358745992,
+      "mean_positive_dice": 0.7794798717491984,
+      "mean_negative_specificity": 1.0,
+      "mean_prob_std": 0.03745427001172068,
+      "non_trivial_masks": 1
+    },
+    {
+      "state_key": "teacher_model",
+      "preprocess_variant": "official_siim_512",
+      "head_key": "head_4_ch12",
+      "cases": 2,
+      "gt_positive_cases": 1,
+      "gt_negative_cases": 1,
+      "pred_positive_cases": 2,
+      "mean_dice": 0.0,
+      "mean_positive_dice": 0.0,
+      "mean_negative_specificity": 0.8536911010742188,
+      "mean_prob_std": 0.21771179139614105,
+      "non_trivial_masks": 2
+    },
+    {
+      "state_key": "teacher_model",
+      "preprocess_variant": "official_siim_512",
+      "head_key": "head_5",
+      "cases": 2,
+      "gt_positive_cases": 1,
+      "gt_negative_cases": 1,
+      "pred_positive_cases": 1,
+      "mean_dice": 0.8879109930255729,
+      "mean_positive_dice": 0.7758219860511458,
+      "mean_negative_specificity": 1.0,
+      "mean_prob_std": 0.03985932105796713,
+      "non_trivial_masks": 1
+    }
+  ],
+  "failures": []
+}

@@ -1,0 +1,2114 @@
+{
+  "stage_a_synthetic": {
+    "model": {
+      "synthetic_input": {
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ],
+        "dtype": "torch.float32",
+        "numel": 150528,
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "outputs": {
+        "head_5": {
+          "label": "official SIIM-ACR pneumothorax segmentation head",
+          "raw_head_logits": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": -28.128623962402344,
+            "max": -12.998600006103516,
+            "mean": -17.326152801513672,
+            "std": 1.3414208889007568
+          },
+          "selected_logits": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": -28.128623962402344,
+            "max": -12.998600006103516,
+            "mean": -17.326152801513672,
+            "std": 1.3414208889007568
+          },
+          "probability": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": 6.07986371751329e-13,
+            "max": 2.263491069243173e-06,
+            "mean": 4.633983152757537e-08,
+            "std": 4.662672381527955e-08
+          }
+        },
+        "head_2": {
+          "label": "official CANDID-PTX pneumothorax diagnostic head",
+          "raw_head_logits": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": -31.825807571411133,
+            "max": -12.866455078125,
+            "mean": -20.6511287689209,
+            "std": 1.6376338005065918
+          },
+          "selected_logits": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": -31.825807571411133,
+            "max": -12.866455078125,
+            "mean": -20.6511287689209,
+            "std": 1.6376338005065918
+          },
+          "probability": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": 1.5073960959663402e-14,
+            "max": 2.5832616756815696e-06,
+            "mean": 3.3406386545919986e-09,
+            "std": 2.840165436168718e-08
+          }
+        },
+        "head_4_ch12": {
+          "label": "official ChestX-Det multiclass segmentation head, channel 12",
+          "raw_head_logits": {
+            "shape": [
+              1,
+              13,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 652288,
+            "min": -13.592945098876953,
+            "max": -4.104025840759277,
+            "mean": -7.453617095947266,
+            "std": 0.8837973475456238
+          },
+          "selected_logits": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": -12.61808967590332,
+            "max": -4.475561141967773,
+            "mean": -7.404965877532959,
+            "std": 0.8406355381011963
+          },
+          "probability": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": 3.3115541100414703e-06,
+            "max": 0.011255699209868908,
+            "mean": 0.0007632511551491916,
+            "std": 0.0005395019543357193
+          }
+        }
+      }
+    },
+    "teacher_model": {
+      "synthetic_input": {
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ],
+        "dtype": "torch.float32",
+        "numel": 150528,
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "outputs": {
+        "head_5": {
+          "label": "official SIIM-ACR pneumothorax segmentation head",
+          "raw_head_logits": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": -49.63356399536133,
+            "max": -19.350849151611328,
+            "mean": -45.67808151245117,
+            "std": 4.051544189453125
+          },
+          "selected_logits": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": -49.63356399536133,
+            "max": -19.350849151611328,
+            "mean": -45.67808151245117,
+            "std": 4.051544189453125
+          },
+          "probability": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": 2.7823838519580855e-22,
+            "max": 3.944872872807537e-09,
+            "mean": 5.101785422075011e-13,
+            "std": 3.823856856155494e-11
+          }
+        },
+        "head_2": {
+          "label": "official CANDID-PTX pneumothorax diagnostic head",
+          "raw_head_logits": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": -61.61803436279297,
+            "max": -19.58975601196289,
+            "mean": -56.658443450927734,
+            "std": 5.517813205718994
+          },
+          "selected_logits": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": -61.61803436279297,
+            "max": -19.58975601196289,
+            "mean": -56.658443450927734,
+            "std": 5.517813205718994
+          },
+          "probability": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": 1.7363117413406128e-27,
+            "max": 3.1065410244224267e-09,
+            "mean": 3.325460024537763e-13,
+            "std": 2.8886519912174613e-11
+          }
+        },
+        "head_4_ch12": {
+          "label": "official ChestX-Det multiclass segmentation head, channel 12",
+          "raw_head_logits": {
+            "shape": [
+              1,
+              13,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 652288,
+            "min": -14.898186683654785,
+            "max": -3.373871088027954,
+            "mean": -10.813660621643066,
+            "std": 1.2070094347000122
+          },
+          "selected_logits": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": -12.778188705444336,
+            "max": -4.438321113586426,
+            "mean": -10.237075805664062,
+            "std": 0.9110965728759766
+          },
+          "probability": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": 2.8216420560056577e-06,
+            "max": 0.011677777394652367,
+            "mean": 9.07223584363237e-05,
+            "std": 0.0003397618711460382
+          }
+        }
+      }
+    }
+  },
+  "stage_b_preprocess": {
+    "model/official_siim_224/siim_009202": {
+      "variant": "official_siim_224",
+      "input_file_path": "nnUNet_raw\\Dataset101_Pneumothorax\\imagesTs\\siim_009202_0000.png",
+      "read_backend": "cv2.imread(..., IMREAD_COLOR)",
+      "channel_order": "opencv_bgr",
+      "original_image_shape": [
+        512,
+        512,
+        3
+      ],
+      "resized_image_shape": [
+        224,
+        224,
+        3
+      ],
+      "output_tensor_shape": [
+        1,
+        3,
+        224,
+        224
+      ],
+      "dtype": "torch.float32",
+      "resize_interpolation": "cv2.INTER_AREA",
+      "normalization": {
+        "mean": [
+          0.48500001430511475,
+          0.4560000002384186,
+          0.4059999883174896
+        ],
+        "std": [
+          0.2290000021457672,
+          0.2240000069141388,
+          0.22499999403953552
+        ],
+        "max_pixel_value": 1,
+        "post_tensor_divide_by_255": true
+      },
+      "stats_before_normalization": {
+        "shape": [
+          224,
+          224,
+          3
+        ],
+        "dtype": "uint8",
+        "min": 0.0,
+        "max": 255.0,
+        "mean": 107.25285339355469,
+        "std": 73.19669342041016
+      },
+      "stats_after_normalization": {
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ],
+        "dtype": "torch.float32",
+        "min": -0.008305505849421024,
+        "max": 4.456302642822266,
+        "mean": 1.8534400463104248,
+        "std": 1.2704143524169922
+      }
+    },
+    "model/official_siim_512/siim_009202": {
+      "variant": "official_siim_512",
+      "input_file_path": "nnUNet_raw\\Dataset101_Pneumothorax\\imagesTs\\siim_009202_0000.png",
+      "read_backend": "cv2.imread(..., IMREAD_COLOR)",
+      "channel_order": "opencv_bgr",
+      "original_image_shape": [
+        512,
+        512,
+        3
+      ],
+      "resized_image_shape": [
+        512,
+        512,
+        3
+      ],
+      "output_tensor_shape": [
+        1,
+        3,
+        512,
+        512
+      ],
+      "dtype": "torch.float32",
+      "resize_interpolation": "cv2.INTER_AREA",
+      "normalization": {
+        "mean": [
+          0.48500001430511475,
+          0.4560000002384186,
+          0.4059999883174896
+        ],
+        "std": [
+          0.2290000021457672,
+          0.2240000069141388,
+          0.22499999403953552
+        ],
+        "max_pixel_value": 1,
+        "post_tensor_divide_by_255": true
+      },
+      "stats_before_normalization": {
+        "shape": [
+          512,
+          512,
+          3
+        ],
+        "dtype": "uint8",
+        "min": 0.0,
+        "max": 255.0,
+        "mean": 107.25390625,
+        "std": 73.33397674560547
+      },
+      "stats_after_normalization": {
+        "shape": [
+          1,
+          3,
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "min": -0.008305505849421024,
+        "max": 4.456302642822266,
+        "mean": 1.8534587621688843,
+        "std": 1.2727967500686646
+      }
+    },
+    "model/current_pr9a_512/siim_009202": {
+      "variant": "current_pr9a_512",
+      "input_file_path": "nnUNet_raw\\Dataset101_Pneumothorax\\imagesTs\\siim_009202_0000.png",
+      "read_backend": "PIL.convert('L')",
+      "channel_order": "rgb_repeated_from_grayscale",
+      "original_image_shape": [
+        512,
+        512,
+        1
+      ],
+      "resized_image_shape": [
+        512,
+        512,
+        3
+      ],
+      "output_tensor_shape": [
+        1,
+        3,
+        512,
+        512
+      ],
+      "dtype": "torch.float32",
+      "resize_interpolation": "PIL.Image.BILINEAR",
+      "normalization": {
+        "mean": [
+          0.48500001430511475,
+          0.4560000002384186,
+          0.4059999883174896
+        ],
+        "std": [
+          0.2290000021457672,
+          0.2240000069141388,
+          0.22499999403953552
+        ],
+        "input_range": "[0, 1]",
+        "post_tensor_divide_by_255": false
+      },
+      "stats_before_normalization": {
+        "shape": [
+          512,
+          512,
+          3
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 1.0,
+        "mean": 0.4206037223339081,
+        "std": 0.28758424520492554
+      },
+      "stats_after_normalization": {
+        "shape": [
+          1,
+          3,
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "min": -2.1179039478302,
+        "max": 2.640000104904175,
+        "mean": -0.12477371841669083,
+        "std": 1.280705451965332
+      }
+    },
+    "model/official_siim_224/siim_010316": {
+      "variant": "official_siim_224",
+      "input_file_path": "nnUNet_raw\\Dataset101_Pneumothorax\\imagesTs\\siim_010316_0000.png",
+      "read_backend": "cv2.imread(..., IMREAD_COLOR)",
+      "channel_order": "opencv_bgr",
+      "original_image_shape": [
+        512,
+        512,
+        3
+      ],
+      "resized_image_shape": [
+        224,
+        224,
+        3
+      ],
+      "output_tensor_shape": [
+        1,
+        3,
+        224,
+        224
+      ],
+      "dtype": "torch.float32",
+      "resize_interpolation": "cv2.INTER_AREA",
+      "normalization": {
+        "mean": [
+          0.48500001430511475,
+          0.4560000002384186,
+          0.4059999883174896
+        ],
+        "std": [
+          0.2290000021457672,
+          0.2240000069141388,
+          0.22499999403953552
+        ],
+        "max_pixel_value": 1,
+        "post_tensor_divide_by_255": true
+      },
+      "stats_before_normalization": {
+        "shape": [
+          224,
+          224,
+          3
+        ],
+        "dtype": "uint8",
+        "min": 1.0,
+        "max": 207.0,
+        "mean": 116.59263610839844,
+        "std": 47.85770034790039
+      },
+      "stats_after_normalization": {
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ],
+        "dtype": "torch.float32",
+        "min": 0.008819248527288437,
+        "max": 3.615966320037842,
+        "mean": 2.015519380569458,
+        "std": 0.8307726979255676
+      }
+    },
+    "model/official_siim_512/siim_010316": {
+      "variant": "official_siim_512",
+      "input_file_path": "nnUNet_raw\\Dataset101_Pneumothorax\\imagesTs\\siim_010316_0000.png",
+      "read_backend": "cv2.imread(..., IMREAD_COLOR)",
+      "channel_order": "opencv_bgr",
+      "original_image_shape": [
+        512,
+        512,
+        3
+      ],
+      "resized_image_shape": [
+        512,
+        512,
+        3
+      ],
+      "output_tensor_shape": [
+        1,
+        3,
+        512,
+        512
+      ],
+      "dtype": "torch.float32",
+      "resize_interpolation": "cv2.INTER_AREA",
+      "normalization": {
+        "mean": [
+          0.48500001430511475,
+          0.4560000002384186,
+          0.4059999883174896
+        ],
+        "std": [
+          0.2290000021457672,
+          0.2240000069141388,
+          0.22499999403953552
+        ],
+        "max_pixel_value": 1,
+        "post_tensor_divide_by_255": true
+      },
+      "stats_before_normalization": {
+        "shape": [
+          512,
+          512,
+          3
+        ],
+        "dtype": "uint8",
+        "min": 0.0,
+        "max": 211.0,
+        "mean": 116.59261322021484,
+        "std": 47.95738983154297
+      },
+      "stats_after_normalization": {
+        "shape": [
+          1,
+          3,
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "min": -0.008305505849421024,
+        "max": 3.6859943866729736,
+        "mean": 2.0155189037323,
+        "std": 0.8325022459030151
+      }
+    },
+    "model/current_pr9a_512/siim_010316": {
+      "variant": "current_pr9a_512",
+      "input_file_path": "nnUNet_raw\\Dataset101_Pneumothorax\\imagesTs\\siim_010316_0000.png",
+      "read_backend": "PIL.convert('L')",
+      "channel_order": "rgb_repeated_from_grayscale",
+      "original_image_shape": [
+        512,
+        512,
+        1
+      ],
+      "resized_image_shape": [
+        512,
+        512,
+        3
+      ],
+      "output_tensor_shape": [
+        1,
+        3,
+        512,
+        512
+      ],
+      "dtype": "torch.float32",
+      "resize_interpolation": "PIL.Image.BILINEAR",
+      "normalization": {
+        "mean": [
+          0.48500001430511475,
+          0.4560000002384186,
+          0.4059999883174896
+        ],
+        "std": [
+          0.2290000021457672,
+          0.2240000069141388,
+          0.22499999403953552
+        ],
+        "input_range": "[0, 1]",
+        "post_tensor_divide_by_255": false
+      },
+      "stats_before_normalization": {
+        "shape": [
+          512,
+          512,
+          3
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 0.8274509906768799,
+        "mean": 0.4572259187698364,
+        "std": 0.1880681961774826
+      },
+      "stats_after_normalization": {
+        "shape": [
+          1,
+          3,
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "min": -2.1179039478302,
+        "max": 1.8731156587600708,
+        "mean": 0.03728632256388664,
+        "std": 0.8446773886680603
+      }
+    },
+    "teacher_model/official_siim_224/siim_009202": {
+      "variant": "official_siim_224",
+      "input_file_path": "nnUNet_raw\\Dataset101_Pneumothorax\\imagesTs\\siim_009202_0000.png",
+      "read_backend": "cv2.imread(..., IMREAD_COLOR)",
+      "channel_order": "opencv_bgr",
+      "original_image_shape": [
+        512,
+        512,
+        3
+      ],
+      "resized_image_shape": [
+        224,
+        224,
+        3
+      ],
+      "output_tensor_shape": [
+        1,
+        3,
+        224,
+        224
+      ],
+      "dtype": "torch.float32",
+      "resize_interpolation": "cv2.INTER_AREA",
+      "normalization": {
+        "mean": [
+          0.48500001430511475,
+          0.4560000002384186,
+          0.4059999883174896
+        ],
+        "std": [
+          0.2290000021457672,
+          0.2240000069141388,
+          0.22499999403953552
+        ],
+        "max_pixel_value": 1,
+        "post_tensor_divide_by_255": true
+      },
+      "stats_before_normalization": {
+        "shape": [
+          224,
+          224,
+          3
+        ],
+        "dtype": "uint8",
+        "min": 0.0,
+        "max": 255.0,
+        "mean": 107.25285339355469,
+        "std": 73.19669342041016
+      },
+      "stats_after_normalization": {
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ],
+        "dtype": "torch.float32",
+        "min": -0.008305505849421024,
+        "max": 4.456302642822266,
+        "mean": 1.8534400463104248,
+        "std": 1.2704143524169922
+      }
+    },
+    "teacher_model/official_siim_512/siim_009202": {
+      "variant": "official_siim_512",
+      "input_file_path": "nnUNet_raw\\Dataset101_Pneumothorax\\imagesTs\\siim_009202_0000.png",
+      "read_backend": "cv2.imread(..., IMREAD_COLOR)",
+      "channel_order": "opencv_bgr",
+      "original_image_shape": [
+        512,
+        512,
+        3
+      ],
+      "resized_image_shape": [
+        512,
+        512,
+        3
+      ],
+      "output_tensor_shape": [
+        1,
+        3,
+        512,
+        512
+      ],
+      "dtype": "torch.float32",
+      "resize_interpolation": "cv2.INTER_AREA",
+      "normalization": {
+        "mean": [
+          0.48500001430511475,
+          0.4560000002384186,
+          0.4059999883174896
+        ],
+        "std": [
+          0.2290000021457672,
+          0.2240000069141388,
+          0.22499999403953552
+        ],
+        "max_pixel_value": 1,
+        "post_tensor_divide_by_255": true
+      },
+      "stats_before_normalization": {
+        "shape": [
+          512,
+          512,
+          3
+        ],
+        "dtype": "uint8",
+        "min": 0.0,
+        "max": 255.0,
+        "mean": 107.25390625,
+        "std": 73.33397674560547
+      },
+      "stats_after_normalization": {
+        "shape": [
+          1,
+          3,
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "min": -0.008305505849421024,
+        "max": 4.456302642822266,
+        "mean": 1.8534587621688843,
+        "std": 1.2727967500686646
+      }
+    },
+    "teacher_model/current_pr9a_512/siim_009202": {
+      "variant": "current_pr9a_512",
+      "input_file_path": "nnUNet_raw\\Dataset101_Pneumothorax\\imagesTs\\siim_009202_0000.png",
+      "read_backend": "PIL.convert('L')",
+      "channel_order": "rgb_repeated_from_grayscale",
+      "original_image_shape": [
+        512,
+        512,
+        1
+      ],
+      "resized_image_shape": [
+        512,
+        512,
+        3
+      ],
+      "output_tensor_shape": [
+        1,
+        3,
+        512,
+        512
+      ],
+      "dtype": "torch.float32",
+      "resize_interpolation": "PIL.Image.BILINEAR",
+      "normalization": {
+        "mean": [
+          0.48500001430511475,
+          0.4560000002384186,
+          0.4059999883174896
+        ],
+        "std": [
+          0.2290000021457672,
+          0.2240000069141388,
+          0.22499999403953552
+        ],
+        "input_range": "[0, 1]",
+        "post_tensor_divide_by_255": false
+      },
+      "stats_before_normalization": {
+        "shape": [
+          512,
+          512,
+          3
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 1.0,
+        "mean": 0.4206037223339081,
+        "std": 0.28758424520492554
+      },
+      "stats_after_normalization": {
+        "shape": [
+          1,
+          3,
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "min": -2.1179039478302,
+        "max": 2.640000104904175,
+        "mean": -0.12477371841669083,
+        "std": 1.280705451965332
+      }
+    },
+    "teacher_model/official_siim_224/siim_010316": {
+      "variant": "official_siim_224",
+      "input_file_path": "nnUNet_raw\\Dataset101_Pneumothorax\\imagesTs\\siim_010316_0000.png",
+      "read_backend": "cv2.imread(..., IMREAD_COLOR)",
+      "channel_order": "opencv_bgr",
+      "original_image_shape": [
+        512,
+        512,
+        3
+      ],
+      "resized_image_shape": [
+        224,
+        224,
+        3
+      ],
+      "output_tensor_shape": [
+        1,
+        3,
+        224,
+        224
+      ],
+      "dtype": "torch.float32",
+      "resize_interpolation": "cv2.INTER_AREA",
+      "normalization": {
+        "mean": [
+          0.48500001430511475,
+          0.4560000002384186,
+          0.4059999883174896
+        ],
+        "std": [
+          0.2290000021457672,
+          0.2240000069141388,
+          0.22499999403953552
+        ],
+        "max_pixel_value": 1,
+        "post_tensor_divide_by_255": true
+      },
+      "stats_before_normalization": {
+        "shape": [
+          224,
+          224,
+          3
+        ],
+        "dtype": "uint8",
+        "min": 1.0,
+        "max": 207.0,
+        "mean": 116.59263610839844,
+        "std": 47.85770034790039
+      },
+      "stats_after_normalization": {
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ],
+        "dtype": "torch.float32",
+        "min": 0.008819248527288437,
+        "max": 3.615966320037842,
+        "mean": 2.015519380569458,
+        "std": 0.8307726979255676
+      }
+    },
+    "teacher_model/official_siim_512/siim_010316": {
+      "variant": "official_siim_512",
+      "input_file_path": "nnUNet_raw\\Dataset101_Pneumothorax\\imagesTs\\siim_010316_0000.png",
+      "read_backend": "cv2.imread(..., IMREAD_COLOR)",
+      "channel_order": "opencv_bgr",
+      "original_image_shape": [
+        512,
+        512,
+        3
+      ],
+      "resized_image_shape": [
+        512,
+        512,
+        3
+      ],
+      "output_tensor_shape": [
+        1,
+        3,
+        512,
+        512
+      ],
+      "dtype": "torch.float32",
+      "resize_interpolation": "cv2.INTER_AREA",
+      "normalization": {
+        "mean": [
+          0.48500001430511475,
+          0.4560000002384186,
+          0.4059999883174896
+        ],
+        "std": [
+          0.2290000021457672,
+          0.2240000069141388,
+          0.22499999403953552
+        ],
+        "max_pixel_value": 1,
+        "post_tensor_divide_by_255": true
+      },
+      "stats_before_normalization": {
+        "shape": [
+          512,
+          512,
+          3
+        ],
+        "dtype": "uint8",
+        "min": 0.0,
+        "max": 211.0,
+        "mean": 116.59261322021484,
+        "std": 47.95738983154297
+      },
+      "stats_after_normalization": {
+        "shape": [
+          1,
+          3,
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "min": -0.008305505849421024,
+        "max": 3.6859943866729736,
+        "mean": 2.0155189037323,
+        "std": 0.8325022459030151
+      }
+    },
+    "teacher_model/current_pr9a_512/siim_010316": {
+      "variant": "current_pr9a_512",
+      "input_file_path": "nnUNet_raw\\Dataset101_Pneumothorax\\imagesTs\\siim_010316_0000.png",
+      "read_backend": "PIL.convert('L')",
+      "channel_order": "rgb_repeated_from_grayscale",
+      "original_image_shape": [
+        512,
+        512,
+        1
+      ],
+      "resized_image_shape": [
+        512,
+        512,
+        3
+      ],
+      "output_tensor_shape": [
+        1,
+        3,
+        512,
+        512
+      ],
+      "dtype": "torch.float32",
+      "resize_interpolation": "PIL.Image.BILINEAR",
+      "normalization": {
+        "mean": [
+          0.48500001430511475,
+          0.4560000002384186,
+          0.4059999883174896
+        ],
+        "std": [
+          0.2290000021457672,
+          0.2240000069141388,
+          0.22499999403953552
+        ],
+        "input_range": "[0, 1]",
+        "post_tensor_divide_by_255": false
+      },
+      "stats_before_normalization": {
+        "shape": [
+          512,
+          512,
+          3
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 0.8274509906768799,
+        "mean": 0.4572259187698364,
+        "std": 0.1880681961774826
+      },
+      "stats_after_normalization": {
+        "shape": [
+          1,
+          3,
+          512,
+          512
+        ],
+        "dtype": "torch.float32",
+        "min": -2.1179039478302,
+        "max": 1.8731156587600708,
+        "mean": 0.03728632256388664,
+        "std": 0.8446773886680603
+      }
+    }
+  },
+  "stage_b_outputs": {
+    "model/official_siim_224/siim_009202/head_5": {
+      "logits": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": -169.33975219726562,
+        "max": 3.9552204608917236,
+        "mean": -59.153411865234375,
+        "std": 27.665021896362305
+      },
+      "probability": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 0.9812055826187134,
+        "mean": 0.001403746078722179,
+        "std": 0.03123069368302822
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 66,
+        "is_positive": true
+      }
+    },
+    "model/official_siim_224/siim_009202/head_2": {
+      "logits": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": -202.6248321533203,
+        "max": 3.177722454071045,
+        "mean": -62.44502258300781,
+        "std": 32.9796142578125
+      },
+      "probability": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 0.9599872827529907,
+        "mean": 0.0010656913509592414,
+        "std": 0.025779524818062782
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 44,
+        "is_positive": true
+      }
+    },
+    "model/official_siim_224/siim_009202/head_4_ch12": {
+      "logits": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": -78.74514770507812,
+        "max": -5.668293476104736,
+        "mean": -21.543699264526367,
+        "std": 8.473546981811523
+      },
+      "probability": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": 6.330192051577785e-35,
+        "max": 0.003441866720095277,
+        "mean": 8.501833690388594e-06,
+        "std": 0.00011242073378525674
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    },
+    "model/official_siim_512/siim_009202/head_5": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -193.17247009277344,
+        "max": 20.8708553314209,
+        "mean": -55.37367248535156,
+        "std": 26.40582847595215
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 1.0,
+        "mean": 0.005831137765198946,
+        "std": 0.0741041973233223
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 1521,
+        "is_positive": true
+      }
+    },
+    "model/official_siim_512/siim_009202/head_2": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -239.09597778320312,
+        "max": 20.706560134887695,
+        "mean": -58.101070404052734,
+        "std": 31.772289276123047
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 1.0,
+        "mean": 0.005674020387232304,
+        "std": 0.07302005589008331
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 1474,
+        "is_positive": true
+      }
+    },
+    "model/official_siim_512/siim_009202/head_4_ch12": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -74.82469940185547,
+        "max": -1.12582528591156,
+        "mean": -18.13311195373535,
+        "std": 7.487179756164551
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 3.191875646769421e-33,
+        "max": 0.2449323534965515,
+        "mean": 0.00035562203265726566,
+        "std": 0.004377956502139568
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    },
+    "model/current_pr9a_512/siim_009202/head_5": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -196.1051025390625,
+        "max": 7.1073737144470215,
+        "mean": -64.98735809326172,
+        "std": 24.054738998413086
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 0.9991815686225891,
+        "mean": 0.0013303500600159168,
+        "std": 0.03411871939897537
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 353,
+        "is_positive": true
+      }
+    },
+    "model/current_pr9a_512/siim_009202/head_2": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -234.90725708007812,
+        "max": 8.576520919799805,
+        "mean": -67.72250366210938,
+        "std": 28.209144592285156
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 0.999811589717865,
+        "mean": 0.001572870765812695,
+        "std": 0.03754093497991562
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 415,
+        "is_positive": true
+      }
+    },
+    "model/current_pr9a_512/siim_009202/head_4_ch12": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -61.50801467895508,
+        "max": -4.200510025024414,
+        "mean": -20.990358352661133,
+        "std": 6.879674911499023
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 1.9382447256376367e-27,
+        "max": 0.01476660929620266,
+        "mean": 1.0918775842583273e-05,
+        "std": 0.00014952714263927191
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    },
+    "model/official_siim_224/siim_010316/head_5": {
+      "logits": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": -134.89749145507812,
+        "max": -13.810430526733398,
+        "mean": -71.51591491699219,
+        "std": 21.07440757751465
+      },
+      "probability": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 1.0050919172499562e-06,
+        "mean": 1.5736620340156549e-10,
+        "std": 9.874674411491924e-09
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    },
+    "model/official_siim_224/siim_010316/head_2": {
+      "logits": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": -146.47555541992188,
+        "max": -13.612981796264648,
+        "mean": -71.32413482666016,
+        "std": 23.35746192932129
+      },
+      "probability": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 1.2244937579453108e-06,
+        "mean": 3.71692010503466e-10,
+        "std": 1.508837144115205e-08
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    },
+    "model/official_siim_224/siim_010316/head_4_ch12": {
+      "logits": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": -60.06431579589844,
+        "max": -3.640528917312622,
+        "mean": -25.27126693725586,
+        "std": 9.420866012573242
+      },
+      "probability": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": 8.211057487963162e-27,
+        "max": 0.025567607954144478,
+        "mean": 8.470845205010846e-05,
+        "std": 0.0009537313017062843
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    },
+    "model/official_siim_512/siim_010316/head_5": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -132.34437561035156,
+        "max": -8.78826904296875,
+        "mean": -55.396507263183594,
+        "std": 20.839046478271484
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 0.0001524884719401598,
+        "mean": 6.372094407680606e-09,
+        "std": 6.502437486233248e-07
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    },
+    "model/official_siim_512/siim_010316/head_2": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -147.96400451660156,
+        "max": -9.773841857910156,
+        "mean": -56.30602264404297,
+        "std": 23.72578239440918
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 5.691800470231101e-05,
+        "mean": 4.632052075237425e-09,
+        "std": 3.1431096658707247e-07
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    },
+    "model/official_siim_512/siim_010316/head_4_ch12": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -54.751651763916016,
+        "max": 4.486827373504639,
+        "mean": -16.871191024780273,
+        "std": 8.64338207244873
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 1.6659415059794735e-24,
+        "max": 0.9888689517974854,
+        "mean": 0.01111055538058281,
+        "std": 0.07617879658937454
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 2033,
+        "is_positive": true
+      }
+    },
+    "model/current_pr9a_512/siim_010316/head_5": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -134.16610717773438,
+        "max": -8.562151908874512,
+        "mean": -62.620765686035156,
+        "std": 19.91558265686035
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 0.00019117083866149187,
+        "mean": 7.627235731888504e-09,
+        "std": 8.81296898569417e-07
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    },
+    "model/current_pr9a_512/siim_010316/head_2": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -144.356201171875,
+        "max": -8.976236343383789,
+        "mean": -65.40473937988281,
+        "std": 22.234689712524414
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 0.0001263616286450997,
+        "mean": 8.202421852843145e-09,
+        "std": 7.685234777454752e-07
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    },
+    "model/current_pr9a_512/siim_010316/head_4_ch12": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -55.39430236816406,
+        "max": 0.9715797901153564,
+        "mean": -21.21420669555664,
+        "std": 8.7490816116333
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 8.761130628582081e-25,
+        "max": 0.7254343032836914,
+        "mean": 0.0012000746792182326,
+        "std": 0.016134344041347504
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 74,
+        "is_positive": true
+      }
+    },
+    "teacher_model/official_siim_224/siim_009202/head_5": {
+      "logits": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": -267.91259765625,
+        "max": 10.368926048278809,
+        "mean": -91.33576965332031,
+        "std": 45.028133392333984
+      },
+      "probability": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 0.9999686479568481,
+        "mean": 0.0020588459447026253,
+        "std": 0.042059656232595444
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 101,
+        "is_positive": true
+      }
+    },
+    "teacher_model/official_siim_224/siim_009202/head_2": {
+      "logits": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": -324.24053955078125,
+        "max": 6.5297980308532715,
+        "mean": -95.8287353515625,
+        "std": 52.67382049560547
+      },
+      "probability": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 0.9985427856445312,
+        "mean": 0.0010977821657434106,
+        "std": 0.028595400974154472
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 53,
+        "is_positive": true
+      }
+    },
+    "teacher_model/official_siim_224/siim_009202/head_4_ch12": {
+      "logits": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": -105.25225067138672,
+        "max": -0.5161572694778442,
+        "mean": -24.53238296508789,
+        "std": 12.328104972839355
+      },
+      "probability": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 0.3737512230873108,
+        "mean": 0.000542269553989172,
+        "std": 0.008548751473426819
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    },
+    "teacher_model/official_siim_512/siim_009202/head_5": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -305.47161865234375,
+        "max": 37.35953903198242,
+        "mean": -80.49095153808594,
+        "std": 41.16069412231445
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 1.0,
+        "mean": 0.006606106646358967,
+        "std": 0.07971864193677902
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 1736,
+        "is_positive": true
+      }
+    },
+    "teacher_model/official_siim_512/siim_009202/head_2": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -385.24462890625,
+        "max": 34.103702545166016,
+        "mean": -85.29998016357422,
+        "std": 48.229557037353516
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 1.0,
+        "mean": 0.005849211942404509,
+        "std": 0.0749085396528244
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 1532,
+        "is_positive": true
+      }
+    },
+    "teacher_model/official_siim_512/siim_009202/head_4_ch12": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -103.7937240600586,
+        "max": 9.09420108795166,
+        "mean": -18.956127166748047,
+        "std": 10.923182487487793
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 0.9998877048492432,
+        "mean": 0.014056987129151821,
+        "std": 0.095622718334198
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 3114,
+        "is_positive": true
+      }
+    },
+    "teacher_model/current_pr9a_512/siim_009202/head_5": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -322.57501220703125,
+        "max": 21.480077743530273,
+        "mean": -101.23892211914062,
+        "std": 42.244956970214844
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 1.0,
+        "mean": 0.00242580845952034,
+        "std": 0.04807354882359505
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 634,
+        "is_positive": true
+      }
+    },
+    "teacher_model/current_pr9a_512/siim_009202/head_2": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -392.98992919921875,
+        "max": 20.059114456176758,
+        "mean": -104.58306884765625,
+        "std": 47.43842697143555
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 1.0,
+        "mean": 0.0023244007024914026,
+        "std": 0.04703865945339203
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 610,
+        "is_positive": true
+      }
+    },
+    "teacher_model/current_pr9a_512/siim_009202/head_4_ch12": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -84.2647476196289,
+        "max": 4.877965927124023,
+        "mean": -21.86679458618164,
+        "std": 10.168985366821289
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 2.5367932549504e-37,
+        "max": 0.9924450516700745,
+        "mean": 0.005636994261294603,
+        "std": 0.05747515708208084
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 1166,
+        "is_positive": true
+      }
+    },
+    "teacher_model/official_siim_224/siim_010316/head_5": {
+      "logits": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": -220.54116821289062,
+        "max": -22.6740665435791,
+        "mean": -108.45443725585938,
+        "std": 33.316585540771484
+      },
+      "probability": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 1.4216020027824072e-10,
+        "mean": 2.428966417919714e-14,
+        "std": 1.321581407677519e-12
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    },
+    "teacher_model/official_siim_224/siim_010316/head_2": {
+      "logits": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": -239.58389282226562,
+        "max": -22.621835708618164,
+        "mean": -108.47027587890625,
+        "std": 35.781192779541016
+      },
+      "probability": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 1.4978267237619747e-10,
+        "mean": 3.110353093789195e-14,
+        "std": 1.422930458357119e-12
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    },
+    "teacher_model/official_siim_224/siim_010316/head_4_ch12": {
+      "logits": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": -77.68738555908203,
+        "max": 12.225118637084961,
+        "mean": -28.771867752075195,
+        "std": 16.141191482543945
+      },
+      "probability": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": 1.8230438829765536e-34,
+        "max": 0.9999951124191284,
+        "mean": 0.045505281537771225,
+        "std": 0.19792018830776215
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 2283,
+        "is_positive": true
+      }
+    },
+    "teacher_model/official_siim_512/siim_010316/head_5": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -195.8428955078125,
+        "max": -17.174667358398438,
+        "mean": -81.28421020507812,
+        "std": 27.587465286254883
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 3.476455745499152e-08,
+        "mean": 1.7340568000609458e-12,
+        "std": 1.791552323160417e-10
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    },
+    "teacher_model/official_siim_512/siim_010316/head_2": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -217.2550048828125,
+        "max": -16.618915557861328,
+        "mean": -84.82282257080078,
+        "std": 31.955915451049805
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 6.060335522306559e-08,
+        "mean": 3.937621062544139e-12,
+        "std": 3.7061695379314585e-10
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    },
+    "teacher_model/official_siim_512/siim_010316/head_4_ch12": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -65.14080047607422,
+        "max": 28.850444793701172,
+        "mean": -15.771448135375977,
+        "std": 15.080904006958008
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 5.125187869652985e-29,
+        "max": 1.0,
+        "mean": 0.14761081337928772,
+        "std": 0.3398008644580841
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 38354,
+        "is_positive": true
+      }
+    },
+    "teacher_model/current_pr9a_512/siim_010316/head_5": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -198.98019409179688,
+        "max": -16.84705924987793,
+        "mean": -86.60931396484375,
+        "std": 28.059354782104492
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 4.8240867300819446e-08,
+        "mean": 2.014429638722004e-12,
+        "std": 2.0516227605682502e-10
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    },
+    "teacher_model/current_pr9a_512/siim_010316/head_2": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -226.76840209960938,
+        "max": -17.606000900268555,
+        "mean": -93.03114318847656,
+        "std": 31.61775779724121
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 2.258452447279069e-08,
+        "mean": 2.2694361580949396e-12,
+        "std": 1.594559484452418e-10
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    },
+    "teacher_model/current_pr9a_512/siim_010316/head_4_ch12": {
+      "logits": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": -67.15158081054688,
+        "max": 23.504684448242188,
+        "mean": -18.261993408203125,
+        "std": 14.787981033325195
+      },
+      "probability": {
+        "shape": [
+          512,
+          512
+        ],
+        "dtype": "float32",
+        "min": 6.861814548687754e-30,
+        "max": 1.0,
+        "mean": 0.12985526025295258,
+        "std": 0.32260364294052124
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 33811,
+        "is_positive": true
+      }
+    }
+  }
+}

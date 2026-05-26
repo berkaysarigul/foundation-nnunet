@@ -1,0 +1,12 @@
+generated_at: '2026-05-26T20:35:02.824940+00:00'
+dataset_root: nnUNet_raw\Dataset101_Pneumothorax
+imagesTs_count: 1602
+heldout_labelsTs_count: 1602
+matched_cases: 1602
+missing_label_cases: []
+extra_label_cases: []
+binary_label_cases: 1602
+nonbinary_label_cases: []
+shape_mismatch_cases: []
+positive_cases: 357
+negative_cases: 1245

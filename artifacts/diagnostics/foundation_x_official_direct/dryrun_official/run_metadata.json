@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "tool": "scripts/foundation_x_official_direct_segment.py",
+  "command": "scripts\\foundation_x_official_direct_segment.py --stage both --dataset-root nnUNet_raw\\Dataset101_Pneumothorax --checkpoint checkpoints\\foundation_x.pth --state-keys model teacher_model --heads 5 2 --head4-channel 12 --preprocess-variants official_siim_224 official_siim_512 current_pr9a_512 --device cpu --max-cases 2 --positive-cases 1 --negative-cases 1 --case-sampling balanced --out artifacts\\diagnostics\\foundation_x_official_direct\\dryrun_official --save-visuals true --save-histograms true",
+  "generated_at": "2026-05-26T20:34:29.784756+00:00",
+  "args": {
+    "dataset_root": "nnUNet_raw\\Dataset101_Pneumothorax",
+    "checkpoint": "checkpoints\\foundation_x.pth",
+    "state_keys": [
+      "model",
+      "teacher_model"
+    ],
+    "heads": [
+      5,
+      2
+    ],
+    "head4_channel": 12,
+    "preprocess_variants": [
+      "official_siim_224",
+      "official_siim_512",
+      "current_pr9a_512"
+    ],
+    "device": "cpu",
+    "max_cases": 2,
+    "positive_cases": 1,
+    "negative_cases": 1,
+    "case_sampling": "balanced",
+    "out": "artifacts\\diagnostics\\foundation_x_official_direct\\dryrun_official",
+    "save_visuals": true,
+    "save_histograms": true,
+    "stage": "both",
+    "threshold": 0.5,
+    "seed": 42
+  },
+  "python": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "torch_version": "2.12.0+cpu",
+  "cuda_available": false,
+  "device": "cpu",
+  "official_foundation_x_commit": "5e0b473cf3f595320ce982697d4365e1d9a4f642",
+  "constraints": [
+    "no training",
+    "no full Dataset101 evaluation",
+    "no priors exported",
+    "CPU guardrail max 2 cases"
+  ]
+}
