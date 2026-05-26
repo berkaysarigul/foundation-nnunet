@@ -67,18 +67,25 @@ class SegmentationHeadSpec:
         return f"{base}, channel {self.channel}"
 
 
-def default_head_specs(heads: list[int] | tuple[int, ...], head4_channel: int) -> list[SegmentationHeadSpec]:
-    """Return requested binary heads plus the ChestX-Det channel diagnostic."""
+def default_head_specs(
+    heads: list[int] | tuple[int, ...],
+    head4_channel: int,
+    include_head4: bool = True,
+) -> list[SegmentationHeadSpec]:
+    """Return requested heads, optionally including the ChestX-Det diagnostic."""
     specs: list[SegmentationHeadSpec] = []
     seen: set[tuple[int, int | None]] = set()
     for head in heads:
-        spec = SegmentationHeadSpec(int(head), None)
+        head_idx = int(head)
+        channel = int(head4_channel) if head_idx == HEAD_CHESTX_DET else None
+        spec = SegmentationHeadSpec(head_idx, channel)
         if (spec.head_idx, spec.channel) not in seen:
             specs.append(spec)
             seen.add((spec.head_idx, spec.channel))
-    head4 = SegmentationHeadSpec(HEAD_CHESTX_DET, int(head4_channel))
-    if (head4.head_idx, head4.channel) not in seen:
-        specs.append(head4)
+    if include_head4:
+        head4 = SegmentationHeadSpec(HEAD_CHESTX_DET, int(head4_channel))
+        if (head4.head_idx, head4.channel) not in seen:
+            specs.append(head4)
     return specs
 
 
@@ -425,6 +432,7 @@ class OfficialFoundationXSegmentationModel:
         image_size: int,
         heads: list[int] | tuple[int, ...] = (HEAD_SIIM_ACR_PNEUMOTHORAX, HEAD_CANDID_PTX),
         head4_channel: int = CHESTX_DET_PNEUMOTHORAX_CHANNEL,
+        include_head4: bool = True,
     ) -> dict[str, Any]:
         """Run one zero tensor through the official segmentation branch."""
         image_size = int(image_size)
@@ -433,7 +441,7 @@ class OfficialFoundationXSegmentationModel:
             "synthetic_input": tensor_stats(probe),
             "outputs": {},
         }
-        for spec in default_head_specs(list(heads), int(head4_channel)):
+        for spec in default_head_specs(list(heads), int(head4_channel), include_head4=include_head4):
             try:
                 logits, prob = self.predict_probability(
                     probe,
