@@ -1,0 +1,1 @@
+scripts/foundation_x_direct_segment.py --dataset-root nnUNet_raw/Dataset101_Pneumothorax --checkpoint checkpoints/foundation_x.pth --state-key model --heads 0 1 2 3 5 --device cpu --max-cases 2 --img-size 512 --out artifacts/diagnostics/foundation_x_direct/dryrun_cpu --save-visuals true --print-keys

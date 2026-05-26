@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "tool": "scripts/foundation_x_direct_segment.py",
+  "command": "scripts/foundation_x_direct_segment.py --dataset-root nnUNet_raw/Dataset101_Pneumothorax --checkpoint checkpoints/foundation_x.pth --state-key model --heads 0 1 2 3 5 --device cpu --max-cases 2 --img-size 512 --out artifacts/diagnostics/foundation_x_direct/dryrun_cpu --save-visuals true --print-keys",
+  "generated_at": "2026-05-26T18:29:42.002759+00:00",
+  "args": {
+    "dataset_root": "nnUNet_raw\\Dataset101_Pneumothorax",
+    "checkpoint": "checkpoints\\foundation_x.pth",
+    "state_key": "model",
+    "heads": [
+      0,
+      1,
+      2,
+      3,
+      5
+    ],
+    "device": "cpu",
+    "max_cases": 2,
+    "thresholds": null,
+    "save_prob_maps": false,
+    "save_binary_masks": false,
+    "save_visuals": true,
+    "img_size": 512,
+    "out": "artifacts\\diagnostics\\foundation_x_direct\\dryrun_cpu",
+    "seed": 42,
+    "num_visuals": 8,
+    "print_keys": true
+  },
+  "load_route_stats": {
+    "raw_total": 2340,
+    "raw_with_prefix": 449,
+    "routed_swin": 351,
+    "routed_segnorm": 8,
+    "routed_locnorm": 6,
+    "routed_ppn": 30,
+    "routed_fpn": 18,
+    "routed_heads": 12,
+    "skipped_non_backbone": 1891,
+    "skipped_classification_heads": 22,
+    "skipped_swin_head": 2,
+    "skipped_other": 0
+  },
+  "missing_keys_count": 0,
+  "unexpected_keys_count": 26,
+  "framing_notice": "Foundation X is SIIM-exposed (D-006). Numbers are leakage-aware diagnostic evidence. Compare back to the trusted pretrained_resnet34_unet baseline (D-042 anchor: 0.4951). Head-to-task mapping not officially confirmed."
+}

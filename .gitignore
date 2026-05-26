@@ -23,6 +23,10 @@ Thumbs.db
 /data/
 /checkpoints/
 
+# Diagnostic checkpoints (too large for GitHub, > 100 MB per file)
+artifacts/diagnostics/**/*.pth
+artifacts/diagnostics/**/diagnostic_checkpoint_*.pth
+
 # Generated experiment outputs
 /results/*
 !/results/LEGACY_NOTICE.md

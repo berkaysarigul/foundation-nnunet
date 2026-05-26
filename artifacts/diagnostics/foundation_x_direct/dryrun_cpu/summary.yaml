@@ -1,0 +1,232 @@
+audit_name: foundation_x_direct_head_sweep
+schema_version: 1
+generated_at: '2026-05-26T18:29:42.002759+00:00'
+framing_notice: 'Foundation X is SIIM-exposed (D-006). Numbers are leakage-aware diagnostic
+  evidence. Compare back to the trusted pretrained_resnet34_unet baseline (D-042 anchor:
+  0.4951). Head-to-task mapping not officially confirmed.'
+checkpoint_path: checkpoints\foundation_x.pth
+checkpoint_sha256: 48332e84df124c6434a502fc0b93f7eee8183e702b673eccb9a4222b78cb69a6
+checkpoint_sha256_scope: first_64MB_prefix
+selected_state_key: model
+ckpt_top_level_keys:
+- model
+- teacher_model
+- optimizer
+- epoch
+dataset_root: nnUNet_raw\Dataset101_Pneumothorax
+cases_evaluated: 2
+thresholds_evaluated:
+- 0.05
+- 0.1
+- 0.15
+- 0.2
+- 0.25
+- 0.3
+- 0.35
+- 0.4
+- 0.45
+- 0.5
+- 0.55
+- 0.6
+- 0.65
+- 0.7
+- 0.75
+- 0.8
+- 0.85
+- 0.9
+- 0.95
+heads_evaluated:
+- 0
+- 1
+- 2
+- 3
+- 5
+skipped_multiclass_heads: []
+img_size: 512
+device: cpu
+inference_seconds_total: 13.08011670014821
+head_output_shapes:
+  0:
+  - 1
+  - 1
+  - 512
+  - 512
+  1:
+  - 1
+  - 1
+  - 512
+  - 512
+  2:
+  - 1
+  - 1
+  - 512
+  - 512
+  3:
+  - 1
+  - 1
+  - 512
+  - 512
+  5:
+  - 1
+  - 1
+  - 512
+  - 512
+load_diagnostics:
+  missing: []
+  unexpected:
+  - swin.norm.weight
+  - swin.norm.bias
+  - swin.layers_0.blocks.0.attn.relative_position_index
+  - swin.layers_0.blocks.1.attn.relative_position_index
+  - swin.layers_1.blocks.0.attn.relative_position_index
+  - swin.layers_1.blocks.1.attn.relative_position_index
+  - swin.layers_2.blocks.0.attn.relative_position_index
+  - swin.layers_2.blocks.1.attn.relative_position_index
+  - swin.layers_2.blocks.2.attn.relative_position_index
+  - swin.layers_2.blocks.3.attn.relative_position_index
+  - swin.layers_2.blocks.4.attn.relative_position_index
+  - swin.layers_2.blocks.5.attn.relative_position_index
+  - swin.layers_2.blocks.6.attn.relative_position_index
+  - swin.layers_2.blocks.7.attn.relative_position_index
+  - swin.layers_2.blocks.8.attn.relative_position_index
+  - swin.layers_2.blocks.9.attn.relative_position_index
+  - swin.layers_2.blocks.10.attn.relative_position_index
+  - swin.layers_2.blocks.11.attn.relative_position_index
+  - swin.layers_2.blocks.12.attn.relative_position_index
+  - swin.layers_2.blocks.13.attn.relative_position_index
+  - swin.layers_2.blocks.14.attn.relative_position_index
+  - swin.layers_2.blocks.15.attn.relative_position_index
+  - swin.layers_2.blocks.16.attn.relative_position_index
+  - swin.layers_2.blocks.17.attn.relative_position_index
+  - swin.layers_3.blocks.0.attn.relative_position_index
+  - swin.layers_3.blocks.1.attn.relative_position_index
+  route_stats:
+    raw_total: 2340
+    raw_with_prefix: 449
+    routed_swin: 351
+    routed_segnorm: 8
+    routed_locnorm: 6
+    routed_ppn: 30
+    routed_fpn: 18
+    routed_heads: 12
+    skipped_non_backbone: 1891
+    skipped_classification_heads: 22
+    skipped_swin_head: 2
+    skipped_other: 0
+  remapped_total: 425
+per_head_best_threshold:
+  0:
+    threshold: 0.05
+    metrics:
+      total_cases: 2
+      cases_with_label: 2
+      gt_positive_cases: 0
+      gt_negative_cases: 2
+      pred_positive_cases: 2
+      tp: 0
+      fn: 0
+      fp: 2
+      tn: 0
+      case_level_precision: 0.0
+      case_level_recall: 0.0
+      case_level_specificity: 0.0
+      case_level_f1: 0.0
+      mean_dice_all_cases: 0.0
+      mean_iou_all_cases: 0.0
+      mean_dice_positive_cases: null
+      mean_dice_detected_positives_only: null
+      negative_case_false_positive_rate: 1.0
+      detected_positive_count: 0
+  1:
+    threshold: 0.05
+    metrics:
+      total_cases: 2
+      cases_with_label: 2
+      gt_positive_cases: 0
+      gt_negative_cases: 2
+      pred_positive_cases: 2
+      tp: 0
+      fn: 0
+      fp: 2
+      tn: 0
+      case_level_precision: 0.0
+      case_level_recall: 0.0
+      case_level_specificity: 0.0
+      case_level_f1: 0.0
+      mean_dice_all_cases: 0.0
+      mean_iou_all_cases: 0.0
+      mean_dice_positive_cases: null
+      mean_dice_detected_positives_only: null
+      negative_case_false_positive_rate: 1.0
+      detected_positive_count: 0
+  2:
+    threshold: 0.05
+    metrics:
+      total_cases: 2
+      cases_with_label: 2
+      gt_positive_cases: 0
+      gt_negative_cases: 2
+      pred_positive_cases: 0
+      tp: 0
+      fn: 0
+      fp: 0
+      tn: 2
+      case_level_precision: 0.0
+      case_level_recall: 0.0
+      case_level_specificity: 1.0
+      case_level_f1: 0.0
+      mean_dice_all_cases: 1.0
+      mean_iou_all_cases: 1.0
+      mean_dice_positive_cases: null
+      mean_dice_detected_positives_only: null
+      negative_case_false_positive_rate: 0.0
+      detected_positive_count: 0
+  3:
+    threshold: 0.05
+    metrics:
+      total_cases: 2
+      cases_with_label: 2
+      gt_positive_cases: 0
+      gt_negative_cases: 2
+      pred_positive_cases: 2
+      tp: 0
+      fn: 0
+      fp: 2
+      tn: 0
+      case_level_precision: 0.0
+      case_level_recall: 0.0
+      case_level_specificity: 0.0
+      case_level_f1: 0.0
+      mean_dice_all_cases: 0.0
+      mean_iou_all_cases: 0.0
+      mean_dice_positive_cases: null
+      mean_dice_detected_positives_only: null
+      negative_case_false_positive_rate: 1.0
+      detected_positive_count: 0
+  5:
+    threshold: 0.05
+    metrics:
+      total_cases: 2
+      cases_with_label: 2
+      gt_positive_cases: 0
+      gt_negative_cases: 2
+      pred_positive_cases: 0
+      tp: 0
+      fn: 0
+      fp: 0
+      tn: 2
+      case_level_precision: 0.0
+      case_level_recall: 0.0
+      case_level_specificity: 1.0
+      case_level_f1: 0.0
+      mean_dice_all_cases: 1.0
+      mean_iou_all_cases: 1.0
+      mean_dice_positive_cases: null
+      mean_dice_detected_positives_only: null
+      negative_case_false_positive_rate: 0.0
+      detected_positive_count: 0
+best_overall:
+  head_idx: 0
+  threshold: 0.05
+  positive_dice_mean: null
+failure_log: []
