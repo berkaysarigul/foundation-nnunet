@@ -123,6 +123,7 @@ FORBIDDEN_OUTPUT_SEGMENTS = [
 
 ALLOWED_OUTPUT_ANCHOR = "artifacts/diagnostics/hybrid_controlled_short_train"
 CHECKPOINT_FILENAME = "diagnostic_checkpoint_final_step.pth"
+BEST_CHECKPOINT_FILENAME = "diagnostic_checkpoint_best_dice_pos_mean_thr_050.pth"
 
 
 def parse_args(argv=None) -> argparse.Namespace:
@@ -243,6 +244,11 @@ def parse_args(argv=None) -> argparse.Namespace:
         "--save_diagnostic_checkpoint",
         action="store_true",
         help="Save a diagnostic-only checkpoint under the output directory.",
+    )
+    parser.add_argument(
+        "--save_best_checkpoint",
+        action="store_true",
+        help="Save best checkpoint by dice_pos_mean_thr_050. Effective only when --save_diagnostic_checkpoint is also set.",
     )
     parser.add_argument(
         "--unfrozen_backbone",
@@ -1680,6 +1686,12 @@ def run_controlled_short_training(args: argparse.Namespace) -> dict[str, Any]:
     scheduled_val_steps = _validation_schedule(int(args.max_steps), int(args.val_every))
     executed_val_steps: list[int] = []
 
+    best_dice_pos_mean_thr_050 = float("-inf")
+    best_checkpoint_step: int | None = None
+    best_checkpoint_saved = False
+    best_checkpoint_path = ""
+    best_checkpoint_metric_value = float("nan")
+
     if model is not None and hook_recorder is not None and selection["train"] and selection["val"]:
         model.train()
         if model.frozen_backbone:
@@ -1718,6 +1730,26 @@ def run_controlled_short_training(args: argparse.Namespace) -> dict[str, Any]:
             )
             validation_step_rows.append(val_row)
             executed_val_steps.append(0)
+            if args.save_best_checkpoint and args.save_diagnostic_checkpoint and model is not None:
+                _m = val_row.get("dice_pos_mean_thr_050")
+                if _m is not None and math.isfinite(float(_m)) and float(_m) > best_dice_pos_mean_thr_050:
+                    best_dice_pos_mean_thr_050 = float(_m)
+                    best_checkpoint_step = 0
+                    best_checkpoint_path = str(args.output_dir / BEST_CHECKPOINT_FILENAME)
+                    torch.save(
+                        {
+                            "diagnostic_only": True,
+                            "selection_metric": "dice_pos_mean_thr_050",
+                            "metric_value": best_dice_pos_mean_thr_050,
+                            "step": best_checkpoint_step,
+                            "model_state_dict": model.state_dict(),
+                            "schema_version": 1,
+                            "audit_name": "hybrid_controlled_short_train",
+                        },
+                        best_checkpoint_path,
+                    )
+                    best_checkpoint_saved = True
+                    best_checkpoint_metric_value = best_dice_pos_mean_thr_050
             post_val_ok, post_val_msg = _assert_trainable_modules_in_train_mode(model)
             train_mode_check_after_validation.append(
                 {
@@ -1948,6 +1980,26 @@ def run_controlled_short_training(args: argparse.Namespace) -> dict[str, Any]:
                     )
                     validation_step_rows.append(val_row)
                     executed_val_steps.append(step_number)
+                    if args.save_best_checkpoint and args.save_diagnostic_checkpoint and model is not None:
+                        _m = val_row.get("dice_pos_mean_thr_050")
+                        if _m is not None and math.isfinite(float(_m)) and float(_m) > best_dice_pos_mean_thr_050:
+                            best_dice_pos_mean_thr_050 = float(_m)
+                            best_checkpoint_step = int(step_number)
+                            best_checkpoint_path = str(args.output_dir / BEST_CHECKPOINT_FILENAME)
+                            torch.save(
+                                {
+                                    "diagnostic_only": True,
+                                    "selection_metric": "dice_pos_mean_thr_050",
+                                    "metric_value": best_dice_pos_mean_thr_050,
+                                    "step": best_checkpoint_step,
+                                    "model_state_dict": model.state_dict(),
+                                    "schema_version": 1,
+                                    "audit_name": "hybrid_controlled_short_train",
+                                },
+                                best_checkpoint_path,
+                            )
+                            best_checkpoint_saved = True
+                            best_checkpoint_metric_value = best_dice_pos_mean_thr_050
                     post_val_ok, post_val_msg = _assert_trainable_modules_in_train_mode(model)
                     train_mode_check_after_validation.append(
                         {
@@ -2064,6 +2116,7 @@ def run_controlled_short_training(args: argparse.Namespace) -> dict[str, Any]:
         + ("--strict " if args.strict else "")
         + ("--no_visuals " if args.no_visuals else "")
         + ("--save_diagnostic_checkpoint " if args.save_diagnostic_checkpoint else "")
+        + ("--save_best_checkpoint " if args.save_best_checkpoint else "")
         + ("--unfrozen_backbone " if args.unfrozen_backbone else "")
     ).strip()
 
@@ -2200,6 +2253,11 @@ def run_controlled_short_training(args: argparse.Namespace) -> dict[str, Any]:
             "progress_png": progress_path,
             "diagnostic_checkpoint_saved": checkpoint_saved,
             "diagnostic_checkpoint_path": checkpoint_path,
+            "best_checkpoint_saved": best_checkpoint_saved,
+            "best_checkpoint_path": best_checkpoint_path,
+            "best_checkpoint_selection_metric": "dice_pos_mean_thr_050",
+            "best_checkpoint_metric_value": best_checkpoint_metric_value,
+            "best_checkpoint_step": best_checkpoint_step,
         },
         "warnings": [],
         "failures": failures,

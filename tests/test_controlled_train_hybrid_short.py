@@ -527,6 +527,34 @@ class TestStubControlledRun(unittest.TestCase):
             summary["warnings"],
         )
 
+    def test_best_checkpoint_default_off(self):
+        summary = self._run(DummyHybrid, extra_args=["--save_diagnostic_checkpoint"])
+        self.assertFalse(summary["outputs"]["best_checkpoint_saved"])
+        best_path = summary["outputs"]["best_checkpoint_path"]
+        self.assertEqual(best_path, "")
+        if best_path:
+            self.assertFalse(Path(best_path).exists())
+
+    def test_best_checkpoint_when_enabled(self):
+        summary = self._run(
+            DummyHybrid,
+            extra_args=["--save_diagnostic_checkpoint", "--save_best_checkpoint"],
+        )
+        self.assertTrue(summary["outputs"]["best_checkpoint_saved"])
+        best_path = summary["outputs"]["best_checkpoint_path"]
+        self.assertTrue(bool(best_path))
+        self.assertTrue(Path(best_path).exists())
+        self.assertEqual(summary["outputs"]["best_checkpoint_selection_metric"], "dice_pos_mean_thr_050")
+        self.assertTrue(np.isfinite(float(summary["outputs"]["best_checkpoint_metric_value"])))
+        self.assertIn(summary["outputs"]["best_checkpoint_step"], summary["validation"]["executed_steps"])
+
+    def test_best_checkpoint_requires_save_diagnostic(self):
+        summary = self._run(DummyHybrid, extra_args=["--save_best_checkpoint"])
+        self.assertFalse(summary["outputs"]["best_checkpoint_saved"])
+        best_path = summary["outputs"]["best_checkpoint_path"]
+        if best_path:
+            self.assertFalse(Path(best_path).exists())
+
     def test_summary_schema_and_d039(self):
         summary = self._run(DummyHybrid)
         for key in (
