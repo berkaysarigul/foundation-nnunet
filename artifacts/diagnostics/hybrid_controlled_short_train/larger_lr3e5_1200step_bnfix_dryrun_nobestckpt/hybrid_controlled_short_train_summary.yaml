@@ -1,0 +1,508 @@
+audit_name: hybrid_controlled_short_train
+degeneracy:
+  all_background_point_count: 0
+  all_foreground_point_count: 3
+  any_degenerate_validation_point: true
+  persistent_collapse_from_start: true
+exit_code: 2
+failures: []
+generated_at_utc: '2026-05-26T12:49:13.632721+00:00'
+gradients:
+  frozen_backbone_no_grad: true
+  optimizer_excludes_frozen_backbone: true
+  summary_last_step:
+    frozen_backbone_grad_present: 0
+    frozen_backbone_params: 325
+    grad_nonfinite_count: 0
+    grad_norm_l2_total: 2.160488907838081
+    trainable_non_backbone_grad_finite: 90
+    trainable_non_backbone_grad_nonzero: 90
+    trainable_non_backbone_grad_present: 90
+    trainable_non_backbone_params: 90
+  trainable_gradients_finite: true
+  trainable_gradients_present: true
+limited_run: true
+next_recommended_pr: Blocking fix PR
+outputs:
+  best_checkpoint_metric_value: null
+  best_checkpoint_path: ''
+  best_checkpoint_saved: false
+  best_checkpoint_selection_metric: dice_pos_mean_thr_050
+  best_checkpoint_step: null
+  diagnostic_checkpoint_path: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train\larger_lr3e5_1200step_bnfix_dryrun_nobestckpt\diagnostic_checkpoint_final_step.pth
+  diagnostic_checkpoint_saved: true
+  gradient_stats_csv: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train\larger_lr3e5_1200step_bnfix_dryrun_nobestckpt\gradient_stats.csv
+  progress_png: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train\larger_lr3e5_1200step_bnfix_dryrun_nobestckpt\progress.png
+  report_md: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train\larger_lr3e5_1200step_bnfix_dryrun_nobestckpt\hybrid_controlled_short_train_report.md
+  selection_log_csv: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train\larger_lr3e5_1200step_bnfix_dryrun_nobestckpt\selection_log.csv
+  summary_json: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train\larger_lr3e5_1200step_bnfix_dryrun_nobestckpt\hybrid_controlled_short_train_summary.json
+  summary_yaml: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train\larger_lr3e5_1200step_bnfix_dryrun_nobestckpt\hybrid_controlled_short_train_summary.yaml
+  train_steps_csv: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train\larger_lr3e5_1200step_bnfix_dryrun_nobestckpt\train_steps.csv
+  validation_steps_csv: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train\larger_lr3e5_1200step_bnfix_dryrun_nobestckpt\validation_steps.csv
+  visual_count: 0
+  visuals_dir: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train\larger_lr3e5_1200step_bnfix_dryrun_nobestckpt\visuals
+pass_criteria:
+  checkpoint_loads: true
+  feature_stage_contract_ok: true
+  frozen_backbone_no_grad: true
+  gradients_finite: true
+  losses_finite: true
+  max_steps_completed: true
+  model_instantiates: true
+  no_forbidden_writes: true
+  no_persistent_degeneracy: false
+  optimizer_excludes_frozen_backbone: true
+  optimizer_step_success: true
+  outputs_finite: true
+  train_mode_restored_after_validation: true
+  train_selection_ok: true
+  train_val_disjoint: true
+  trainable_gradients_finite: true
+  trainable_gradients_present: true
+  trainable_in_train_mode_before_step: true
+  val_selection_ok: true
+  validation_finite: true
+  validation_schedule_complete: true
+schema_version: 1
+selection:
+  counts:
+    overlap_count: 0
+    source_negative: 7051
+    source_positive: 2022
+    source_total: 9073
+    train_negative: 4
+    train_positive: 4
+    train_total: 8
+    val_negative: 2
+    val_positive: 2
+    val_total: 4
+  train_case_ids:
+  - siim_000004
+  - siim_000001
+  - siim_000009
+  - siim_000002
+  - siim_000013
+  - siim_000003
+  - siim_000022
+  - siim_000005
+  val_case_ids:
+  - siim_000023
+  - siim_000028
+  - siim_000006
+  - siim_000007
+setup:
+  batch_size: 1
+  bce_loss_weight: 1.0
+  command: py scripts/controlled_train_hybrid_short.py --input_dir C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\nnUNet_raw\Dataset101_Pneumothorax\imagesTr
+    --labels_dir C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\nnUNet_raw\Dataset101_Pneumothorax\labelsTr
+    --foundation_checkpoint C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\checkpoints\foundation_x.pth
+    --output_dir C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\artifacts\diagnostics\hybrid_controlled_short_train\larger_lr3e5_1200step_bnfix_dryrun_nobestckpt
+    --img_size 256 --device cpu --num_train_cases 8 --num_val_cases 4 --max_steps
+    3 --batch_size 1 --lr 3e-05 --bce_loss_weight 1.0 --val_every 2 --no_visuals --save_diagnostic_checkpoint
+  device: cpu
+  foundation_checkpoint: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\checkpoints\foundation_x.pth
+  foundation_checkpoint_sha256: 9b7eb0215b8fdb50d1413fee306e70ed8ac7b646cff342dbce78ca44fd0f32c3
+  foundation_checkpoint_size_bytes: 2816610642
+  frozen_backbone: true
+  img_size: 256
+  input_dir: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\nnUNet_raw\Dataset101_Pneumothorax\imagesTr
+  labels_dir: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet\nnUNet_raw\Dataset101_Pneumothorax\labelsTr
+  learning_rate: 3.0e-05
+  max_steps: 3
+  num_train_cases_processed: 8
+  num_train_cases_requested: 8
+  num_train_neg: 4
+  num_train_pos: 4
+  num_val_cases_processed: 4
+  num_val_cases_requested: 4
+  num_val_neg: 2
+  num_val_pos: 2
+  seed: 42
+  val_every: 2
+  weight_decay: 0.01
+status: BLOCKED
+strict: false
+suspicious_signals:
+  any_degenerate_validation_point: true
+  suspicious_loss_behavior: false
+train_mode:
+  post_validation_checks:
+  - after_val_step: 0
+    message: ''
+    model_training: true
+    ok: true
+  - after_val_step: 2
+    message: ''
+    model_training: true
+    ok: true
+  - after_val_step: 3
+    message: ''
+    model_training: true
+    ok: true
+  steps_checked: 3
+  steps_passed: 3
+  train_mode_restored_after_validation: true
+  trainable_in_train_mode_before_step: true
+  training_mode_violation_steps: []
+training:
+  foundation_feature_shapes_sample:
+  - - 1
+    - 128
+    - 64
+    - 64
+  - - 1
+    - 256
+    - 32
+    - 32
+  - - 1
+    - 512
+    - 16
+    - 16
+  - - 1
+    - 1024
+    - 8
+    - 8
+  frozen_backbone_param_count: 325
+  grad_nonfinite_total: 0
+  grad_norm_l2_per_step:
+  - 2.3576280497767312
+  - 2.09464172577548
+  - 2.160488907838081
+  logits_inf_total: 0
+  logits_nan_total: 0
+  loss_total_per_step:
+  - 1.8055492639541626
+  - 1.8059756755828857
+  - 1.7500793933868408
+  optimizer_trainable_param_count: 90
+  optimizer_trainable_param_names:
+  - enc1.block.0.weight
+  - enc1.block.1.weight
+  - enc1.block.1.bias
+  - enc1.block.3.weight
+  - enc1.block.4.weight
+  - enc1.block.4.bias
+  - enc2.block.0.weight
+  - enc2.block.1.weight
+  - enc2.block.1.bias
+  - enc2.block.3.weight
+  - enc2.block.4.weight
+  - enc2.block.4.bias
+  - enc3.block.0.weight
+  - enc3.block.1.weight
+  - enc3.block.1.bias
+  - enc3.block.3.weight
+  - enc3.block.4.weight
+  - enc3.block.4.bias
+  - enc4.block.0.weight
+  - enc4.block.1.weight
+  - enc4.block.1.bias
+  - enc4.block.3.weight
+  - enc4.block.4.weight
+  - enc4.block.4.bias
+  - fusion_e3.conv.0.weight
+  - fusion_e3.conv.0.bias
+  - fusion_e3.conv.1.weight
+  - fusion_e3.conv.1.bias
+  - fusion_e4.conv.0.weight
+  - fusion_e4.conv.0.bias
+  - fusion_e4.conv.1.weight
+  - fusion_e4.conv.1.bias
+  - h16_unet_context.block.0.weight
+  - h16_unet_context.block.1.weight
+  - h16_unet_context.block.1.bias
+  - h16_unet_context.block.3.weight
+  - h16_unet_context.block.4.weight
+  - h16_unet_context.block.4.bias
+  - h16_fx_context.conv.0.weight
+  - h16_fx_context.conv.0.bias
+  - h16_fx_context.conv.1.weight
+  - h16_fx_context.conv.1.bias
+  - h32_context_head.block.0.weight
+  - h32_context_head.block.1.weight
+  - h32_context_head.block.1.bias
+  - h32_context_head.block.3.weight
+  - h32_context_head.block.4.weight
+  - h32_context_head.block.4.bias
+  - h32_to_h16.weight
+  - h32_to_h16.bias
+  - context_merge.block.0.weight
+  - context_merge.block.1.weight
+  - context_merge.block.1.bias
+  - context_merge.block.3.weight
+  - context_merge.block.4.weight
+  - context_merge.block.4.bias
+  - up4.weight
+  - up4.bias
+  - dec4.block.0.weight
+  - dec4.block.1.weight
+  - dec4.block.1.bias
+  - dec4.block.3.weight
+  - dec4.block.4.weight
+  - dec4.block.4.bias
+  - up3.weight
+  - up3.bias
+  - dec3.block.0.weight
+  - dec3.block.1.weight
+  - dec3.block.1.bias
+  - dec3.block.3.weight
+  - dec3.block.4.weight
+  - dec3.block.4.bias
+  - up2.weight
+  - up2.bias
+  - dec2.block.0.weight
+  - dec2.block.1.weight
+  - dec2.block.1.bias
+  - dec2.block.3.weight
+  - dec2.block.4.weight
+  - dec2.block.4.bias
+  - up1.weight
+  - up1.bias
+  - dec1.block.0.weight
+  - dec1.block.1.weight
+  - dec1.block.1.bias
+  - dec1.block.3.weight
+  - dec1.block.4.weight
+  - dec1.block.4.bias
+  - final.weight
+  - final.bias
+  pred_non_empty_rate_per_step:
+  - 1.0
+  - 1.0
+  - 1.0
+  pred_pos_pixel_ratio_per_step:
+  - 0.7423095703125
+  - 0.7564849853515625
+  - 0.6896209716796875
+  prob_inf_total: 0
+  prob_nan_total: 0
+  prob_output_shape_sample:
+  - 1
+  - 1
+  - 256
+  - 256
+  raw_logits_shape_sample:
+  - 1
+  - 1
+  - 256
+  - 256
+  steps_completed: 3
+  total_train_ms: 7674.8552322387695
+validation:
+  dice_mean_per_step:
+  - 0.008017974381800741
+  - 0.008017974381800741
+  - 0.008017974381800741
+  dice_pos_mean_per_step:
+  - 0.016035948763601482
+  - 0.016035948763601482
+  - 0.016035948763601482
+  executed_steps:
+  - 0
+  - 2
+  - 3
+  logits_max_per_step:
+  - 0.10028461366891861
+  - 0.10333240032196045
+  - 0.110188327729702
+  logits_mean_per_step:
+  - 0.0909189551435361
+  - 0.09245063283202626
+  - 0.09673582812342829
+  logits_min_per_step:
+  - 0.08312754333019257
+  - 0.08409073948860168
+  - 0.08654316514730453
+  logits_std_per_step:
+  - 0.0018978448679552633
+  - 0.002860477339257025
+  - 0.0038107364384700497
+  loss_total_mean_per_step:
+  - 1.7720482349395752
+  - 1.772978037595749
+  - 1.77549347281456
+  num_points: 3
+  pred_pos_pixel_ratio_mean_per_step:
+  - 1.0
+  - 1.0
+  - 1.0
+  prediction_non_empty_rate_per_step:
+  - 1.0
+  - 1.0
+  - 1.0
+  prob_foreground_ratio_thr05_per_step:
+  - 1.0
+  - 1.0
+  - 1.0
+  prob_max_per_step:
+  - 0.525050163269043
+  - 0.525810182094574
+  - 0.5275192260742188
+  prob_mean_per_step:
+  - 0.5227140739125389
+  - 0.5230961628060413
+  - 0.5241650275575012
+  prob_min_per_step:
+  - 0.5207699537277222
+  - 0.5210103392601013
+  - 0.5216223001480103
+  prob_std_per_step:
+  - 0.00047348399263450727
+  - 0.0007135747937032188
+  - 0.0009504225167806595
+  scheduled_steps:
+  - 0
+  - 2
+  - 3
+  threshold_sweep:
+    '0.05':
+      all_background_per_step:
+      - false
+      - false
+      - false
+      all_foreground_per_step:
+      - true
+      - true
+      - true
+      dice_mean_per_step:
+      - 0.008017974381800741
+      - 0.008017974381800741
+      - 0.008017974381800741
+      dice_pos_mean_per_step:
+      - 0.016035948763601482
+      - 0.016035948763601482
+      - 0.016035948763601482
+      pred_pos_pixel_ratio_per_step:
+      - 1.0
+      - 1.0
+      - 1.0
+      prediction_non_empty_rate_per_step:
+      - 1.0
+      - 1.0
+      - 1.0
+    '0.10':
+      all_background_per_step:
+      - false
+      - false
+      - false
+      all_foreground_per_step:
+      - true
+      - true
+      - true
+      dice_mean_per_step:
+      - 0.008017974381800741
+      - 0.008017974381800741
+      - 0.008017974381800741
+      dice_pos_mean_per_step:
+      - 0.016035948763601482
+      - 0.016035948763601482
+      - 0.016035948763601482
+      pred_pos_pixel_ratio_per_step:
+      - 1.0
+      - 1.0
+      - 1.0
+      prediction_non_empty_rate_per_step:
+      - 1.0
+      - 1.0
+      - 1.0
+    '0.20':
+      all_background_per_step:
+      - false
+      - false
+      - false
+      all_foreground_per_step:
+      - true
+      - true
+      - true
+      dice_mean_per_step:
+      - 0.008017974381800741
+      - 0.008017974381800741
+      - 0.008017974381800741
+      dice_pos_mean_per_step:
+      - 0.016035948763601482
+      - 0.016035948763601482
+      - 0.016035948763601482
+      pred_pos_pixel_ratio_per_step:
+      - 1.0
+      - 1.0
+      - 1.0
+      prediction_non_empty_rate_per_step:
+      - 1.0
+      - 1.0
+      - 1.0
+    '0.30':
+      all_background_per_step:
+      - false
+      - false
+      - false
+      all_foreground_per_step:
+      - true
+      - true
+      - true
+      dice_mean_per_step:
+      - 0.008017974381800741
+      - 0.008017974381800741
+      - 0.008017974381800741
+      dice_pos_mean_per_step:
+      - 0.016035948763601482
+      - 0.016035948763601482
+      - 0.016035948763601482
+      pred_pos_pixel_ratio_per_step:
+      - 1.0
+      - 1.0
+      - 1.0
+      prediction_non_empty_rate_per_step:
+      - 1.0
+      - 1.0
+      - 1.0
+    '0.40':
+      all_background_per_step:
+      - false
+      - false
+      - false
+      all_foreground_per_step:
+      - true
+      - true
+      - true
+      dice_mean_per_step:
+      - 0.008017974381800741
+      - 0.008017974381800741
+      - 0.008017974381800741
+      dice_pos_mean_per_step:
+      - 0.016035948763601482
+      - 0.016035948763601482
+      - 0.016035948763601482
+      pred_pos_pixel_ratio_per_step:
+      - 1.0
+      - 1.0
+      - 1.0
+      prediction_non_empty_rate_per_step:
+      - 1.0
+      - 1.0
+      - 1.0
+    '0.50':
+      all_background_per_step:
+      - false
+      - false
+      - false
+      all_foreground_per_step:
+      - true
+      - true
+      - true
+      dice_mean_per_step:
+      - 0.008017974381800741
+      - 0.008017974381800741
+      - 0.008017974381800741
+      dice_pos_mean_per_step:
+      - 0.016035948763601482
+      - 0.016035948763601482
+      - 0.016035948763601482
+      pred_pos_pixel_ratio_per_step:
+      - 1.0
+      - 1.0
+      - 1.0
+      prediction_non_empty_rate_per_step:
+      - 1.0
+      - 1.0
+      - 1.0
+warnings: []

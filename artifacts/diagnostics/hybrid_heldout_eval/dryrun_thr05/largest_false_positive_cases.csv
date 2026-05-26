@@ -1,0 +1,5 @@
+case_id,gt_is_positive,pred_is_positive,gt_foreground_pixels,pred_foreground_pixels,dice,iou,precision,recall
+siim_009074,False,True,0,65536,0.0,0.0,0.0,0.0
+siim_009075,False,True,0,65536,0.0,0.0,0.0,0.0
+siim_009076,False,True,0,65536,0.0,0.0,0.0,0.0
+siim_009077,False,True,0,65536,0.0,0.0,0.0,0.0

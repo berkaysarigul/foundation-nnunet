@@ -1,0 +1,1 @@
+case_id,gt_is_positive,pred_is_positive,gt_foreground_pixels,pred_foreground_pixels,dice,iou,precision,recall
