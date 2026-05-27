@@ -188,10 +188,15 @@ class ManifestAudit:
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Validate Foundation X prior manifests (train + heldout test) for PR-10B.",
+        description=(
+            "Validate Foundation X prior manifests. Supports the original PR-10B "
+            "train/test mode and PR-11 single generic manifest mode."
+        ),
     )
-    parser.add_argument("--train-manifest", type=Path, required=True)
-    parser.add_argument("--test-manifest", type=Path, required=True)
+    parser.add_argument("--manifest", type=Path, default=None,
+                        help="PR-11 generic single prior manifest to validate.")
+    parser.add_argument("--train-manifest", type=Path, default=None)
+    parser.add_argument("--test-manifest", type=Path, default=None)
     parser.add_argument(
         "--dataset-root",
         type=Path,
@@ -244,6 +249,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=42,
         help="RNG seed for the per-manifest sampling of full reads.",
     )
+    parser.add_argument("--expected-state-key", default=EXPECTED_PROVENANCE["state_key"])
+    parser.add_argument("--expected-preprocess-variant", default=EXPECTED_PROVENANCE["preprocess_variant"])
+    parser.add_argument("--expected-head-key", default=EXPECTED_PROVENANCE["head_key"])
     return parser.parse_args(argv)
 
 
@@ -912,27 +920,266 @@ def run(
     return payload
 
 
+# --- PR-11 single manifest validation ----------------------------------------
+
+
+def _generic_manifest_semantic_path_errors(row: dict[str, str]) -> list[str]:
+    errors: list[str] = []
+    forbidden_tokens = (
+        "visual_overlays",
+        "probability_histograms",
+        "binary_masks",
+        "head_4",
+        "head_4_ch12",
+    )
+    for column in ("probability_map_path", "aligned_probability_map_path"):
+        raw = row.get(column, "") or ""
+        if not raw:
+            continue
+        norm = _norm_path_str(raw).lower()
+        for token in forbidden_tokens:
+            if token in norm:
+                errors.append(f"{column}_contains_{token}")
+        if "head_5" not in norm and row.get("head_key") != "head_5":
+            errors.append(f"{column}_does_not_prove_head_5")
+        if row.get("binary_mask_path") and _norm_path_str(row.get("binary_mask_path", "")) == _norm_path_str(raw):
+            errors.append(f"{column}_equals_binary_mask_path")
+    return errors
+
+
+def _duplicates(values: Iterable[str]) -> list[str]:
+    seen: dict[str, int] = {}
+    for value in values:
+        seen[value] = seen.get(value, 0) + 1
+    return sorted(value for value, count in seen.items() if value and count > 1)
+
+
+def _audit_generic_probability_map(path: Path) -> dict[str, Any]:
+    with Image.open(path) as image:
+        mode = image.mode
+        gray = image.convert("L")
+        arr = np.asarray(gray)
+    return {
+        "mode": mode,
+        "width": int(arr.shape[1]),
+        "height": int(arr.shape[0]),
+        "min": int(arr.min()) if arr.size else None,
+        "max": int(arr.max()) if arr.size else None,
+        "mean": float(arr.mean()) if arr.size else None,
+        "std": float(arr.std()) if arr.size else None,
+        "unique_count": int(np.unique(arr).size) if arr.size else 0,
+        "degenerate": bool(arr.size and int(arr.min()) == int(arr.max())),
+    }
+
+
+def run_single_manifest(
+    manifest: Path,
+    dataset_root: Path,
+    out_dir: Path,
+    *,
+    strict: bool,
+    sample_size: int,
+    repo_root: Path | None,
+    sample_seed: int,
+    expected_state_key: str,
+    expected_preprocess_variant: str,
+    expected_head_key: str,
+) -> dict[str, Any]:
+    repo_root = (repo_root or _default_repo_root()).resolve()
+    header, rows = _read_manifest(manifest)
+    required = {
+        "case_id",
+        "probability_map_path",
+        "state_key",
+        "preprocess_variant",
+        "head_key",
+    }
+    missing_columns = sorted(required - set(header))
+    duplicate_case_ids = sorted(_duplicates([row.get("case_id", "") for row in rows]))
+    per_row: list[dict[str, Any]] = []
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    rng = random.Random(sample_seed)
+    sample_indices = set(rng.sample(range(len(rows)), min(max(sample_size, 0), len(rows)))) if rows else set()
+    for idx, row in enumerate(rows):
+        case_id = row.get("case_id", "")
+        probability_raw = row.get("probability_map_path", "")
+        aligned_raw = row.get("aligned_probability_map_path", "")
+        binary_raw = row.get("binary_mask_path", "")
+        semantic_errors = _generic_manifest_semantic_path_errors(row)
+        row_errors = list(semantic_errors)
+        row_warnings: list[str] = []
+        if row.get("state_key") != expected_state_key:
+            row_errors.append("wrong_state_key")
+        if row.get("preprocess_variant") != expected_preprocess_variant:
+            row_errors.append("wrong_preprocess_variant")
+        if row.get("head_key") != expected_head_key:
+            row_errors.append("wrong_head_key")
+        prob_path = _resolve_manifest_path(probability_raw, repo_root)
+        aligned_path = _resolve_manifest_path(aligned_raw, repo_root) if aligned_raw else None
+        prob_exists = prob_path.is_file()
+        aligned_exists = aligned_path.is_file() if aligned_path is not None else ""
+        if not prob_exists:
+            row_errors.append("missing_probability_map_path")
+        if aligned_path is not None and not aligned_path.is_file():
+            row_errors.append("missing_aligned_probability_map_path")
+
+        prob_stats: dict[str, Any] = {}
+        aligned_stats: dict[str, Any] = {}
+        sampled = idx in sample_indices
+        if sampled and prob_exists:
+            try:
+                prob_stats = _audit_generic_probability_map(prob_path)
+                if prob_stats["degenerate"]:
+                    row_warnings.append("degenerate_probability_map")
+            except Exception as exc:
+                row_errors.append(f"probability_map_unreadable:{type(exc).__name__}")
+        if sampled and aligned_path is not None and aligned_path.is_file():
+            try:
+                aligned_stats = _audit_generic_probability_map(aligned_path)
+                if aligned_stats["degenerate"]:
+                    row_warnings.append("degenerate_aligned_probability_map")
+            except Exception as exc:
+                row_errors.append(f"aligned_probability_map_unreadable:{type(exc).__name__}")
+
+        errors.extend(f"{case_id}:{err}" for err in row_errors)
+        warnings.extend(f"{case_id}:{warn}" for warn in row_warnings)
+        per_row.append(
+            {
+                "case_id": case_id,
+                "probability_map_path": probability_raw,
+                "aligned_probability_map_path": aligned_raw,
+                "binary_mask_path": binary_raw,
+                "probability_map_exists": prob_exists,
+                "aligned_probability_map_exists": aligned_exists,
+                "sampled": sampled,
+                "prob_width": prob_stats.get("width", ""),
+                "prob_height": prob_stats.get("height", ""),
+                "prob_min": prob_stats.get("min", ""),
+                "prob_max": prob_stats.get("max", ""),
+                "prob_mean": prob_stats.get("mean", ""),
+                "prob_std": prob_stats.get("std", ""),
+                "prob_unique_count": prob_stats.get("unique_count", ""),
+                "aligned_width": aligned_stats.get("width", ""),
+                "aligned_height": aligned_stats.get("height", ""),
+                "errors": ";".join(row_errors),
+                "warnings": ";".join(row_warnings),
+            }
+        )
+
+    if missing_columns:
+        errors.append(f"schema_missing_columns:{missing_columns}")
+    if duplicate_case_ids:
+        errors.append(f"duplicate_case_ids:{duplicate_case_ids[:10]}")
+    failed_checks = list(errors)
+    if strict:
+        failed_checks.extend(warnings)
+    verdict = "PASS" if not failed_checks else "FAIL"
+    payload = {
+        "verdict": verdict,
+        "mode": "single_manifest",
+        "strict_mode": strict,
+        "generated_at": _dt.datetime.now(_dt.timezone.utc).isoformat(),
+        "manifest": str(manifest),
+        "dataset_root": str(dataset_root),
+        "repo_root": str(repo_root),
+        "row_count": len(rows),
+        "unique_case_ids": len({row.get("case_id", "") for row in rows}),
+        "duplicate_case_ids": duplicate_case_ids,
+        "missing_columns": missing_columns,
+        "sample_size": sample_size,
+        "expected_provenance": {
+            "state_key": expected_state_key,
+            "preprocess_variant": expected_preprocess_variant,
+            "head_key": expected_head_key,
+        },
+        "errors": errors[:200],
+        "warnings": warnings[:200],
+        "error_count": len(errors),
+        "warning_count": len(warnings),
+        "failed_checks": failed_checks[:200],
+    }
+    _write_summary(out_dir, payload)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    with (out_dir / "manifest_audit.csv").open("w", encoding="utf-8", newline="") as handle:
+        fieldnames = list(per_row[0].keys()) if per_row else [
+            "case_id",
+            "probability_map_path",
+            "aligned_probability_map_path",
+            "errors",
+            "warnings",
+        ]
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(per_row)
+    lines = [
+        "# PR-11 Foundation X prior manifest validation report",
+        "",
+        f"- Overall verdict: **{verdict}**",
+        f"- Manifest: `{manifest}`",
+        f"- Rows: `{len(rows)}`",
+        f"- Errors: `{len(errors)}`",
+        f"- Warnings: `{len(warnings)}`",
+        f"- Strict mode: `{strict}`",
+        "",
+        "## Semantic Path Checks",
+        "",
+        "- probability paths must not point into visual overlays, histograms, binary masks, head_4, or head_4_ch12",
+        "- probability paths must prove head_5 through path or manifest provenance",
+        "- probability paths must not equal binary mask paths",
+    ]
+    if errors:
+        lines.extend(["", "## Error Sample", ""])
+        lines.extend(f"- `{err}`" for err in errors[:25])
+    if warnings:
+        lines.extend(["", "## Warning Sample", ""])
+        lines.extend(f"- `{warn}`" for warn in warnings[:25])
+    (out_dir / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return payload
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     try:
-        payload = run(
-            train_manifest=args.train_manifest,
-            test_manifest=args.test_manifest,
-            dataset_root=args.dataset_root,
-            out_dir=args.out,
-            strict=args.strict,
-            expected_train_rows=args.expected_train_rows,
-            expected_test_rows=args.expected_test_rows,
-            sample_size=args.sample_size,
-            allow_imagestr_in_test=args.allow_imagesTr_in_test,
-            repo_root=args.repo_root,
-            sample_seed=args.sample_seed,
-        )
+        if args.manifest is not None:
+            payload = run_single_manifest(
+                manifest=args.manifest,
+                dataset_root=args.dataset_root,
+                out_dir=args.out,
+                strict=args.strict,
+                sample_size=args.sample_size,
+                repo_root=args.repo_root,
+                sample_seed=args.sample_seed,
+                expected_state_key=args.expected_state_key,
+                expected_preprocess_variant=args.expected_preprocess_variant,
+                expected_head_key=args.expected_head_key,
+            )
+        else:
+            if args.train_manifest is None or args.test_manifest is None:
+                print(
+                    "[FAIL] provide either --manifest or both --train-manifest and --test-manifest",
+                    file=sys.stderr,
+                )
+                return 2
+            payload = run(
+                train_manifest=args.train_manifest,
+                test_manifest=args.test_manifest,
+                dataset_root=args.dataset_root,
+                out_dir=args.out,
+                strict=args.strict,
+                expected_train_rows=args.expected_train_rows,
+                expected_test_rows=args.expected_test_rows,
+                sample_size=args.sample_size,
+                allow_imagestr_in_test=args.allow_imagesTr_in_test,
+                repo_root=args.repo_root,
+                sample_seed=args.sample_seed,
+            )
     except FileNotFoundError as exc:
         print(f"[FAIL] {exc}", file=sys.stderr)
         return 2
     verdict = payload["verdict"]
-    print(f"[{verdict}] PR-10B manifest validation written to {args.out}")
+    print(f"[{verdict}] Foundation X prior manifest validation written to {args.out}")
     if payload["failed_checks"]:
         print(f"failed_checks: {payload['failed_checks'][:10]}"
               + (" ..." if len(payload['failed_checks']) > 10 else ""))
