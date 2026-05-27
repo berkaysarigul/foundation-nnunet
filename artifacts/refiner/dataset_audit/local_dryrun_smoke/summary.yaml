@@ -1,0 +1,245 @@
+verdict: FAIL
+strict_mode: false
+generated_at: '2026-05-27T04:43:06.943028+00:00'
+dataset_root: nnUNet_raw\Dataset101_Pneumothorax
+repo_root: C:\Users\beko5\Desktop\Foundation-nnU-Net\foundation-nnunet
+expected_train_rows: null
+expected_test_rows: null
+sample_size: 2
+allow_imagestr_in_test: true
+train:
+  kind: train
+  manifest_path: artifacts\diagnostics\foundation_x_official_direct\teacher_head5_official224_export_imagesTr_dryrun\teacher_head5_prior_manifest_train.csv
+  row_count: 2
+  positive_count: 0
+  negative_count: 2
+  duplicate_case_ids: []
+  sampled_image_sizes:
+    512x512: 2
+  sampled_label_sizes:
+    512x512: 2
+  sampled_prob_sizes:
+    224x224: 2
+  sampled_prob_min: 0
+  sampled_prob_max: 0
+  degenerate_prob_samples:
+  - siim_000001
+  - siim_000002
+  label_unique_values_seen:
+  - 0
+  checks:
+  - name: schema_header
+    passed: true
+    severity: error
+    detail: schema matches PR-10A 20-column contract
+    offenders_sample: []
+    offenders_count: 0
+  - name: train_row_count
+    passed: true
+    severity: warning
+    detail: row count not validated; got 2 (no --expected-train-rows supplied)
+    offenders_sample: []
+    offenders_count: 0
+  - name: train_case_id_unique
+    passed: true
+    severity: error
+    detail: 0 duplicate case_id(s)
+    offenders_sample: []
+    offenders_count: 0
+  - name: train_split_value
+    passed: true
+    severity: error
+    detail: observed splits=['train']; allowed=['train']
+    offenders_sample: []
+    offenders_count: 0
+  - name: train_provenance
+    passed: true
+    severity: error
+    detail: 'expected {''state_key'': ''teacher_model'', ''preprocess_variant'': ''official_siim_224'',
+      ''head_key'': ''head_5''}'
+    offenders_sample: []
+    offenders_count: 0
+  - name: train_leakage_imagesTs
+    passed: true
+    severity: error
+    detail: no path may include the 'imagesTs/' segment in train manifest
+    offenders_sample: []
+    offenders_count: 0
+  - name: train_leakage_heldout_labelsTs
+    passed: true
+    severity: error
+    detail: no path may include the 'heldout_labelsTs/' segment in train manifest
+    offenders_sample: []
+    offenders_count: 0
+  - name: train_image_paths_exist
+    passed: true
+    severity: error
+    detail: 0 missing image_path
+    offenders_sample: []
+    offenders_count: 0
+  - name: train_label_paths_exist
+    passed: true
+    severity: error
+    detail: 0 missing label_path
+    offenders_sample: []
+    offenders_count: 0
+  - name: train_probability_map_paths_exist
+    passed: true
+    severity: error
+    detail: 0 missing probability_map_path
+    offenders_sample: []
+    offenders_count: 0
+  - name: train_label_binarity_sampled
+    passed: true
+    severity: error
+    detail: sampled label pixel values must be a subset of {0, 1, 255}
+    offenders_sample: []
+    offenders_count: 0
+  - name: train_image_label_alignment_sampled
+    passed: true
+    severity: error
+    detail: sampled image and label must share H x W
+    offenders_sample: []
+    offenders_count: 0
+  - name: train_prob_range_sampled
+    passed: true
+    severity: error
+    detail: 'sampled prob uint8 range observed: [0, 0]'
+    offenders_sample: []
+    offenders_count: 0
+  - name: train_prob_nondegenerate_sampled
+    passed: false
+    severity: warning
+    detail: sampled prob maps with min == max are usually all-zero placeholders
+    offenders_sample:
+    - siim_000001
+    - siim_000002
+    offenders_count: 2
+  - name: train_prob_size_uniform_sampled
+    passed: true
+    severity: warning
+    detail: 'sampled prob H x W values: {''224x224'': 2}'
+    offenders_sample: []
+    offenders_count: 0
+test:
+  kind: test
+  manifest_path: artifacts\diagnostics\foundation_x_official_direct\teacher_head5_official224_export_imagesTr_dryrun\teacher_head5_prior_manifest_train.csv
+  row_count: 2
+  positive_count: 0
+  negative_count: 2
+  duplicate_case_ids: []
+  sampled_image_sizes:
+    512x512: 2
+  sampled_label_sizes:
+    512x512: 2
+  sampled_prob_sizes:
+    224x224: 2
+  sampled_prob_min: 0
+  sampled_prob_max: 0
+  degenerate_prob_samples:
+  - siim_000001
+  - siim_000002
+  label_unique_values_seen:
+  - 0
+  checks:
+  - name: schema_header
+    passed: true
+    severity: error
+    detail: schema matches PR-10A 20-column contract
+    offenders_sample: []
+    offenders_count: 0
+  - name: test_row_count
+    passed: true
+    severity: warning
+    detail: row count not validated; got 2 (no --expected-test-rows supplied)
+    offenders_sample: []
+    offenders_count: 0
+  - name: test_case_id_unique
+    passed: true
+    severity: error
+    detail: 0 duplicate case_id(s)
+    offenders_sample: []
+    offenders_count: 0
+  - name: test_split_value
+    passed: false
+    severity: error
+    detail: observed splits=['train']; allowed=['eval', 'heldout', 'test', 'val']
+    offenders_sample:
+    - siim_000001
+    - siim_000002
+    offenders_count: 2
+  - name: test_provenance
+    passed: true
+    severity: error
+    detail: 'expected {''state_key'': ''teacher_model'', ''preprocess_variant'': ''official_siim_224'',
+      ''head_key'': ''head_5''}'
+    offenders_sample: []
+    offenders_count: 0
+  - name: test_leakage_imagesTr
+    passed: true
+    severity: warning
+    detail: --allow-imagesTr-in-test was set; check skipped
+    offenders_sample: []
+    offenders_count: 0
+  - name: test_image_paths_exist
+    passed: true
+    severity: error
+    detail: 0 missing image_path
+    offenders_sample: []
+    offenders_count: 0
+  - name: test_label_paths_exist
+    passed: true
+    severity: error
+    detail: 0 missing label_path
+    offenders_sample: []
+    offenders_count: 0
+  - name: test_probability_map_paths_exist
+    passed: true
+    severity: error
+    detail: 0 missing probability_map_path
+    offenders_sample: []
+    offenders_count: 0
+  - name: test_label_binarity_sampled
+    passed: true
+    severity: error
+    detail: sampled label pixel values must be a subset of {0, 1, 255}
+    offenders_sample: []
+    offenders_count: 0
+  - name: test_image_label_alignment_sampled
+    passed: true
+    severity: error
+    detail: sampled image and label must share H x W
+    offenders_sample: []
+    offenders_count: 0
+  - name: test_prob_range_sampled
+    passed: true
+    severity: error
+    detail: 'sampled prob uint8 range observed: [0, 0]'
+    offenders_sample: []
+    offenders_count: 0
+  - name: test_prob_nondegenerate_sampled
+    passed: false
+    severity: warning
+    detail: sampled prob maps with min == max are usually all-zero placeholders
+    offenders_sample:
+    - siim_000001
+    - siim_000002
+    offenders_count: 2
+  - name: test_prob_size_uniform_sampled
+    passed: true
+    severity: warning
+    detail: 'sampled prob H x W values: {''224x224'': 2}'
+    offenders_sample: []
+    offenders_count: 0
+cross:
+  name: case_id_disjoint_train_test
+  passed: false
+  severity: error
+  detail: 2 case_id(s) appear in both train and test manifests
+  offenders_sample:
+  - siim_000001
+  - siim_000002
+  offenders_count: 2
+failed_checks:
+- test:test_split_value
+- cross:case_id_disjoint_train_test
