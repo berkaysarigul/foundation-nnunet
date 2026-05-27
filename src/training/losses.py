@@ -85,3 +85,47 @@ class DiceFocalLoss(nn.Module):
             target: (batch, 1, H, W) — binary mask (0 or 1)
         """
         return self.dice(pred, target) + self.focal(pred, target)
+
+
+class DiceLoss(nn.Module):
+    """Per-image Dice loss that accepts logits by default."""
+
+    def __init__(self, smooth: float = 1.0, from_logits: bool = True):
+        super().__init__()
+        self.smooth = smooth
+        self.from_logits = from_logits
+
+    def forward(self, pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        if self.from_logits:
+            pred = torch.sigmoid(pred)
+
+        batch_size = pred.shape[0]
+        pred_flat = pred.reshape(batch_size, -1)
+        target_flat = target.reshape(batch_size, -1)
+        intersection = (pred_flat * target_flat).sum(dim=1)
+        dice = (2.0 * intersection + self.smooth) / (
+            pred_flat.sum(dim=1) + target_flat.sum(dim=1) + self.smooth
+        )
+        return (1.0 - dice).mean()
+
+
+class BCEDiceLoss(nn.Module):
+    """BCEWithLogitsLoss plus logits-compatible Dice loss."""
+
+    def __init__(
+        self,
+        bce_weight: float = 1.0,
+        dice_weight: float = 1.0,
+        smooth: float = 1.0,
+    ):
+        super().__init__()
+        self.bce_weight = float(bce_weight)
+        self.dice_weight = float(dice_weight)
+        self.bce = nn.BCEWithLogitsLoss()
+        self.dice = DiceLoss(smooth=smooth, from_logits=True)
+
+    def forward(self, logits: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        return self.bce_weight * self.bce(logits, target) + self.dice_weight * self.dice(
+            logits,
+            target,
+        )

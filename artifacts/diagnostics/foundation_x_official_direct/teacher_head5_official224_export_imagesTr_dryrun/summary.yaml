@@ -1,0 +1,90 @@
+audit_name: foundation_x_official_direct_prior_export
+schema_version: 2
+generated_at: '2026-05-26T21:33:30.190276+00:00'
+official_foundation_x_commit: 5e0b473cf3f595320ce982697d4365e1d9a4f642
+export_scope: diagnostics_and_training_prior_export
+framing_notice: PR-9A reverse-engineered predictions were trivial and must not be
+  used as nnU-Net priors. PR-10A exports only the confirmed official Foundation_X
+  teacher_model/head_5/official_siim_224 prior setting.
+stage: both
+split_name: train
+dataset_root: nnUNet_raw\Dataset101_Pneumothorax
+images_dir: nnUNet_raw\Dataset101_Pneumothorax\imagesTr
+labels_dir: nnUNet_raw\Dataset101_Pneumothorax\labelsTr
+checkpoint: checkpoints\foundation_x.pth
+state_keys_requested:
+- teacher_model
+state_keys_loaded:
+- teacher_model
+heads_requested:
+- 5
+head4_channel: 12
+include_head4: false
+head_specs_evaluated:
+- head_idx: 5
+  channel: null
+  key: head_5
+  label: official SIIM-ACR pneumothorax segmentation head
+preprocess_variants:
+- official_siim_224
+device: cpu
+threshold: 0.5
+save_prob_maps: true
+save_binary_masks: true
+save_visuals: false
+save_histograms: false
+metrics_only: false
+dataset_counts:
+  split_name: train
+  images_dir: nnUNet_raw\Dataset101_Pneumothorax\imagesTr
+  labels_dir: nnUNet_raw\Dataset101_Pneumothorax\labelsTr
+  cases_count: 9073
+  images_count: 9073
+  labels_count: 9073
+  matched_cases: 9073
+  positive_cases: 2022
+  negative_cases: 7051
+selected_cases:
+- case_id: siim_000001
+  split: train
+  image_path: nnUNet_raw\Dataset101_Pneumothorax\imagesTr\siim_000001_0000.png
+  label_path: nnUNet_raw\Dataset101_Pneumothorax\labelsTr\siim_000001.png
+  label_is_positive: false
+  label_foreground_pixels: 0
+- case_id: siim_000002
+  split: train
+  image_path: nnUNet_raw\Dataset101_Pneumothorax\imagesTr\siim_000002_0000.png
+  label_path: nnUNet_raw\Dataset101_Pneumothorax\labelsTr\siim_000002.png
+  label_is_positive: false
+  label_foreground_pixels: 0
+stage_b_rows: 2
+manifest_path: artifacts\diagnostics\foundation_x_official_direct\teacher_head5_official224_export_imagesTr_dryrun\teacher_head5_prior_manifest_train.csv
+export_validation:
+  status: passed
+  errors: []
+  row_count: 2
+  expected_rows: 2
+  unique_case_ids: 2
+  selected_case_count: 2
+  expected_dataset101_train_cases: 9073
+  full_train_export_requested: false
+  metrics_only: false
+  save_prob_maps: true
+  save_binary_masks: true
+non_trivial_mask_rows: 0
+nonconstant_probability_rows: 0
+non_trivial_enough_to_consider_stage_c: false
+aggregates_by_state_preprocess_head:
+- state_key: teacher_model
+  preprocess_variant: official_siim_224
+  head_key: head_5
+  cases: 2
+  gt_positive_cases: 0
+  gt_negative_cases: 2
+  pred_positive_cases: 0
+  mean_dice: 1.0
+  mean_positive_dice: null
+  mean_negative_specificity: 1.0
+  mean_prob_std: 2.069618517633754e-13
+  non_trivial_masks: 0
+failures: []

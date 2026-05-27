@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "tool": "scripts/foundation_x_official_direct_segment.py",
+  "command": "scripts/foundation_x_official_direct_segment.py --dataset-root nnUNet_raw\\Dataset101_Pneumothorax --images-dir nnUNet_raw\\Dataset101_Pneumothorax\\imagesTr --labels-dir nnUNet_raw\\Dataset101_Pneumothorax\\labelsTr --split-name train --checkpoint checkpoints\\foundation_x.pth --state-keys teacher_model --heads 5 --preprocess-variants official_siim_224 --device cpu --max-cases 2 --case-sampling sequential --out artifacts\\diagnostics\\foundation_x_official_direct\\teacher_head5_official224_export_imagesTr_dryrun --save-prob-maps true --save-binary-masks true --save-visuals false --save-histograms false --threshold 0.5",
+  "generated_at": "2026-05-26T21:33:30.198698+00:00",
+  "args": {
+    "dataset_root": "nnUNet_raw\\Dataset101_Pneumothorax",
+    "images_dir": "nnUNet_raw\\Dataset101_Pneumothorax\\imagesTr",
+    "labels_dir": "nnUNet_raw\\Dataset101_Pneumothorax\\labelsTr",
+    "split_name": "train",
+    "checkpoint": "checkpoints\\foundation_x.pth",
+    "state_keys": [
+      "teacher_model"
+    ],
+    "heads": [
+      5
+    ],
+    "head4_channel": 12,
+    "include_head4": false,
+    "preprocess_variants": [
+      "official_siim_224"
+    ],
+    "device": "cpu",
+    "max_cases": 2,
+    "positive_cases": 1,
+    "negative_cases": 1,
+    "case_sampling": "sequential",
+    "out": "artifacts\\diagnostics\\foundation_x_official_direct\\teacher_head5_official224_export_imagesTr_dryrun",
+    "save_prob_maps": true,
+    "save_binary_masks": true,
+    "save_visuals": false,
+    "save_histograms": false,
+    "metrics_only": false,
+    "stage": "both",
+    "threshold": 0.5,
+    "seed": 42
+  },
+  "python": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "torch_version": "2.12.0+cpu",
+  "cuda_available": false,
+  "device": "cpu",
+  "official_foundation_x_commit": "5e0b473cf3f595320ce982697d4365e1d9a4f642",
+  "constraints": [
+    "no training",
+    "no refiner or nnU-Net training behavior modified",
+    "no imagesTs use for train prior export",
+    "full Dataset101 train export should run on Colab/GPU, not locally",
+    "CPU guardrail max 2 cases"
+  ]
+}

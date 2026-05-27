@@ -1,0 +1,255 @@
+{
+  "stage_a_synthetic": {
+    "teacher_model": {
+      "synthetic_input": {
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ],
+        "dtype": "torch.float32",
+        "numel": 150528,
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0,
+        "std": 0.0
+      },
+      "outputs": {
+        "head_5": {
+          "label": "official SIIM-ACR pneumothorax segmentation head",
+          "raw_head_logits": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": -49.63356399536133,
+            "max": -19.350849151611328,
+            "mean": -45.67808151245117,
+            "std": 4.051544189453125
+          },
+          "selected_logits": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": -49.63356399536133,
+            "max": -19.350849151611328,
+            "mean": -45.67808151245117,
+            "std": 4.051544189453125
+          },
+          "probability": {
+            "shape": [
+              1,
+              1,
+              224,
+              224
+            ],
+            "dtype": "torch.float32",
+            "numel": 50176,
+            "min": 2.7823838519580855e-22,
+            "max": 3.944872872807537e-09,
+            "mean": 5.101785422075011e-13,
+            "std": 3.823856856155494e-11
+          }
+        }
+      }
+    }
+  },
+  "stage_b_preprocess": {
+    "teacher_model/official_siim_224/siim_000001": {
+      "variant": "official_siim_224",
+      "input_file_path": "nnUNet_raw\\Dataset101_Pneumothorax\\imagesTr\\siim_000001_0000.png",
+      "read_backend": "cv2.imread(..., IMREAD_COLOR)",
+      "channel_order": "opencv_bgr",
+      "original_image_shape": [
+        512,
+        512,
+        3
+      ],
+      "resized_image_shape": [
+        224,
+        224,
+        3
+      ],
+      "output_tensor_shape": [
+        1,
+        3,
+        224,
+        224
+      ],
+      "dtype": "torch.float32",
+      "resize_interpolation": "cv2.INTER_AREA",
+      "normalization": {
+        "mean": [
+          0.48500001430511475,
+          0.4560000002384186,
+          0.4059999883174896
+        ],
+        "std": [
+          0.2290000021457672,
+          0.2240000069141388,
+          0.22499999403953552
+        ],
+        "max_pixel_value": 1,
+        "post_tensor_divide_by_255": true
+      },
+      "stats_before_normalization": {
+        "shape": [
+          224,
+          224,
+          3
+        ],
+        "dtype": "uint8",
+        "min": 6.0,
+        "max": 245.0,
+        "mean": 170.0979461669922,
+        "std": 52.88508224487305
+      },
+      "stats_after_normalization": {
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ],
+        "dtype": "torch.float32",
+        "min": 0.09444300830364227,
+        "max": 4.2812323570251465,
+        "mean": 2.9440324306488037,
+        "std": 0.9182283282279968
+      }
+    },
+    "teacher_model/official_siim_224/siim_000002": {
+      "variant": "official_siim_224",
+      "input_file_path": "nnUNet_raw\\Dataset101_Pneumothorax\\imagesTr\\siim_000002_0000.png",
+      "read_backend": "cv2.imread(..., IMREAD_COLOR)",
+      "channel_order": "opencv_bgr",
+      "original_image_shape": [
+        512,
+        512,
+        3
+      ],
+      "resized_image_shape": [
+        224,
+        224,
+        3
+      ],
+      "output_tensor_shape": [
+        1,
+        3,
+        224,
+        224
+      ],
+      "dtype": "torch.float32",
+      "resize_interpolation": "cv2.INTER_AREA",
+      "normalization": {
+        "mean": [
+          0.48500001430511475,
+          0.4560000002384186,
+          0.4059999883174896
+        ],
+        "std": [
+          0.2290000021457672,
+          0.2240000069141388,
+          0.22499999403953552
+        ],
+        "max_pixel_value": 1,
+        "post_tensor_divide_by_255": true
+      },
+      "stats_before_normalization": {
+        "shape": [
+          224,
+          224,
+          3
+        ],
+        "dtype": "uint8",
+        "min": 0.0,
+        "max": 250.0,
+        "mean": 72.00843048095703,
+        "std": 67.09024047851562
+      },
+      "stats_after_normalization": {
+        "shape": [
+          1,
+          3,
+          224,
+          224
+        ],
+        "dtype": "torch.float32",
+        "min": -0.008305505849421024,
+        "max": 4.368767738342285,
+        "mean": 1.2418209314346313,
+        "std": 1.1643767356872559
+      }
+    }
+  },
+  "stage_b_outputs": {
+    "teacher_model/official_siim_224/siim_000001/head_5": {
+      "logits": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": -219.38723754882812,
+        "max": -25.450246810913086,
+        "mean": -104.57698822021484,
+        "std": 32.53744125366211
+      },
+      "probability": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 8.853158657562421e-12,
+        "mean": 9.901811977029219e-16,
+        "std": 8.327600355172507e-14
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    },
+    "teacher_model/official_siim_224/siim_000002/head_5": {
+      "logits": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": -309.017333984375,
+        "max": -24.065494537353516,
+        "mean": -98.84123992919922,
+        "std": 37.442352294921875
+      },
+      "probability": {
+        "shape": [
+          224,
+          224
+        ],
+        "dtype": "float32",
+        "min": 0.0,
+        "max": 3.535806716858936e-11,
+        "mean": 3.984584861902894e-15,
+        "std": 3.3064769997502574e-13
+      },
+      "threshold": 0.5,
+      "prediction": {
+        "foreground_pixels": 0,
+        "is_positive": false
+      }
+    }
+  }
+}
