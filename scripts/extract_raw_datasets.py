@@ -18,15 +18,20 @@ class DatasetSpec:
     name: str
     zip_path: Path
     out_dir: Path
+    selected_root: str | None = None
+    stripped_root: str | None = None
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Extract PR-11 raw dataset ZIP files.")
-    parser.add_argument("--siim-zip", type=Path, required=True)
-    parser.add_argument("--ptx-zip", type=Path, required=True)
+    parser.add_argument("--siim-zip", type=Path)
+    parser.add_argument("--ptx-zip", type=Path)
     parser.add_argument("--out-root", type=Path, required=True)
     parser.add_argument("--force", type=parse_bool, default=False)
-    return parser.parse_args(argv)
+    args = parser.parse_args(argv)
+    if args.siim_zip is None and args.ptx_zip is None:
+        parser.error("Provide at least one of --siim-zip or --ptx-zip.")
+    return args
 
 
 def _entry_parts(name: str) -> list[str]:
@@ -51,13 +56,56 @@ def _inspect_zip(zip_path: Path) -> dict[str, Any]:
         }
 
 
-def _strip_root_for_dataset(dataset_name: str, top_roots: list[str]) -> str | None:
+def _zip_has_site_dirs(zip_path: Path, root: str | None) -> bool:
+    expected = {"SiteA", "SiteB", "SiteC"}
+    with zipfile.ZipFile(zip_path) as zf:
+        for entry in zf.infolist():
+            parts = _entry_parts(entry.filename)
+            if len(parts) < 2:
+                continue
+            if root is None and parts[0] in expected:
+                return True
+            if root is not None and parts[0] == root and len(parts) >= 2 and parts[1] in expected:
+                return True
+    return False
+
+
+def _ptx_version_score(root: str) -> tuple[int, str]:
+    lowered = root.lower()
+    score = 0
+    if "v2" in lowered:
+        score += 2
+    if "fix" in lowered:
+        score += 2
+    return score, root
+
+
+def _select_roots_for_dataset(dataset_name: str, zip_path: Path, top_roots: list[str]) -> tuple[str | None, str | None]:
     if dataset_name == "SIIM-ACR" and len(top_roots) == 1:
-        return top_roots[0]
-    return None
+        return top_roots[0], top_roots[0]
+    if dataset_name != "PTX-498":
+        return None, None
+
+    expected_sites = {"SiteA", "SiteB", "SiteC"}
+    if expected_sites & set(top_roots):
+        return None, None
+
+    candidate_roots = [root for root in top_roots if _zip_has_site_dirs(zip_path, root)]
+    versioned = [root for root in candidate_roots if "v2" in root.lower() or "fix" in root.lower()]
+    if versioned:
+        selected = sorted(versioned, key=_ptx_version_score)[-1]
+        return selected, selected
+    if len(candidate_roots) == 1:
+        return candidate_roots[0], candidate_roots[0]
+    return None, None
 
 
-def _destination_for(entry_name: str, out_dir: Path, stripped_root: str | None) -> Path | None:
+def _destination_for(
+    entry_name: str,
+    out_dir: Path,
+    selected_root: str | None,
+    stripped_root: str | None,
+) -> Path | None:
     parts = _entry_parts(entry_name)
     if not parts:
         return None
@@ -65,9 +113,11 @@ def _destination_for(entry_name: str, out_dir: Path, stripped_root: str | None) 
         raise ValueError(f"Unsafe ZIP path contains '..': {entry_name}")
     if PurePosixPath(entry_name).is_absolute():
         raise ValueError(f"Unsafe absolute ZIP path: {entry_name}")
+    if selected_root is not None and parts[0] != selected_root:
+        return None
     if stripped_root is not None:
         if parts[0] != stripped_root:
-            raise ValueError(f"Expected root {stripped_root!r}, got {parts[0]!r} in {entry_name}")
+            return None
         parts = parts[1:]
     if not parts:
         return None
@@ -108,13 +158,18 @@ def _load_previous_summary(path: Path) -> dict[str, Any] | None:
         return None
 
 
-def _validate_destinations(zip_path: Path, out_dir: Path, stripped_root: str | None) -> dict[str, Any]:
+def _validate_destinations(
+    zip_path: Path,
+    out_dir: Path,
+    selected_root: str | None,
+    stripped_root: str | None,
+) -> dict[str, Any]:
     destinations: dict[Path, str] = {}
     with zipfile.ZipFile(zip_path) as zf:
         for entry in zf.infolist():
             if entry.is_dir():
                 continue
-            dest = _destination_for(entry.filename, out_dir, stripped_root)
+            dest = _destination_for(entry.filename, out_dir, selected_root, stripped_root)
             if dest is None:
                 continue
             resolved = dest.resolve()
@@ -130,14 +185,14 @@ def _validate_destinations(zip_path: Path, out_dir: Path, stripped_root: str | N
     return {"destination_count": len(destinations)}
 
 
-def _extract_zip(zip_path: Path, out_dir: Path, stripped_root: str | None) -> int:
+def _extract_zip(zip_path: Path, out_dir: Path, selected_root: str | None, stripped_root: str | None) -> int:
     count = 0
     out_dir.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(zip_path) as zf:
         for entry in zf.infolist():
             if entry.is_dir():
                 continue
-            dest = _destination_for(entry.filename, out_dir, stripped_root)
+            dest = _destination_for(entry.filename, out_dir, selected_root, stripped_root)
             if dest is None:
                 continue
             dest.parent.mkdir(parents=True, exist_ok=True)
@@ -155,7 +210,9 @@ def process_dataset(
     previous: dict[str, Any] | None,
 ) -> dict[str, Any]:
     inspection = _inspect_zip(spec.zip_path)
-    stripped_root = _strip_root_for_dataset(spec.name, inspection["top_level_roots"])
+    selected_root, stripped_root = _select_roots_for_dataset(spec.name, spec.zip_path, inspection["top_level_roots"])
+    spec = DatasetSpec(spec.name, spec.zip_path, spec.out_dir, selected_root, stripped_root)
+    inspection["selected_root"] = selected_root or ""
     inspection["stripped_root"] = stripped_root or ""
     inspection["output_dir"] = str(spec.out_dir)
 
@@ -171,8 +228,8 @@ def process_dataset(
             )
         _safe_remove_dir(spec.out_dir, out_root)
 
-    inspection.update(_validate_destinations(spec.zip_path, spec.out_dir, stripped_root))
-    inspection["files_extracted"] = _extract_zip(spec.zip_path, spec.out_dir, stripped_root)
+    inspection.update(_validate_destinations(spec.zip_path, spec.out_dir, selected_root, stripped_root))
+    inspection["files_extracted"] = _extract_zip(spec.zip_path, spec.out_dir, selected_root, stripped_root)
     inspection["status"] = "extracted"
     return inspection
 
@@ -190,6 +247,7 @@ def write_report(path: Path, payload: dict[str, Any]) -> None:
                 f"- entries: `{info['entry_count']}`",
                 f"- files extracted this run: `{info['files_extracted']}`",
                 f"- top-level roots: `{', '.join(info['top_level_roots'])}`",
+                f"- selected root: `{info.get('selected_root') or ''}`",
                 f"- stripped root: `{info.get('stripped_root') or ''}`",
                 "",
             ]
@@ -205,10 +263,11 @@ def main(argv: list[str] | None = None) -> int:
     report_path = out_root / "extraction_report.md"
     previous = _load_previous_summary(summary_path)
 
-    specs = [
-        DatasetSpec("SIIM-ACR", args.siim_zip, out_root / "SIIM-ACR"),
-        DatasetSpec("PTX-498", args.ptx_zip, out_root / "PTX-498"),
-    ]
+    specs = []
+    if args.siim_zip is not None:
+        specs.append(DatasetSpec("SIIM-ACR", args.siim_zip, out_root / "SIIM-ACR"))
+    if args.ptx_zip is not None:
+        specs.append(DatasetSpec("PTX-498", args.ptx_zip, out_root / "PTX-498"))
     payload = {
         "schema_version": 1,
         "out_root": str(out_root),
@@ -235,4 +294,3 @@ if __name__ == "__main__":
     except Exception as exc:
         print(f"[error] {type(exc).__name__}: {exc}", file=sys.stderr)
         raise SystemExit(1)
-

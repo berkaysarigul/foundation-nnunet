@@ -6,6 +6,7 @@ import csv
 import sys
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 import numpy as np
@@ -19,6 +20,7 @@ for _path in (str(REPO_ROOT), str(SCRIPTS_DIR)):
 
 import build_ptx498_manifest as ptx_manifest  # noqa: E402
 import build_siim_acr_png_manifest as siim_manifest  # noqa: E402
+import extract_raw_datasets as extract_raw  # noqa: E402
 import validate_fx_prior_manifests as validate_fx  # noqa: E402
 
 
@@ -78,13 +80,44 @@ class PR11PipelineScriptTests(unittest.TestCase):
             (site / "1.4.img.nii.gz").write_bytes(b"nii")
             (site / "1.5.mask.nii.gz").write_bytes(b"nii")
 
-            rows, conflicts, summary = ptx_manifest.build_manifest(root, hash_files=False)
+            rows, conflicts, unmatched_images, unmatched_masks, empty_masks, summary = ptx_manifest.build_manifest(
+                root,
+                hash_files=False,
+            )
 
             self.assertEqual(len(rows), 1)
-            self.assertEqual(rows[0]["case_id"], "ptx498_sitea_000001")
+            self.assertEqual(rows[0]["case_id"], "ptx498_sitea_1")
             self.assertTrue(rows[0]["mask_is_positive"])
-            self.assertEqual([row["conflict_type"] for row in conflicts], ["expected_498_cases_not_met"])
+            self.assertFalse(conflicts)
+            self.assertFalse(unmatched_images)
+            self.assertFalse(unmatched_masks)
+            self.assertFalse(empty_masks)
             self.assertEqual(summary["site_counts"], {"SiteA": 1})
+
+    def test_extract_ptx_wrapper_preserves_site_directories(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            ptx_zip = root / "PTX-498.zip"
+            with zipfile.ZipFile(ptx_zip, "w") as zf:
+                zf.writestr("PTX-498-v2-fix/SiteA/1.1.img.png", b"image")
+                zf.writestr("PTX-498-v2-fix/SiteA/1.2.mask.png", b"mask")
+                zf.writestr("older/SiteA/old.txt", b"old")
+
+            rc = extract_raw.main(
+                [
+                    "--ptx-zip",
+                    str(ptx_zip),
+                    "--out-root",
+                    str(root / "extracted"),
+                    "--force",
+                    "false",
+                ]
+            )
+
+            self.assertEqual(rc, 0)
+            self.assertTrue((root / "extracted" / "PTX-498" / "SiteA" / "1.1.img.png").is_file())
+            self.assertFalse((root / "extracted" / "PTX-498" / "PTX-498-v2-fix").exists())
+            self.assertFalse((root / "extracted" / "PTX-498" / "older").exists())
 
     def test_single_fx_prior_manifest_rejects_visual_head4_probability_path(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
